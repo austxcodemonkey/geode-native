@@ -28,10 +28,10 @@ Delta::Delta(Cache* cache) : m_cache(cache) {}
 std::shared_ptr<Delta> Delta::clone() const {
   auto out = m_cache->createDataOutput();
   auto ptr = dynamic_cast<const Cacheable*>(this);
-  out->writeObject(ptr);
-  auto in = m_cache->createDataInput(out->getBuffer(), out->getBufferLength());
+  out.writeObject(ptr);
+  auto in = m_cache->createDataInput(out.getBuffer(), out.getBufferLength());
   std::shared_ptr<Cacheable> theClonePtr;
-  in->readObject(theClonePtr);
+  in.readObject(theClonePtr);
   return std::dynamic_pointer_cast<Delta>(theClonePtr);
 }
 

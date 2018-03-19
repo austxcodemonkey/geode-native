@@ -59,6 +59,14 @@ class DataInputInternal;
  */
 class _GEODE_EXPORT DataInput {
  public:
+  DataInput() = default;
+  DataInput(const DataInput&) = delete;
+  DataInput& operator=(const DataInput&) = delete;
+  DataInput(DataInput&&) = default;
+  DataInput& operator=(DataInput&&) = default;
+
+  ~DataInput() = default;
+
   /**
    * Read a signed byte from the <code>DataInput</code>.
    *
@@ -431,9 +439,6 @@ class _GEODE_EXPORT DataInput {
     }
   }
 
-  /** destructor */
-  ~DataInput() {}
-
   /**
    * Get the pointer to current buffer position. This should be treated
    * as readonly and modification of contents using this internal pointer
@@ -502,7 +507,7 @@ class _GEODE_EXPORT DataInput {
   const uint8_t* m_buf;
   const uint8_t* m_bufHead;
   size_t m_bufLength;
-  std::reference_wrapper<const std::string> m_poolName;
+  std::string m_poolName;
   const CacheImpl* m_cache;
 
   std::shared_ptr<Serializable> readObjectInternal(int8_t typeId = -1);
@@ -651,10 +656,6 @@ class _GEODE_EXPORT DataInput {
     m_poolName = std::ref(poolName);
   }
 
-  // disable other constructors and assignment
-  DataInput() = delete;
-  DataInput(const DataInput&) = delete;
-  DataInput& operator=(const DataInput&) = delete;
 
   friend Cache;
   friend CacheImpl;

@@ -103,10 +103,10 @@ GfErrType ThinClientLocatorHelper::getAllServers(
                        sysProps.connectTimeout(), buffSize);
       GetAllServersRequest request(serverGrp);
       auto data = m_poolDM->getConnectionManager().getCacheImpl()->createDataOutput();
-      data->writeInt((int32_t)1001);  // GOSSIPVERSION
-      data->writeObject(&request);
+      data.writeInt((int32_t)1001);  // GOSSIPVERSION
+      data.writeObject(&request);
       int sentLength = conn->send(
-          (char*)(data->getBuffer()), data->getBufferLength(),
+          (char*)(data.getBuffer()), data.getBufferLength(),
           m_poolDM ? m_poolDM->getReadTimeout() : std::chrono::seconds(10));
       if (sentLength <= 0) {
         // conn->close(); delete conn; conn = nullptr;
@@ -128,15 +128,15 @@ GfErrType ThinClientLocatorHelper::getAllServers(
       /* adongre
        * SSL Enabled on Location and not in the client
        */
-      if (di->read() == REPLY_SSL_ENABLED && !sysProps.sslEnabled()) {
+      if (di.read() == REPLY_SSL_ENABLED && !sysProps.sslEnabled()) {
         LOGERROR("SSL is enabled on locator, enable SSL in client as well");
         throw AuthenticationRequiredException(
             "SSL is enabled on locator, enable SSL in client as well");
       }
-      di->rewindCursor(1);
+      di.rewindCursor(1);
 
       auto response =
-          std::static_pointer_cast<GetAllServersResponse>(di->readObject());
+          std::static_pointer_cast<GetAllServersResponse>(di.readObject());
       servers = response->getServers();
       return GF_NOERR;
     } catch (const AuthenticationRequiredException&) {
@@ -195,10 +195,10 @@ GfErrType ThinClientLocatorHelper::getEndpointForNewCallBackConn(
       QueueConnectionRequest request(memId, exclEndPts, redundancy, false,
                                      serverGrp);
       auto data = m_poolDM->getConnectionManager().getCacheImpl()->createDataOutput();
-      data->writeInt((int32_t)1001);  // GOSSIPVERSION
-      data->writeObject(&request);
+      data.writeInt((int32_t)1001);  // GOSSIPVERSION
+      data.writeObject(&request);
       int sentLength = conn->send(
-          (char*)(data->getBuffer()), data->getBufferLength(),
+          (char*)(data.getBuffer()), data.getBufferLength(),
           m_poolDM ? m_poolDM->getReadTimeout() : sysProps.connectTimeout());
       if (sentLength <= 0) {
         // conn->close(); delete conn; conn = nullptr;
@@ -219,15 +219,15 @@ GfErrType ThinClientLocatorHelper::getEndpointForNewCallBackConn(
       /* adongre
        * ssl defect
        */
-      const auto acceptanceCode = di->read();
+      const auto acceptanceCode = di.read();
       if (acceptanceCode == REPLY_SSL_ENABLED && !sysProps.sslEnabled()) {
         LOGERROR("SSL is enabled on locator, enable SSL in client as well");
         throw AuthenticationRequiredException(
             "SSL is enabled on locator, enable SSL in client as well");
       }
-      di->rewindCursor(1);
+      di.rewindCursor(1);
       auto response =
-          std::static_pointer_cast<QueueConnectionResponse>(di->readObject());
+          std::static_pointer_cast<QueueConnectionResponse>(di.readObject());
       outEndpoint = response->getServers();
       return GF_NOERR;
     } catch (const AuthenticationRequiredException& excp) {
@@ -285,20 +285,20 @@ GfErrType ThinClientLocatorHelper::getEndpointForNewFwdConn(
       auto data = m_poolDM->getConnectionManager()
                       .getCacheImpl()
                       ->createDataOutput();
-      data->writeInt(1001);  // GOSSIPVERSION
+      data.writeInt(1001);  // GOSSIPVERSION
       if (currentServer == nullptr) {
         LOGDEBUG("Creating ClientConnectionRequest");
         ClientConnectionRequest request(exclEndPts, serverGrp);
-        data->writeObject(&request);
+        data.writeObject(&request);
       } else {
         LOGDEBUG("Creating ClientReplacementRequest for connection: ",
                  currentServer->getEndpointObject()->name().c_str());
         ClientReplacementRequest request(
             currentServer->getEndpointObject()->name(), exclEndPts, serverGrp);
-        data->writeObject(&request);
+        data.writeObject(&request);
       }
       int sentLength = conn->send(
-          (char*)(data->getBuffer()), data->getBufferLength(),
+          (char*)(data.getBuffer()), data.getBufferLength(),
           m_poolDM ? m_poolDM->getReadTimeout() : sysProps.connectTimeout());
       if (sentLength <= 0) {
         // conn->close();
@@ -320,16 +320,16 @@ GfErrType ThinClientLocatorHelper::getEndpointForNewFwdConn(
       /* adongre
        * SSL is enabled on locator and not in the client
        */
-      const auto acceptanceCode = di->read();
+      const auto acceptanceCode = di.read();
       if (acceptanceCode == REPLY_SSL_ENABLED && !sysProps.sslEnabled()) {
         LOGERROR("SSL is enabled on locator, enable SSL in client as well");
         throw AuthenticationRequiredException(
             "SSL is enabled on locator, enable SSL in client as well");
       }
-      di->rewindCursor(1);
+      di.rewindCursor(1);
 
       auto response =
-          std::static_pointer_cast<ClientConnectionResponse>(di->readObject());
+          std::static_pointer_cast<ClientConnectionResponse>(di.readObject());
       response->printInfo();
       if (!response->serverFound()) {
         LOGFINE("Server not found");
@@ -383,10 +383,10 @@ GfErrType ThinClientLocatorHelper::updateLocators(
       auto data = m_poolDM->getConnectionManager()
                       .getCacheImpl()
                       ->createDataOutput();
-      data->writeInt((int32_t)1001);  // GOSSIPVERSION
-      data->writeObject(&request);
+      data.writeInt((int32_t)1001);  // GOSSIPVERSION
+      data.writeObject(&request);
       int sentLength = conn->send(
-          (char*)(data->getBuffer()), data->getBufferLength(),
+          (char*)(data.getBuffer()), data.getBufferLength(),
           m_poolDM ? m_poolDM->getReadTimeout() : sysProps.connectTimeout());
       if (sentLength <= 0) {
         //  conn->close();
@@ -411,16 +411,16 @@ GfErrType ThinClientLocatorHelper::updateLocators(
       /* adongre
        * SSL Enabled on Location and not in the client
        */
-      const auto acceptanceCode = di->read();
+      const auto acceptanceCode = di.read();
       if (acceptanceCode == REPLY_SSL_ENABLED && !sysProps.sslEnabled()) {
         LOGERROR("SSL is enabled on locator, enable SSL in client as well");
         throw AuthenticationRequiredException(
             "SSL is enabled on locator, enable SSL in client as well");
       }
-      di->rewindCursor(1);
+      di.rewindCursor(1);
 
       auto response =
-          std::static_pointer_cast<LocatorListResponse>(di->readObject());
+          std::static_pointer_cast<LocatorListResponse>(di.readObject());
       auto locators = response->getLocators();
       if (locators.size() > 0) {
         RandGen randGen;

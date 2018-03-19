@@ -2726,11 +2726,12 @@ GfErrType ThinClientRegion::clientNotificationHandler(TcrMessage& msg) {
     case TcrMessage::LOCAL_UPDATE: {
       //  for update set the NOTIFICATION_UPDATE to trigger the
       // afterUpdate event even if the key is not present in local cache
+      auto delta = msg.getDelta();
       err = LocalRegion::putNoThrow(
           msg.getKey(), msg.getValue(), msg.getCallbackArgument(), oldValue, -1,
           CacheEventFlags::NOTIFICATION | CacheEventFlags::NOTIFICATION_UPDATE |
               CacheEventFlags::LOCAL,
-          msg.getVersionTag(), msg.getDelta(), msg.getEventId());
+          msg.getVersionTag(), &delta, msg.getEventId());
       break;
     }
     case TcrMessage::TOMBSTONE_OPERATION:
@@ -3347,15 +3348,15 @@ void ChunkedInterestResponse::handleChunk(const uint8_t* chunk,
                                           const Cache* cache) {
   auto input = cache->createDataInput(chunk, chunkLen);
 
-  DataInputInternal::setPoolName(*input, m_replyMsg.getPoolName());
+  DataInputInternal::setPoolName(input, m_replyMsg.getPoolName());
 
   uint32_t partLen;
   if (TcrMessageHelper::readChunkPartHeader(
-          m_msg, *input, 0, GeodeTypeIds::CacheableArrayList,
+          m_msg, input, 0, GeodeTypeIds::CacheableArrayList,
           "ChunkedInterestResponse", partLen,
           isLastChunkWithSecurity) != TcrMessageHelper::OBJECT) {
     // encountered an exception part, so return without reading more
-    m_replyMsg.readSecureObjectPart(*input, false, true,
+    m_replyMsg.readSecureObjectPart(input, false, true,
                                     isLastChunkWithSecurity);
     return;
   }
@@ -3364,8 +3365,8 @@ void ChunkedInterestResponse::handleChunk(const uint8_t* chunk,
     m_resultKeys =
         std::make_shared<std::vector<std::shared_ptr<CacheableKey>>>();
   }
-  serializer::readObject(*input, *m_resultKeys);
-  m_replyMsg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+  serializer::readObject(input, *m_resultKeys);
+  m_replyMsg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
 }
 
 void ChunkedKeySetResponse::reset() {
@@ -3379,21 +3380,21 @@ void ChunkedKeySetResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
                                         const Cache* cache) {
   auto input = cache->createDataInput(chunk, chunkLen);
 
-  DataInputInternal::setPoolName(*input, m_replyMsg.getPoolName());
+  DataInputInternal::setPoolName(input, m_replyMsg.getPoolName());
 
   uint32_t partLen;
   if (TcrMessageHelper::readChunkPartHeader(
-          m_msg, *input, 0, GeodeTypeIds::CacheableArrayList,
+          m_msg, input, 0, GeodeTypeIds::CacheableArrayList,
           "ChunkedKeySetResponse", partLen,
           isLastChunkWithSecurity) != TcrMessageHelper::OBJECT) {
     // encountered an exception part, so return without reading more
-    m_replyMsg.readSecureObjectPart(*input, false, true,
+    m_replyMsg.readSecureObjectPart(input, false, true,
                                     isLastChunkWithSecurity);
     return;
   }
 
-  serializer::readObject(*input, m_resultKeys);
-  m_replyMsg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+  serializer::readObject(input, m_resultKeys);
+  m_replyMsg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
 }
 
 void ChunkedQueryResponse::reset() {
@@ -3454,26 +3455,26 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
                                        const Cache* cache) {
   LOGDEBUG("ChunkedQueryResponse::handleChunk..");
   auto input = cache->createDataInput(chunk, chunkLen);
-  DataInputInternal::setPoolName(*input, m_msg.getPoolName());
+  DataInputInternal::setPoolName(input, m_msg.getPoolName());
   uint32_t partLen;
   TcrMessageHelper::ChunkObjectType objType;
   if ((objType = TcrMessageHelper::readChunkPartHeader(
-           m_msg, *input, GeodeTypeIdsImpl::FixedIDByte,
+           m_msg, input, GeodeTypeIdsImpl::FixedIDByte,
            static_cast<uint8_t>(GeodeTypeIdsImpl::CollectionTypeImpl),
            "ChunkedQueryResponse", partLen, isLastChunkWithSecurity)) ==
       TcrMessageHelper::EXCEPTION) {
     // encountered an exception part, so return without reading more
-    m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+    m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
     return;
   } else if (objType == TcrMessageHelper::NULL_OBJECT) {
     // special case for scalar result
-    partLen = input->readInt32();
-    input->read();
-    auto intVal = std::static_pointer_cast<CacheableInt32>(input->readObject());
+    partLen = input.readInt32();
+    input.read();
+    auto intVal = std::static_pointer_cast<CacheableInt32>(input.readObject());
     m_queryResults->push_back(intVal);
 
     // TODO:
-    m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+    m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
 
     return;
   }
@@ -3487,23 +3488,23 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
   // If the results on server are in a bag, or the user need to manipulate
   // the elements, then we have to revisit this issue.
   // For now, we'll live with duplicate records, hoping they do not cost much.
-  skipClass(*input);
+  skipClass(input);
   // skipping CollectionTypeImpl
-  // skipClass(*input); // no longer, since GFE 5.7
+  // skipClass(input); // no longer, since GFE 5.7
 
-  input->read();  // this is Fixed ID byte (1)
-  input->read();  // this is DataSerializable (45)
-  input->read();  // this is Class 43
-  const auto isStructTypeImpl = input->readString();
+  input.read();  // this is Fixed ID byte (1)
+  input.read();  // this is DataSerializable (45)
+  input.read();  // this is Class 43
+  const auto isStructTypeImpl = input.readString();
 
   if (isStructTypeImpl == "org.apache.geode.cache.query.Struct") {
-    int32_t numOfFldNames = input->readArrayLen();
+    int32_t numOfFldNames = input.readArrayLen();
     bool skip = false;
     if (m_structFieldNames.size() != 0) {
       skip = true;
     }
     for (int i = 0; i < numOfFldNames; i++) {
-      auto sptr = input->readString();
+      auto sptr = input.readString();
       if (!skip) {
         m_structFieldNames.push_back(sptr);
       }
@@ -3511,13 +3512,13 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
   }
 
   // skip the remaining part
-  input->reset();
+  input.reset();
   // skip the whole part including partLen and isObj (4+1)
-  input->advanceCursor(partLen + 5);
+  input.advanceCursor(partLen + 5);
 
-  partLen = input->readInt32();
+  partLen = input.readInt32();
 
-  if (!input->read()) {
+  if (!input.read()) {
     LOGERROR(
         "Query response part is not an object; possible serialization "
         "mismatch");
@@ -3528,28 +3529,28 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
 
   bool isResultSet = (m_structFieldNames.size() == 0);
 
-  auto arrayType = input->read();
+  auto arrayType = input.read();
 
   if (arrayType == GeodeTypeIds::CacheableObjectArray) {
-    int32_t arraySize = input->readArrayLen();
-    skipClass(*input);
+    int32_t arraySize = input.readArrayLen();
+    skipClass(input);
     for (int32_t arrayItem = 0; arrayItem < arraySize; ++arrayItem) {
       std::shared_ptr<Serializable> value;
       if (isResultSet) {
-        input->readObject(value);
+        input.readObject(value);
         m_queryResults->push_back(value);
       } else {
-        input->read();
-        int32_t arraySize2 = input->readArrayLen();
-        skipClass(*input);
+        input.read();
+        int32_t arraySize2 = input.readArrayLen();
+        skipClass(input);
         for (int32_t index = 0; index < arraySize2; ++index) {
-          input->readObject(value);
+          input.readObject(value);
           m_queryResults->push_back(value);
         }
       }
     }
   } else if (arrayType == GeodeTypeIdsImpl::FixedIDByte) {
-    arrayType = input->read();
+    arrayType = input.read();
     if (arrayType != GeodeTypeIdsImpl::CacheableObjectPartList) {
       LOGERROR(
           "Query response got unhandled message format %d while expecting "
@@ -3559,7 +3560,7 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
           "Query response got unhandled message format while expecting object "
           "part list; possible serialization mismatch");
     }
-    readObjectPartList(*input, isResultSet);
+    readObjectPartList(input, isResultSet);
   } else {
     LOGERROR(
         "Query response got unhandled message format %d; possible "
@@ -3570,7 +3571,7 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
         "mismatch");
   }
 
-  m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+  m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
 }
 
 void ChunkedQueryResponse::skipClass(DataInput& input) {
@@ -3596,16 +3597,16 @@ void ChunkedFunctionExecutionResponse::handleChunk(
     const Cache* cache) {
   LOGDEBUG("ChunkedFunctionExecutionResponse::handleChunk");
   auto input = cache->createDataInput(chunk, chunkLen);
-  DataInputInternal::setPoolName(*input, m_msg.getPoolName());
+  DataInputInternal::setPoolName(input, m_msg.getPoolName());
   uint32_t partLen;
 
   int8_t arrayType;
   if ((arrayType = static_cast<TcrMessageHelper::ChunkObjectType>(
            TcrMessageHelper::readChunkPartHeader(
-               m_msg, *input, "ChunkedFunctionExecutionResponse", partLen,
+               m_msg, input, "ChunkedFunctionExecutionResponse", partLen,
                isLastChunkWithSecurity))) == TcrMessageHelper::EXCEPTION) {
     // encountered an exception part, so return without reading more
-    m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+    m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
     return;
   }
 
@@ -3617,18 +3618,18 @@ void ChunkedFunctionExecutionResponse::handleChunk(
       TcrMessageHelper::NULL_OBJECT) {
     LOGDEBUG("ChunkedFunctionExecutionResponse::handleChunk nullptr object");
     //	m_functionExecutionResults->push_back(nullptr);
-    m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+    m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
     return;
   }
 
   int startLen =
-      input->getBytesRead() -
+      input.getBytesRead() -
       1;  // from here need to look value part + memberid AND -1 for array type
-  int32_t len = input->readArrayLen();
+  int32_t len = input.readArrayLen();
 
   // read a byte to determine whether to read exception part for sendException
   // or read objects.
-  uint8_t partType = input->read();
+  uint8_t partType = input.read();
   bool isExceptionPart = false;
   // See If partType is JavaSerializable
   const int CHUNK_HDR_LEN = 5;
@@ -3641,7 +3642,7 @@ void ChunkedFunctionExecutionResponse::handleChunk(
   if (partType == GeodeTypeIdsImpl::JavaSerializable) {
     isExceptionPart = true;
     // reset the input.
-    input->reset();
+    input.reset();
 
     if (((isLastChunkWithSecurity & 0x02) &&
          (chunkLen - static_cast<int32_t>(partLen) <=
@@ -3649,50 +3650,50 @@ void ChunkedFunctionExecutionResponse::handleChunk(
         (((isLastChunkWithSecurity & 0x02) == 0) &&
          (chunkLen - static_cast<int32_t>(partLen) <= CHUNK_HDR_LEN))) {
       readPart = false;
-      partLen = input->readInt32();
-      input->advanceCursor(1);  // skip isObject byte
-      input->advanceCursor(partLen);
+      partLen = input.readInt32();
+      input.advanceCursor(1);  // skip isObject byte
+      input.advanceCursor(partLen);
     } else {
       // skip first part i.e JavaSerializable.
-      TcrMessageHelper::skipParts(m_msg, *input, 1);
+      TcrMessageHelper::skipParts(m_msg, input, 1);
 
       // read the second part which is string in usual manner, first its length.
-      partLen = input->readInt32();
+      partLen = input.readInt32();
 
       // then isObject byte
-      input->read();  // ignore iSobject
+      input.read();  // ignore iSobject
 
-      startLen = input->getBytesRead();  // reset from here need to look value
+      startLen = input.getBytesRead();  // reset from here need to look value
       // part + memberid AND -1 for array type
 
       // Since it is contained as a part of other results, read arrayType which
       // is arrayList = 65.
-      arrayType = input->read();
+      arrayType = input.read();
 
       // then its len which is 2
-      len = input->readArrayLen();
+      len = input.readArrayLen();
     }
   } else {
     // rewind cursor by 1 to what we had read a byte to determine whether to
     // read exception part or read objects.
-    input->rewindCursor(1);
+    input.rewindCursor(1);
   }
 
   // Read either object or exception string from sendException.
   std::shared_ptr<Serializable> value;
   // std::shared_ptr<Cacheable> memberId;
   if (readPart) {
-    input->readObject(value);
+    input.readObject(value);
     // TODO: track this memberId for PrFxHa
-    // input->readObject(memberId);
-    int objectlen = input->getBytesRead() - startLen;
+    // input.readObject(memberId);
+    int objectlen = input.getBytesRead() - startLen;
 
     int memberIdLen = partLen - objectlen;
-    input->advanceCursor(memberIdLen);
+    input.advanceCursor(memberIdLen);
     LOGDEBUG("function partlen = %d , objectlen = %d,  memberidlen = %d ",
              partLen, objectlen, memberIdLen);
-    LOGDEBUG("function input->getBytesRemaining() = %d ",
-             input->getBytesRemaining());
+    LOGDEBUG("function input.getBytesRemaining() = %d ",
+             input.getBytesRemaining());
 
   } else {
     value = CacheableString::create("Function exception result.");
@@ -3713,7 +3714,7 @@ void ChunkedFunctionExecutionResponse::handleChunk(
     }
   }
 
-  m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+  m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
   //  m_functionExecutionResults->push_back(value);
 }
 
@@ -3729,14 +3730,14 @@ void ChunkedGetAllResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
                                         uint8_t isLastChunkWithSecurity,
                                         const Cache* cache) {
   auto input = cache->createDataInput(chunk, chunkLen);
-  DataInputInternal::setPoolName(*input, m_msg.getPoolName());
+  DataInputInternal::setPoolName(input, m_msg.getPoolName());
   uint32_t partLen;
   if (TcrMessageHelper::readChunkPartHeader(
-          m_msg, *input, GeodeTypeIdsImpl::FixedIDByte,
+          m_msg, input, GeodeTypeIdsImpl::FixedIDByte,
           GeodeTypeIdsImpl::VersionedObjectPartList, "ChunkedGetAllResponse",
           partLen, isLastChunkWithSecurity) != TcrMessageHelper::OBJECT) {
     // encountered an exception part, so return without reading more
-    m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+    m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
     return;
   }
 
@@ -3745,9 +3746,9 @@ void ChunkedGetAllResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
       &m_trackerMap, m_destroyTracker, m_addToLocalCache, m_dsmemId,
       m_responseLock);
 
-  objectList.fromData(*input);
+  objectList.fromData(input);
 
-  m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+  m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
 }
 
 void ChunkedGetAllResponse::add(const ChunkedGetAllResponse* other) {
@@ -3783,18 +3784,18 @@ void ChunkedPutAllResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
                                         uint8_t isLastChunkWithSecurity,
                                         const Cache* cache) {
   auto input = cache->createDataInput(chunk, chunkLen);
-  DataInputInternal::setPoolName(*input, m_msg.getPoolName());
+  DataInputInternal::setPoolName(input, m_msg.getPoolName());
   uint32_t partLen;
   int8_t chunkType;
   if ((chunkType = (TcrMessageHelper::ChunkObjectType)
            TcrMessageHelper::readChunkPartHeader(
-               m_msg, *input, GeodeTypeIdsImpl::FixedIDByte,
+               m_msg, input, GeodeTypeIdsImpl::FixedIDByte,
                GeodeTypeIdsImpl::VersionedObjectPartList,
                "ChunkedPutAllResponse", partLen, isLastChunkWithSecurity)) ==
       TcrMessageHelper::NULL_OBJECT) {
     LOGDEBUG("ChunkedPutAllResponse::handleChunk nullptr object");
     // No issues it will be empty in case of disabled caching.
-    m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+    m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
     return;
   }
 
@@ -3805,16 +3806,16 @@ void ChunkedPutAllResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
     auto vcObjPart = std::make_shared<VersionedCacheableObjectPartList>(
         dynamic_cast<ThinClientRegion*>(m_region.get()),
         m_msg.getChunkedResultHandler()->getEndpointMemId(), responseLock);
-    vcObjPart->fromData(*input);
+    vcObjPart->fromData(input);
     m_list->addAll(vcObjPart);
-    m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+    m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
   } else {
     LOGDEBUG("ChunkedPutAllResponse::handleChunk BYTES PART");
-    const auto byte0 = input->read();
+    const auto byte0 = input.read();
     LOGDEBUG("ChunkedPutAllResponse::handleChunk single-hop bytes byte0 = %d ",
              byte0);
-    const auto byte1 = input->read();
-    m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+    const auto byte1 = input.read();
+    m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
 
     auto pool = cache->getPoolManager().find(m_msg.getPoolName());
     if (pool != nullptr && !pool->isDestroyed() &&
@@ -3843,18 +3844,18 @@ void ChunkedRemoveAllResponse::handleChunk(const uint8_t* chunk,
                                            uint8_t isLastChunkWithSecurity,
                                            const Cache* cache) {
   auto input = cache->createDataInput(chunk, chunkLen);
-  DataInputInternal::setPoolName(*input, m_msg.getPoolName());
+  DataInputInternal::setPoolName(input, m_msg.getPoolName());
   uint32_t partLen;
   int8_t chunkType;
   if ((chunkType = (TcrMessageHelper::ChunkObjectType)
            TcrMessageHelper::readChunkPartHeader(
-               m_msg, *input, GeodeTypeIdsImpl::FixedIDByte,
+               m_msg, input, GeodeTypeIdsImpl::FixedIDByte,
                GeodeTypeIdsImpl::VersionedObjectPartList,
                "ChunkedRemoveAllResponse", partLen, isLastChunkWithSecurity)) ==
       TcrMessageHelper::NULL_OBJECT) {
     LOGDEBUG("ChunkedRemoveAllResponse::handleChunk nullptr object");
     // No issues it will be empty in case of disabled caching.
-    m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+    m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
     return;
   }
 
@@ -3865,17 +3866,17 @@ void ChunkedRemoveAllResponse::handleChunk(const uint8_t* chunk,
     auto vcObjPart = std::make_shared<VersionedCacheableObjectPartList>(
         dynamic_cast<ThinClientRegion*>(m_region.get()),
         m_msg.getChunkedResultHandler()->getEndpointMemId(), responseLock);
-    vcObjPart->fromData(*input);
+    vcObjPart->fromData(input);
     m_list->addAll(vcObjPart);
-    m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+    m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
   } else {
     LOGDEBUG("ChunkedRemoveAllResponse::handleChunk BYTES PART");
-    const auto byte0 = input->read();
+    const auto byte0 = input.read();
     LOGDEBUG(
         "ChunkedRemoveAllResponse::handleChunk single-hop bytes byte0 = %d ",
         byte0);
-    const auto byte1 = input->read();
-    m_msg.readSecureObjectPart(*input, false, true, isLastChunkWithSecurity);
+    const auto byte1 = input.read();
+    m_msg.readSecureObjectPart(input, false, true, isLastChunkWithSecurity);
 
     auto pool = cache->getPoolManager().find(m_msg.getPoolName());
     if (pool != nullptr && !pool->isDestroyed() &&
@@ -3904,12 +3905,12 @@ void ChunkedDurableCQListResponse::handleChunk(const uint8_t* chunk,
                                                uint8_t isLastChunkWithSecurity,
                                                const Cache* cache) {
   auto input = cache->createDataInput(chunk, chunkLen);
-  DataInputInternal::setPoolName(*input, m_msg.getPoolName());
+  DataInputInternal::setPoolName(input, m_msg.getPoolName());
 
   // read part length
   uint32_t partLen;
-  partLen = input->readInt32();
-  if (!input->readBoolean()) {
+  partLen = input.readInt32();
+  if (!input.readBoolean()) {
     // we're currently always expecting an object
     char exMsg[256];
     ACE_OS::snprintf(
@@ -3918,15 +3919,15 @@ void ChunkedDurableCQListResponse::handleChunk(const uint8_t* chunk,
     throw MessageException(exMsg);
   }
 
-  input->advanceCursor(1);  // skip the CacheableArrayList type ID byte
+  input.advanceCursor(1);  // skip the CacheableArrayList type ID byte
 
   const auto stringParts =
-      input->read();  // read the number of strings in the message this
+      input.read();  // read the number of strings in the message this
                       // is one byte
 
   for (int i = 0; i < stringParts; i++) {
     m_resultList->push_back(
-        std::static_pointer_cast<CacheableString>(input->readObject()));
+        std::static_pointer_cast<CacheableString>(input.readObject()));
   }
 }
 

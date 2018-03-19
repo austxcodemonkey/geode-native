@@ -232,9 +232,9 @@ class _GEODE_EXPORT Cache : public GeodeCache {
   virtual std::shared_ptr<PdxInstanceFactory> createPdxInstanceFactory(
       std::string className) const override;
 
-  virtual std::unique_ptr<DataInput> createDataInput(const uint8_t* m_buffer,
-                                                     size_t len) const;
-  virtual std::unique_ptr<DataOutput> createDataOutput() const;
+  virtual DataInput createDataInput(const uint8_t* buffer,
+                                     size_t len) const;
+  virtual DataOutput createDataOutput() const;
 
   virtual PoolManager& getPoolManager() const;
 

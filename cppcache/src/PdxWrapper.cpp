@@ -26,10 +26,10 @@ namespace geode {
 namespace client {
 
 PdxWrapper::PdxWrapper(std::shared_ptr<void> userObject, std::string className,
-                       std::shared_ptr<PdxSerializer> pdxSerializerPtr)
+                       std::shared_ptr<PdxSerializer> serializer)
     : m_userObject(userObject),
-      m_className(className),
-      m_serializer(pdxSerializerPtr) {
+      m_className(className) {
+  m_serializer = serializer;
   if (m_serializer == nullptr) {
     LOGERROR("No registered PDX serializer found for PdxWrapper");
     throw IllegalArgumentException(

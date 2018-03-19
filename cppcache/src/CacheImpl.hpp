@@ -285,13 +285,12 @@ class _GEODE_EXPORT CacheImpl : private NonCopyable, private NonAssignable {
     return m_authInitialize;
   }
 
-  virtual std::unique_ptr<DataOutput> createDataOutput() const {
-    return std::unique_ptr<DataOutput>(new DataOutput(this));
+  inline DataOutput createDataOutput() const {
+    return DataOutput(this);
   }
 
-  virtual std::unique_ptr<DataInput> createDataInput(const uint8_t* buffer,
-                                                     int32_t len) const {
-    return std::unique_ptr<DataInput>(new DataInput(buffer, len, this));
+  inline DataInput createDataInput(const uint8_t* buffer, int32_t len) const {
+    return DataInput(buffer, len, this);
   }
 
  private:

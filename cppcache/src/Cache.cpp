@@ -228,14 +228,13 @@ PoolManager& Cache::getPoolManager() const {
   return m_cacheImpl->getPoolManager();
 }
 
-std::unique_ptr<DataInput> Cache::createDataInput(const uint8_t* m_buffer,
-                                                  size_t len) const {
-  return std::unique_ptr<DataInput>(
-      new DataInput(m_buffer, len, m_cacheImpl.get()));
+DataInput Cache::createDataInput(const uint8_t* buffer,
+                                  size_t len) const {
+  return DataInput(buffer, len, m_cacheImpl.get());
 }
 
-std::unique_ptr<DataOutput> Cache::createDataOutput() const {
-  return std::unique_ptr<DataOutput>(new DataOutput(m_cacheImpl.get()));
+DataOutput Cache::createDataOutput() const {
+  return DataOutput(DataOutput(m_cacheImpl.get()));
 }
 
 }  // namespace client

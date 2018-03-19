@@ -48,6 +48,19 @@ class CacheImpl;
  */
 class _GEODE_EXPORT DataOutput {
  public:
+  DataOutput(const DataOutput&) = delete;
+  DataOutput& operator=(const DataOutput&) = delete;
+
+  DataOutput(DataOutput&&) = default;
+  DataOutput& operator=(DataOutput&&) = default;
+  DataOutput() : DataOutput(nullptr) {}
+
+  /** Destruct a DataOutput, including releasing the created buffer. */
+  ~DataOutput() {
+    reset();
+    DataOutput::checkinBuffer(m_bytes, m_size);
+  }
+
   /**
    * Write an unsigned byte to the <code>DataOutput</code>.
    *
@@ -393,11 +406,6 @@ class _GEODE_EXPORT DataOutput {
   }
 
   uint8_t getValueAtPos(size_t offset) { return m_bytes[offset]; }
-  /** Destruct a DataOutput, including releasing the created buffer. */
-  ~DataOutput() {
-    reset();
-    DataOutput::checkinBuffer(m_bytes, m_size);
-  }
 
   /**
    * Get a pointer to the internal buffer of <code>DataOutput</code>.
@@ -505,7 +513,6 @@ class _GEODE_EXPORT DataOutput {
    */
   DataOutput(const CacheImpl* cache);
 
-  DataOutput() : DataOutput(nullptr) {}
 
   virtual const SerializationRegistry& getSerializationRegistry() const;
 
@@ -748,10 +755,6 @@ class _GEODE_EXPORT DataOutput {
 
   static uint8_t* checkoutBuffer(size_t* size);
   static void checkinBuffer(uint8_t* buffer, size_t size);
-
-  // disable copy constructor and assignment
-  DataOutput(const DataOutput&);
-  DataOutput& operator=(const DataOutput&);
 
   friend Cache;
   friend CacheImpl;
