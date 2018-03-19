@@ -70,11 +70,11 @@ StatDataOutput::~StatDataOutput() {
 int64_t StatDataOutput::getBytesWritten() { return this->bytesWritten; }
 
 void StatDataOutput::flush() {
-  const uint8_t *buffBegin = dataBuffer->getBuffer();
+  const uint8_t *buffBegin = dataBuffer.getBuffer();
   if (buffBegin == nullptr) {
     throw NullPointerException("undefined stat data buffer beginning");
   }
-  const uint8_t *buffEnd = dataBuffer->getCursor();
+  const uint8_t *buffEnd = dataBuffer.getCursor();
   if (buffEnd == nullptr) {
     throw NullPointerException("undefined stat data buffer end");
   }
@@ -95,35 +95,35 @@ void StatDataOutput::flush() {
 }
 
 void StatDataOutput::resetBuffer() {
-  dataBuffer->reset();
+  dataBuffer.reset();
   bytesWritten = 0;
 }
 
 void StatDataOutput::writeByte(int8_t v) {
-  dataBuffer->write((int8_t)v);
+  dataBuffer.write((int8_t)v);
   bytesWritten += 1;
 }
 
 void StatDataOutput::writeBoolean(int8_t v) { writeByte(v); }
 
 void StatDataOutput::writeShort(int16_t v) {
-  dataBuffer->writeInt(v);
+  dataBuffer.writeInt(v);
   bytesWritten += 2;
 }
 
 void StatDataOutput::writeInt(int32_t v) {
-  dataBuffer->writeInt(v);
+  dataBuffer.writeInt(v);
   bytesWritten += 4;
 }
 
 void StatDataOutput::writeLong(int64_t v) {
-  dataBuffer->writeInt(v);
+  dataBuffer.writeInt(v);
   bytesWritten += 8;
 }
 
 void StatDataOutput::writeUTF(std::string s) {
   size_t len = s.length();
-  dataBuffer->writeUTF(s);
+  dataBuffer.writeUTF(s);
   bytesWritten += len;
 }
 
@@ -423,11 +423,11 @@ void StatArchiveWriter::openFile(std::string filename) {
 
   StatDataOutput *p_dataBuffer = new StatDataOutput(filename, cache);
 
-  const uint8_t *buffBegin = dataBuffer->dataBuffer->getBuffer();
+  const uint8_t *buffBegin = dataBuffer->dataBuffer.getBuffer();
   if (buffBegin == nullptr) {
     throw NullPointerException("undefined stat data buffer beginning");
   }
-  const uint8_t *buffEnd = dataBuffer->dataBuffer->getCursor();
+  const uint8_t *buffEnd = dataBuffer->dataBuffer.getCursor();
   if (buffEnd == nullptr) {
     throw NullPointerException("undefined stat data buffer end");
   }

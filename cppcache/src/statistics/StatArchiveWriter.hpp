@@ -125,14 +125,14 @@ class APACHE_GEODE_EXPORT StatDataOutput {
   /**
    * This method is for the unit tests only for this class.
    */
-  const uint8_t *getBuffer() { return dataBuffer->getBuffer(); }
+  const uint8_t *getBuffer() { return dataBuffer.getBuffer(); }
   void close();
 
   void openFile(std::string, int64_t);
 
  private:
   int64_t bytesWritten;
-  std::unique_ptr<DataOutput> dataBuffer;
+  DataOutput dataBuffer;
   std::string outFile;
   FILE *m_fp;
   bool closed;

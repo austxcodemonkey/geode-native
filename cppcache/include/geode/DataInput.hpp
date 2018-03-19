@@ -59,6 +59,14 @@ class Pool;
  */
 class APACHE_GEODE_EXPORT DataInput {
  public:
+  DataInput() = default;
+  DataInput(const DataInput&) = delete;
+  DataInput& operator=(const DataInput&) = delete;
+  DataInput(DataInput&&) = default;
+  DataInput& operator=(DataInput&&) = default;
+
+  ~DataInput() = default;
+
   /**
    * Read a signed byte from the <code>DataInput</code>.
    *

@@ -164,13 +164,13 @@ SystemProperties& Cache::getSystemProperties() const {
   return m_cacheImpl->getSystemProperties();
 }
 
-std::unique_ptr<DataInput> Cache::createDataInput(const uint8_t* m_buffer,
-                                                  size_t len) const {
-  return m_cacheImpl->createDataInput(m_buffer, len);
+DataInput Cache::createDataInput(const uint8_t* buffer,
+                                  size_t len) const {
+  return DataInput(buffer, len, m_cacheImpl.get());
 }
 
-std::unique_ptr<DataOutput> Cache::createDataOutput() const {
-  return m_cacheImpl->createDataOutput();
+DataOutput Cache::createDataOutput() const {
+  return DataOutput(DataOutput(m_cacheImpl.get()));
 }
 
 }  // namespace client

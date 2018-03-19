@@ -46,6 +46,19 @@ class Pool;
  */
 class APACHE_GEODE_EXPORT DataOutput {
  public:
+  DataOutput(const DataOutput&) = delete;
+  DataOutput& operator=(const DataOutput&) = delete;
+
+  DataOutput(DataOutput&&) = default;
+  DataOutput& operator=(DataOutput&&) = default;
+  DataOutput() : DataOutput(nullptr) {}
+
+  /** Destruct a DataOutput, including releasing the created buffer. */
+  ~DataOutput() {
+    reset();
+    DataOutput::checkinBuffer(m_bytes, m_size);
+  }
+
   /**
    * Write an unsigned byte to the <code>DataOutput</code>.
    *
