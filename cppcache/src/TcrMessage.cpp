@@ -497,7 +497,7 @@ void TcrMessage::writeObjectPart(
     m_request.write(isObject);
   }
 
-  auto sizeBeforeWritingObj = m_request->getBufferLength();
+  auto sizeBeforeWritingObj = m_request.getBufferLength();
   if (isDelta) {
     auto deltaPtr = std::dynamic_pointer_cast<Delta>(se);
     deltaPtr->toDelta(m_request);
@@ -524,11 +524,11 @@ void TcrMessage::writeObjectPart(
     // m_request.writeBytesOnly(rawByteArray->value(), rawByteArray->length());
     writeBytesOnly(se);
   }
-  auto sizeAfterWritingObj = m_request->getBufferLength();
+  auto sizeAfterWritingObj = m_request.getBufferLength();
   auto sizeOfSerializedObj = sizeAfterWritingObj - sizeBeforeWritingObj;
-  m_request->rewindCursor(sizeOfSerializedObj + 1 + 4);  //
-  m_request->writeInt(static_cast<int32_t>(sizeOfSerializedObj));
-  m_request->advanceCursor(sizeOfSerializedObj + 1);
+  m_request.rewindCursor(sizeOfSerializedObj + 1 + 4);  //
+  m_request.writeInt(static_cast<int32_t>(sizeOfSerializedObj));
+  m_request.advanceCursor(sizeOfSerializedObj + 1);
 }
 
 void TcrMessage::readInt(uint8_t* buffer, uint16_t* value) {
@@ -546,7 +546,7 @@ void TcrMessage::readInt(uint8_t* buffer, uint32_t* value) {
 }
 
 void TcrMessage::writeBytesOnly(const std::shared_ptr<Serializable>& se) {
-  auto cBufferLength = m_request->getBufferLength();
+  auto cBufferLength = m_request.getBufferLength();
   uint8_t* startBytes = nullptr;
   m_request.writeObject(se);
   uint8_t* cursor =
@@ -659,9 +659,9 @@ void TcrMessage::writeEventIdPart(int reserveSize,
 }
 
 void TcrMessage::writeMessageLength() {
-  auto totalLen = m_request->getBufferLength();
+  auto totalLen = m_request.getBufferLength();
   auto msgLen = totalLen - g_headerLen;
-  m_request->rewindCursor(
+  m_request.rewindCursor(
       totalLen -
       4);  // msg len is written after the msg type which is of 4 bytes ...
   m_request.writeInt(static_cast<int32_t>(msgLen));
@@ -2848,10 +2848,10 @@ const char* TcrMessage::getMsgBody() const {
   return (char*)m_request.getBuffer() + g_headerLen;
 }
 
-size_t TcrMessage::getMsgLength() const { return m_request->getBufferLength(); }
+size_t TcrMessage::getMsgLength() const { return m_request.getBufferLength(); }
 
 size_t TcrMessage::getMsgBodyLength() const {
-  return m_request->getBufferLength() - g_headerLen;
+  return m_request.getBufferLength() - g_headerLen;
 }
 std::shared_ptr<EventId> TcrMessage::getEventId() const { return m_eventid; }
 

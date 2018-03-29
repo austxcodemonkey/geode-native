@@ -271,7 +271,7 @@ bool TcrConnection::InitTcrConnection(
           }
           serverChallenge = CacheableBytes::create(std::vector<int8_t>(
               serverChallengeBytes, serverChallengeBytes + 64));
-          serverChallenge->toData(*handShakeMsg);
+          serverChallenge->toData(handShakeMsg);
         }
       } else {                       // if isDhOn
         if (isClientNotification) {  //:only for backward connection
@@ -355,8 +355,8 @@ bool TcrConnection::InitTcrConnection(
       }
       challengeBytes->toData(cleartext);
       auto ciphertext =
-          m_dh->encrypt(cleartext->getBuffer(),
-                        static_cast<int>(cleartext->getBufferLength()));
+          m_dh->encrypt(cleartext.getBuffer(),
+                        static_cast<int>(cleartext.getBufferLength()));
 
       auto sendCreds = cacheImpl->createDataOutput();
       ciphertext->toData(sendCreds);
@@ -986,7 +986,7 @@ void TcrConnection::readMessageChunked(
 
   auto input = m_connectionManager->getCacheImpl()->createDataInput(msg_header,
                                                                     HDR_LEN_12);
-  int32_t msgType = input->readInt32();
+  int32_t msgType = input.readInt32();
   reply.setMessageType(msgType);
   int32_t txId;
   int32_t numOfParts = input.readInt32();
@@ -1194,7 +1194,7 @@ uint32_t TcrConnection::readHandshakeArraySize(
   auto codeBytes = readHandshakeData(1, connectTimeout);
   auto codeDI = m_connectionManager->getCacheImpl()->createDataInput(
       reinterpret_cast<const uint8_t*>(codeBytes.data()), codeBytes.size());
-  uint8_t code = codeDI->read();
+  uint8_t code = codeDI.read();
   uint32_t arraySize = 0;
   if (code == 0xFF) {
     return 0;
@@ -1205,13 +1205,13 @@ uint32_t TcrConnection::readHandshakeArraySize(
         auto lenBytes = readHandshakeData(2, connectTimeout);
         auto lenDI = m_connectionManager->getCacheImpl()->createDataInput(
             reinterpret_cast<const uint8_t*>(lenBytes.data()), lenBytes.size());
-        uint16_t val = lenDI->readInt16();
+        uint16_t val = lenDI.readInt16();
         tempLen = val;
       } else if (code == 0xFD) {
         auto lenBytes = readHandshakeData(4, connectTimeout);
         auto lenDI = m_connectionManager->getCacheImpl()->createDataInput(
             reinterpret_cast<const uint8_t*>(lenBytes.data()), lenBytes.size());
-        uint32_t val = lenDI->readInt32();
+        uint32_t val = lenDI.readInt32();
         tempLen = val;
       } else {
         GF_SAFE_DELETE_CON(m_conn);
@@ -1304,7 +1304,7 @@ int32_t TcrConnection::readHandShakeInt(
 
   auto di =
       m_connectionManager->getCacheImpl()->createDataInput(recvMessage, 4);
-  int32_t val = di->readInt32();
+  int32_t val = di.readInt32();
 
   _GEODE_SAFE_DELETE_ARRAY(recvMessage);
 
@@ -1342,7 +1342,7 @@ std::shared_ptr<CacheableString> TcrConnection::readHandshakeString(
       auto lenBytes = readHandshakeData(2, connectTimeout);
       auto lenDI = m_connectionManager->getCacheImpl()->createDataInput(
           reinterpret_cast<const uint8_t*>(lenBytes.data()), lenBytes.size());
-      length = lenDI->readInt16();
+      length = lenDI.readInt16();
 
       break;
     }
