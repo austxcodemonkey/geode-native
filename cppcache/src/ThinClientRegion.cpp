@@ -3489,7 +3489,7 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
   const auto isStructTypeImpl = input.readString();
 
   if (isStructTypeImpl == "org.apache.geode.cache.query.Struct") {
-    int32_t numOfFldNames = input.readArrayLen();
+    int32_t numOfFldNames = input.readArrayLength();
     bool skip = false;
     if (m_structFieldNames.size() != 0) {
       skip = true;
@@ -3523,7 +3523,7 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
   auto arrayType = input.read();
 
   if (arrayType == GeodeTypeIds::CacheableObjectArray) {
-    int32_t arraySize = input.readArrayLen();
+    int32_t arraySize = input.readArrayLength();
     skipClass(input);
     for (int32_t arrayItem = 0; arrayItem < arraySize; ++arrayItem) {
       std::shared_ptr<Serializable> value;
@@ -3532,7 +3532,7 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
         m_queryResults->push_back(value);
       } else {
         input.read();
-        int32_t arraySize2 = input.readArrayLen();
+        int32_t arraySize2 = input.readArrayLength();
         skipClass(input);
         for (int32_t index = 0; index < arraySize2; ++index) {
           input.readObject(value);
@@ -3617,7 +3617,7 @@ void ChunkedFunctionExecutionResponse::handleChunk(
       input.getBytesRead() -
       1;  // from here need to look value part + memberid AND -1 for array type
   // read and ignore array length
-  input.readArrayLen();
+  input.readArrayLength();
 
   // read a byte to determine whether to read exception part for sendException
   // or read objects.

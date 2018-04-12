@@ -1109,7 +1109,7 @@ std::shared_ptr<PdxSerializable> PdxInstanceImpl::getObject() {
       m_enableTimeStatistics ? Utils::startStatOpTime() : 0;
   //[ToDo] do we have to call incPdxDeSerialization here?
   auto ret =
-      PdxHelper::deserializePdx(dataInput, true, m_typeId, m_bufferLength);
+      PdxHelper::deserializePdx(dataInput, m_typeId, m_bufferLength);
 
   if (m_enableTimeStatistics) {
     Utils::updateStatOpTime(m_cacheStats.getStat(),

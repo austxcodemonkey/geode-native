@@ -24,6 +24,7 @@
 #include <string>
 #include <cstdlib>
 #include <algorithm>
+#include <iostream>
 
 #include "internal/geode_globals.hpp"
 #include "ExceptionTypes.hpp"
@@ -46,17 +47,18 @@ class Pool;
  */
 class APACHE_GEODE_EXPORT DataOutput {
  public:
+  DataOutput() = default;
   DataOutput(const DataOutput&) = delete;
   DataOutput& operator=(const DataOutput&) = delete;
 
   DataOutput(DataOutput&&) = default;
   DataOutput& operator=(DataOutput&&) = default;
-  DataOutput() : DataOutput(nullptr) {}
 
   /** Destruct a DataOutput, including releasing the created buffer. */
   ~DataOutput() {
     reset();
-    DataOutput::checkinBuffer(m_bytes, m_size);
+    std::cout << static_cast<void*>(this) << ": calling checkinBuffer(" << static_cast<void*>(m_bytes.get()) << ", " << m_size << ")\n";
+    DataOutput::checkinBuffer(m_bytes.release(), m_size);
   }
 
   /**
@@ -400,17 +402,17 @@ class APACHE_GEODE_EXPORT DataOutput {
   void rewindCursor(size_t offset) { m_buf -= offset; }
 
   void updateValueAtPos(size_t offset, uint8_t value) {
-    m_bytes[offset] = value;
+    m_bytes.get()[offset] = value;
   }
 
-  uint8_t getValueAtPos(size_t offset) { return m_bytes[offset]; }
+  uint8_t getValueAtPos(size_t offset) { return m_bytes.get()[offset]; }
 
   /**
    * Get a pointer to the internal buffer of <code>DataOutput</code>.
    */
   inline const uint8_t* getBuffer() const {
     // GF_R_ASSERT(!((uint32_t)(m_bytes) % 4));
-    return m_bytes;
+    return m_bytes.get();
   }
 
   /**
@@ -428,19 +430,19 @@ class APACHE_GEODE_EXPORT DataOutput {
    *   should not be nullptr
    */
   inline const uint8_t* getBuffer(size_t* rsize) const {
-    *rsize = m_buf - m_bytes;
+    *rsize = m_buf - m_bytes.get();
     // GF_R_ASSERT(!((uint32_t)(m_bytes) % 4));
-    return m_bytes;
+    return m_bytes.get();
   }
 
   inline uint8_t* getBufferCopy() {
-    size_t size = m_buf - m_bytes;
+    size_t size = m_buf - m_bytes.get();
     uint8_t* result;
     result = (uint8_t*)std::malloc(size * sizeof(uint8_t));
     if (result == nullptr) {
       throw OutOfMemoryException("Out of Memory while resizing buffer");
     }
-    std::memcpy(result, m_bytes, size);
+    std::memcpy(result, m_bytes.get(), size);
     return result;
   }
 
@@ -448,17 +450,15 @@ class APACHE_GEODE_EXPORT DataOutput {
    * Get the length of current data in the internal buffer of
    * <code>DataOutput</code>.
    */
-  inline size_t getBufferLength() const { return m_buf - m_bytes; }
+  inline size_t getBufferLength() const { return m_buf - m_bytes.get(); }
 
   /**
    * Reset the internal cursor to the start of the buffer.
    */
   inline void reset() {
     if (m_haveBigBuffer) {
-      // free existing buffer
-      std::free(m_bytes);
       // create smaller buffer
-      m_bytes = (uint8_t*)std::malloc(m_lowWaterMark * sizeof(uint8_t));
+      m_bytes.reset((uint8_t*)std::malloc(m_lowWaterMark * sizeof(uint8_t)));
       if (m_bytes == nullptr) {
         throw OutOfMemoryException("Out of Memory while resizing buffer");
       }
@@ -468,12 +468,12 @@ class APACHE_GEODE_EXPORT DataOutput {
       // release the lock
       releaseLock();
     }
-    m_buf = m_bytes;
+    m_buf = m_bytes.get();
   }
 
   // make sure there is room left for the requested size item.
   inline void ensureCapacity(size_t size) {
-    size_t offset = m_buf - m_bytes;
+    size_t offset = m_buf - m_bytes.get();
     if ((m_size - offset) < size) {
       size_t newSize = m_size * 2 + (8192 * (size / 8192));
       if (newSize >= m_highWaterMark && !m_haveBigBuffer) {
@@ -484,12 +484,13 @@ class APACHE_GEODE_EXPORT DataOutput {
       }
       m_size = newSize;
 
-      auto tmp = (uint8_t*)std::realloc(m_bytes, m_size * sizeof(uint8_t));
+      auto bytes = m_bytes.release();
+      auto tmp = (uint8_t*)std::realloc(bytes, m_size * sizeof(uint8_t));
       if (tmp == nullptr) {
         throw OutOfMemoryException("Out of Memory while resizing buffer");
       }
-      m_bytes = tmp;
-      m_buf = m_bytes + offset;
+      m_bytes.reset(tmp);
+      m_buf = m_bytes.get() + offset;
     }
   }
 
@@ -504,16 +505,6 @@ class APACHE_GEODE_EXPORT DataOutput {
   static void safeDelete(uint8_t* src) { _GEODE_SAFE_DELETE(src); }
 
   virtual Cache* getCache() const;
-
-  /** Destruct a DataOutput, including releasing the created buffer. */
-  ~DataOutput() {
-    reset();
-    DataOutput::checkinBuffer(m_bytes, m_size);
-  }
-
-  DataOutput() = delete;
-  DataOutput(const DataOutput&) = delete;
-  DataOutput& operator=(const DataOutput&) = delete;
 
  protected:
   /**
@@ -530,7 +521,7 @@ class APACHE_GEODE_EXPORT DataOutput {
   static void releaseLock();
 
   // memory m_buffer to encode to.
-  uint8_t* m_bytes;
+  std::unique_ptr<uint8_t> m_bytes;
   // cursor.
   uint8_t* m_buf;
   // size of m_bytes.

@@ -491,11 +491,6 @@ class APACHE_GEODE_EXPORT DataInput {
 
   virtual Cache* getCache() const;
 
-  ~DataInput() = default;
-  DataInput() = delete;
-  DataInput(const DataInput&) = delete;
-  DataInput& operator=(const DataInput&) = delete;
-
  protected:
   /** constructor given a pre-allocated byte array with size */
   DataInput(const uint8_t* m_buffer, size_t len, const CacheImpl* cache,

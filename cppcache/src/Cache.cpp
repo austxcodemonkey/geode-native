@@ -166,11 +166,11 @@ SystemProperties& Cache::getSystemProperties() const {
 
 DataInput Cache::createDataInput(const uint8_t* buffer,
                                   size_t len) const {
-  return DataInput(buffer, len, m_cacheImpl.get());
+  return DataInput(buffer, len, m_cacheImpl.get(), getPoolManager().getDefaultPool().get());
 }
 
 DataOutput Cache::createDataOutput() const {
-  return DataOutput(DataOutput(m_cacheImpl.get()));
+  return DataOutput(DataOutput(m_cacheImpl.get(), getPoolManager().getDefaultPool().get()));
 }
 
 }  // namespace client

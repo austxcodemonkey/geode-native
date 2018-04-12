@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <iostream>
 #include <vector>
 
 #include <ace/TSS_T.h>
@@ -92,6 +93,12 @@ class TSSDataOutput {
 
   void poolBuffer(uint8_t* buf, size_t size) {
     BufferDesc desc(buf, size);
+    GF_D_ASSERT(std::find(m_buffers.begin(), m_buffers.end(), desc) != m_buffers.end());
+    for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it) {
+      if (it->m_buf == buf) {
+        std::cout << "Duplicate buffer! " << static_cast<void*>(buf) << "\n";
+      }
+    }
     m_buffers.push_back(desc);
   }
 
@@ -116,6 +123,7 @@ ACE_TSS<TSSDataOutput> TSSDataOutput::s_tssDataOutput;
 DataOutput::DataOutput(const CacheImpl* cache, Pool* pool)
     : m_size(0), m_haveBigBuffer(false), m_cache(cache), m_pool(pool) {
   m_buf = m_bytes = DataOutput::checkoutBuffer(&m_size);
+  std::cout << static_cast<void*>(this) << ": called checkoutBuffer(" << static_cast<void*>(m_bytes) << ", " << m_size << ")\n";
 }
 
 uint8_t* DataOutput::checkoutBuffer(size_t* size) {
