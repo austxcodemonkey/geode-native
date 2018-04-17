@@ -175,7 +175,7 @@ void SqLiteImpl::destroy(const std::shared_ptr<CacheableKey>& key,
   size_t keyBufferSize;
   keyDataBuffer.writeObject(key);
   void* keyData = const_cast<uint8_t*>(keyDataBuffer.getBuffer(&keyBufferSize));
-  if (m_sqliteHelper->removeKey(keyData, keyBufferSize) != 0) {
+  if (m_sqliteHelper->removeKey(keyData, static_cast<int>(keyBufferSize)) != 0) {
     throw IllegalStateException("Failed to destroy the key from SQLITE.");
   }
 }
