@@ -131,7 +131,12 @@ uint8_t* DataOutput::checkoutBuffer(size_t* size) {
 }
 
 void DataOutput::checkinBuffer(uint8_t* buffer, size_t size) {
-  TSSDataOutput::s_tssDataOutput->poolBuffer(buffer, size);
+  // DataOutput move ctor sets buffer member to nullptr, so
+  // we need this check to ensure we're not putting null
+  // buffers into the pool.
+  if (buffer != nullptr) {
+    TSSDataOutput::s_tssDataOutput->poolBuffer(buffer, size);
+  }
 }
 
 void DataOutput::writeObjectInternal(const Serializable* ptr, bool isDelta) {
