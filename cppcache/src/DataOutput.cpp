@@ -93,12 +93,6 @@ class TSSDataOutput {
 
   void poolBuffer(uint8_t* buf, size_t size) {
     BufferDesc desc(buf, size);
-    GF_D_ASSERT(std::find(m_buffers.begin(), m_buffers.end(), desc) != m_buffers.end());
-    for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it) {
-      if (it->m_buf == buf) {
-        std::cout << "Duplicate buffer! " << static_cast<void*>(buf) << "\n";
-      }
-    }
     m_buffers.push_back(desc);
   }
 

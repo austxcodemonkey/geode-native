@@ -57,7 +57,6 @@ class APACHE_GEODE_EXPORT DataOutput {
   /** Destruct a DataOutput, including releasing the created buffer. */
   ~DataOutput() {
     reset();
-    std::cout << static_cast<void*>(this) << ": calling checkinBuffer(" << static_cast<void*>(m_bytes.get()) << ", " << m_size << ")\n";
     DataOutput::checkinBuffer(m_bytes.release(), m_size);
   }
 
