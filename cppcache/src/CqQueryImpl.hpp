@@ -223,7 +223,7 @@ class CqQueryImpl : public CqQuery,
    */
   void setCqState(CqState state);
 
-  CqAttributesMutator getCqAttributesMutator() const;
+  CqAttributesMutator getCqAttributesMutator() const override;
 
   /**
    * @return Returns the cqOperation.

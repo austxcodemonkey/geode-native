@@ -89,7 +89,7 @@ class APACHE_GEODE_EXPORT CqQuery {
    * Get the AttributesMutator of this CQ.
    * @return CqAttributesMutator, the CqAttributesMutator object.
    */
-  CqAttributesMutator getCqAttributesMutator() const;
+  virtual CqAttributesMutator getCqAttributesMutator() const = 0;
 
   /**
    * Start executing the CQ or if this CQ is stopped earlier, resumes execution

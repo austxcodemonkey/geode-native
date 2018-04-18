@@ -529,6 +529,7 @@ void CqQueryImpl::setCqState(CqState state) {
 CqAttributesMutator CqQueryImpl::getCqAttributesMutator() const {
   return m_cqAttributesMutator;
 }
+
 /**
  * @return Returns the cqOperation.
  */
