@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "CqAttributesMutator.hpp"
+#include <geode/CqAttributesMutator.hpp>
+
 #include "CqAttributesImpl.hpp"
+
 using namespace apache::geode::client;
-CqAttributesMutator::CqAttributesMutatorImpl(
-    const std::shared_ptr<CqAttributes>& impl)
+CqAttributesMutator::CqAttributesMutator(const std::shared_ptr<CqAttributes>& impl)
     : m_cqAttributes(impl) {}
 
 void CqAttributesMutator::addCqListener(
