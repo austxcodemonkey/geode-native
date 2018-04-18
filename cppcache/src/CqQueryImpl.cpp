@@ -19,7 +19,7 @@
 #include <geode/ExceptionTypes.hpp>
 
 #include "CqQueryImpl.hpp"
-#include "CqAttributesMutatorImpl.hpp"
+#include "CqAttributesMutator.hpp"
 #include "ResultSetImpl.hpp"
 #include "StructSetImpl.hpp"
 #include "ThinClientRegion.hpp"
@@ -50,8 +50,7 @@ CqQueryImpl::CqQueryImpl(
       m_tccdm(m_cqService->getDM()) {
   CqAttributesFactory cqAf(cqAttributes);
   m_cqAttributes = cqAf.create();
-  m_cqAttributesMutator =
-      std::make_shared<CqAttributesMutatorImpl>(m_cqAttributes);
+  m_cqAttributesMutator = CqAttributesMutatorImpl(m_cqAttributes);
   if (userAttributesPtr != nullptr) {
     m_authenticatedView = userAttributesPtr->getAuthenticatedView();
   } else {
@@ -529,8 +528,7 @@ void CqQueryImpl::setCqState(CqState state) {
   m_cqState = state;
 }
 
-std::shared_ptr<CqAttributesMutator> CqQueryImpl::getCqAttributesMutator()
-    const {
+CqAttributesMutator CqQueryImpl::getCqAttributesMutator() const {
   return m_cqAttributesMutator;
 }
 /**
