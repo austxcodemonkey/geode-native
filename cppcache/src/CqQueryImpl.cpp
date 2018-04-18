@@ -20,6 +20,7 @@
 #include <geode/CqAttributesMutator.hpp>
 
 #include "CqQueryImpl.hpp"
+#include "CqAttributesMutator.hpp"
 #include "ResultSetImpl.hpp"
 #include "StructSetImpl.hpp"
 #include "ThinClientRegion.hpp"
