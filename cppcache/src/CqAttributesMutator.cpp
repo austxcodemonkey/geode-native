@@ -19,8 +19,7 @@
 #include "CqAttributesImpl.hpp"
 
 using namespace apache::geode::client;
-CqAttributesMutator::CqAttributesMutatorImpl(
-    const std::shared_ptr<CqAttributes>& impl)
+CqAttributesMutator::CqAttributesMutator(const std::shared_ptr<CqAttributes>& impl)
     : m_cqAttributes(impl) {}
 
 void CqAttributesMutator::addCqListener(
