@@ -34,20 +34,28 @@ namespace {
 
 using namespace apache::geode::client;
 
-class TestDataOutput : public DataOutputInternal {
+class TestCacheImpl : public CacheImpl {
  public:
-  TestDataOutput(Cache*)
-      : DataOutputInternal(nullptr),
-        m_byteArray(nullptr),
-        m_serializationRegistry() {
-    // NOP
+  TestCacheImpl(Cache* cache, const std::shared_ptr<Properties>& dsProps,
+                bool ignorePdxUnreadFields, bool readPdxSerialized,
+                const std::shared_ptr<AuthInitialize>& authInitialize)
+      : CacheImpl(cache, dsProps, ignorePdxUnreadFields, readPdxSerialized, authInitialize) {
   }
 
-  virtual ~TestDataOutput() {
+  std::shared_ptr<SerializationRegistry> getSerializationRegistry() const override {
+    return std::make_shared<SerializationRegistry>();
+  }
+};
+
+class DataOutputUnderTest : public DataOutput {
+ public:
+  using DataOutput::DataOutput;
+  DataOutputUnderTest(CacheImpl* cacheImpl) : DataOutput(cacheImpl, nullptr), m_byteArray(nullptr) {}
+
+  virtual ~DataOutputUnderTest() {
     delete m_byteArray;
     m_byteArray = nullptr;
   }
-
   const ByteArray& getByteArray() const {
     if (!m_byteArray) {
       m_byteArray = new ByteArray(getBuffer(), getBufferLength());
@@ -55,15 +63,8 @@ class TestDataOutput : public DataOutputInternal {
     return *m_byteArray;
   }
 
- protected:
-  virtual const SerializationRegistry& getSerializationRegistry()
-      const override {
-    return m_serializationRegistry;
-  }
-
  private:
   mutable ByteArray* m_byteArray;
-  SerializationRegistry m_serializationRegistry;
 };
 
 class DataOutputTest : public ::testing::Test, public ByteArrayFixture {
@@ -79,6 +80,7 @@ class DataOutputTest : public ::testing::Test, public ByteArrayFixture {
  protected:
   std::random_device m_randomDevice;
   std::mt19937 m_mersennesTwister;
+  std::unique_ptr<TestCacheImpl> m_testCacheImpl;
 
   int32_t getRandomSequenceNumber() {
     // One would normally just use std::uniform_int_distribution but gcc 4.4.7
@@ -92,24 +94,32 @@ class DataOutputTest : public ::testing::Test, public ByteArrayFixture {
     }
     return static_cast<int32_t>(result);
   }
+
+  void SetUp() {
+    auto dsProperties = std::make_shared<Properties>();
+    std::shared_ptr<AuthInitialize> auth;
+    m_testCacheImpl.reset(new TestCacheImpl((Cache*)nullptr, dsProperties, false,
+                                            false, auth));
+  }
 };
 
+
 TEST_F(DataOutputTest, TestWriteUint8) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.write(static_cast<uint8_t>(55U));
   dataOutput.write(static_cast<uint8_t>(66U));
   EXPECT_BYTEARRAY_EQ("3742", dataOutput.getByteArray());
 }
 
 TEST_F(DataOutputTest, TestWriteInt8) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.write(static_cast<int8_t>(66));
   dataOutput.write(static_cast<int8_t>(55));
   EXPECT_BYTEARRAY_EQ("4237", dataOutput.getByteArray());
 }
 
 TEST_F(DataOutputTest, TestWriteSequenceNumber) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeInt((int32_t)55);
   dataOutput.writeInt((int32_t)17);
   dataOutput.writeInt((int32_t)0);
@@ -120,7 +130,7 @@ TEST_F(DataOutputTest, TestWriteSequenceNumber) {
 }
 
 TEST_F(DataOutputTest, TestWriteBoolean) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeBoolean(true);
   dataOutput.writeBoolean(false);
   EXPECT_BYTEARRAY_EQ("0100", dataOutput.getByteArray());
@@ -129,7 +139,7 @@ TEST_F(DataOutputTest, TestWriteBoolean) {
 TEST_F(DataOutputTest, TestWriteBytesSigned) {
   int8_t bytes[] = {0, 1, 2, 3, 4, 5, -4, -3, -2, -1, 0};
 
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeBytes(bytes, 11);
   EXPECT_BYTEARRAY_EQ("0B000102030405FCFDFEFF00", dataOutput.getByteArray());
 }
@@ -137,7 +147,7 @@ TEST_F(DataOutputTest, TestWriteBytesSigned) {
 TEST_F(DataOutputTest, TestWriteBytesOnlyUnsigned) {
   uint8_t bytes[] = {0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0};
 
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeBytesOnly(bytes, 11);
   EXPECT_BYTEARRAY_EQ("0001020304050403020100", dataOutput.getByteArray());
 }
@@ -145,13 +155,13 @@ TEST_F(DataOutputTest, TestWriteBytesOnlyUnsigned) {
 TEST_F(DataOutputTest, TestWriteBytesOnlySigned) {
   int8_t bytes[] = {0, 1, 2, 3, 4, 5, -4, -3, -2, -1, 0};
 
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeBytesOnly(bytes, 11);
   EXPECT_BYTEARRAY_EQ("000102030405FCFDFEFF00", dataOutput.getByteArray());
 }
 
 TEST_F(DataOutputTest, TestWriteIntUInt16) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeInt(static_cast<uint16_t>(66));
   dataOutput.writeInt(static_cast<uint16_t>(55));
   dataOutput.writeInt(static_cast<uint16_t>(3333));
@@ -159,7 +169,7 @@ TEST_F(DataOutputTest, TestWriteIntUInt16) {
 }
 
 TEST_F(DataOutputTest, TestWriteCharUInt16) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeChar(static_cast<uint16_t>(66));
   dataOutput.writeChar(static_cast<uint16_t>(55));
   dataOutput.writeChar(static_cast<uint16_t>(3333));
@@ -167,20 +177,20 @@ TEST_F(DataOutputTest, TestWriteCharUInt16) {
 }
 
 TEST_F(DataOutputTest, TestWriteIntUInt32) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeInt(static_cast<uint32_t>(3435973836));
   EXPECT_BYTEARRAY_EQ("CCCCCCCC", dataOutput.getByteArray());
 }
 
 TEST_F(DataOutputTest, TestWriteIntUInt64) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   uint64_t big = 13455272147882261178U;
   dataOutput.writeInt(big);
   EXPECT_BYTEARRAY_EQ("BABABABABABABABA", dataOutput.getByteArray());
 }
 
 TEST_F(DataOutputTest, TestWriteIntInt16) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeInt(static_cast<int16_t>(66));
   dataOutput.writeInt(static_cast<int16_t>(55));
   dataOutput.writeInt(static_cast<int16_t>(3333));
@@ -188,40 +198,40 @@ TEST_F(DataOutputTest, TestWriteIntInt16) {
 }
 
 TEST_F(DataOutputTest, TestWriteIntInt32) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeInt(static_cast<int32_t>(3435973836));
   EXPECT_BYTEARRAY_EQ("CCCCCCCC", dataOutput.getByteArray());
 }
 
 TEST_F(DataOutputTest, TestWriteIntInt64) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   int64_t big = 773738426788457421;
   dataOutput.writeInt(big);
   EXPECT_BYTEARRAY_EQ("0ABCDEFFEDCBABCD", dataOutput.getByteArray());
 }
 
 TEST_F(DataOutputTest, TestWriteArrayLength) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeArrayLen(static_cast<int32_t>(3435973836));
   EXPECT_BYTEARRAY_EQ("CC", dataOutput.getByteArray());
 }
 
 TEST_F(DataOutputTest, TestWriteFloat) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   float pi = 3.14f;
   dataOutput.writeFloat(pi);
   EXPECT_BYTEARRAY_EQ("4048F5C3", dataOutput.getByteArray());
 }
 
 TEST_F(DataOutputTest, TestWriteDouble) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   double pi = 3.14159265359;
   dataOutput.writeDouble(pi);
   EXPECT_BYTEARRAY_EQ("400921FB54442EEA", dataOutput.getByteArray());
 }
 
 TEST_F(DataOutputTest, TestWriteString) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeString("You had me at meat tornado.");
   EXPECT_BYTEARRAY_EQ(
       "2A001B596F7520686164206D65206174206D65617420746F726E61646F2E",
@@ -229,7 +239,7 @@ TEST_F(DataOutputTest, TestWriteString) {
 }
 
 TEST_F(DataOutputTest, TestWriteUTF) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeUTF("You had me at meat tornado.");
   EXPECT_BYTEARRAY_EQ(
       "001B596F7520686164206D65206174206D65617420746F726E61646F2E",
@@ -237,7 +247,7 @@ TEST_F(DataOutputTest, TestWriteUTF) {
 }
 
 TEST_F(DataOutputTest, TestWriteUTFWide) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeUTF(L"You had me at meat tornado!");
   EXPECT_BYTEARRAY_EQ(
       "001B596F7520686164206D65206174206D65617420746F726E61646F21",
@@ -245,7 +255,7 @@ TEST_F(DataOutputTest, TestWriteUTFWide) {
 }
 
 TEST_F(DataOutputTest, TestWriteChars) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeChars("You had me at meat tornado.");
   EXPECT_BYTEARRAY_EQ(
       "0059006F007500200068006100640020006D00650020006100740020006D006500610074"
@@ -254,7 +264,7 @@ TEST_F(DataOutputTest, TestWriteChars) {
 }
 
 TEST_F(DataOutputTest, TestWriteStringFromUtf8String) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   auto str = std::string(u8"You had me at");
   str.push_back(0);
   str.append(u8"meat tornad\u00F6!\U000F0000");
@@ -266,7 +276,7 @@ TEST_F(DataOutputTest, TestWriteStringFromUtf8String) {
 }
 
 TEST_F(DataOutputTest, TestWriteStringFromUtf16String) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   auto str = std::u16string(u"You had me at");
   str.push_back(0);
   str.append(u"meat tornad\u00F6!\U000F0000");
@@ -278,7 +288,7 @@ TEST_F(DataOutputTest, TestWriteStringFromUtf16String) {
 }
 
 TEST_F(DataOutputTest, TestWriteStringFromUcs4String) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   auto str = std::u32string(U"You had me at");
   str.push_back(0);
   str.append(U"meat tornad\u00F6!\U000F0000");
@@ -290,7 +300,7 @@ TEST_F(DataOutputTest, TestWriteStringFromUcs4String) {
 }
 
 TEST_F(DataOutputTest, TestWriteStringFromWideString) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   auto str = std::wstring(L"You had me at");
   str.push_back(0);
   str.append(L"meat tornad\u00F6!\U000F0000");
@@ -302,7 +312,7 @@ TEST_F(DataOutputTest, TestWriteStringFromWideString) {
 }
 
 TEST_F(DataOutputTest, TestWriteObjectSharedPtr) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   auto objptr = CacheableString::create("You had me at meat tornado.");
   dataOutput.writeObject(objptr);
   EXPECT_BYTEARRAY_EQ(
@@ -311,7 +321,7 @@ TEST_F(DataOutputTest, TestWriteObjectSharedPtr) {
 }
 
 TEST_F(DataOutputTest, TestCursorAdvance) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeUTF("You had me at meat tornado.");
   EXPECT_BYTEARRAY_EQ(
       "001B596F7520686164206D65206174206D65617420746F726E61646F2E",
@@ -324,7 +334,7 @@ TEST_F(DataOutputTest, TestCursorAdvance) {
 }
 
 TEST_F(DataOutputTest, TestCursorNegativeAdvance) {
-  TestDataOutput dataOutput(nullptr);
+  DataOutputUnderTest dataOutput(m_testCacheImpl.get());
   dataOutput.writeUTF("You had me at meat tornado.");
   EXPECT_BYTEARRAY_EQ(
       "001B596F7520686164206D65206174206D65617420746F726E61646F2E",

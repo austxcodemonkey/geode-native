@@ -208,7 +208,7 @@ class APACHE_GEODE_EXPORT CacheImpl : private NonCopyable,
   /**
    * @brief constructors
    */
-  CacheImpl(Cache* c, const std::shared_ptr<Properties>& dsProps,
+  CacheImpl(Cache* cache, const std::shared_ptr<Properties>& dsProps,
             bool ignorePdxUnreadFields, bool readPdxSerialized,
             const std::shared_ptr<AuthInitialize>& authInitialize);
 

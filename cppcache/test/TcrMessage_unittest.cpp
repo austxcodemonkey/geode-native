@@ -32,19 +32,15 @@ using namespace apache::geode::client;
 
 class TestCacheImpl : public CacheImpl {
 public:
- TestCacheImpl(Cache* c, DistributedSystem&& distributedSystem,
+ TestCacheImpl(Cache* cache, const std::shared_ptr<Properties>& dsProps,
             bool ignorePdxUnreadFields, bool readPdxSerialized,
             const std::shared_ptr<AuthInitialize>& authInitialize)
-   : CacheImpl(c, std::forward<DistributedSystem>(distributedSystem), ignorePdxUnreadFields, readPdxSerialized, authInitialize) {
-   m_serializationRegistry.reset(new SerializationRegistry());
+   : CacheImpl(cache, dsProps, ignorePdxUnreadFields, readPdxSerialized, authInitialize) {
  }
 
   std::shared_ptr<SerializationRegistry> getSerializationRegistry() const override {
-    return std::make_shared<SerializationRegistry>(*m_serializationRegistry);
+    return std::make_shared<SerializationRegistry>();
   }
-
-private:
-  std::unique_ptr<SerializationRegistry> m_serializationRegistry;
 };
 
 class DataOutputUnderTest : public DataOutput {
@@ -70,9 +66,9 @@ protected:
   std::unique_ptr<TestCacheImpl> m_testCacheImpl;
 
   void SetUp() {
-    auto distributedSystem = DistributedSystem::create("testDS");
+    auto dsProperties = std::make_shared<Properties>();
     std::shared_ptr<AuthInitialize> auth;
-    m_testCacheImpl.reset(new TestCacheImpl((Cache*)nullptr, std::move(distributedSystem), false,
+    m_testCacheImpl.reset(new TestCacheImpl((Cache*)nullptr, dsProperties, false,
                       false, auth));
   }
 };
@@ -544,6 +540,7 @@ TEST_F(TcrMessageTest, testConstructorEventId) {
 
 TEST_F(TcrMessageTest, testConstructorREMOVE_USER_AUTH) {
   DataOutputUnderTest dout(m_testCacheImpl.get());
+  DataOutputUnderTest dout2(m_testCacheImpl.get());
   TcrMessageRemoveUserAuth message(
       std::move(dout), true,
       static_cast<ThinClientBaseDM *>(nullptr));
@@ -553,7 +550,7 @@ TEST_F(TcrMessageTest, testConstructorREMOVE_USER_AUTH) {
   EXPECT_MESSAGE_EQ("0000004E0000000600000001FFFFFFFF00000000010001", message);
 
   TcrMessageRemoveUserAuth message2(
-      std::move(dout), false,
+      std::move(dout2), false,
       static_cast<ThinClientBaseDM *>(nullptr));
 
   EXPECT_EQ(TcrMessage::REMOVE_USER_AUTH, message2.getMessageType());

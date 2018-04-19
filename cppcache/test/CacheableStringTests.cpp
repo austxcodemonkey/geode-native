@@ -54,12 +54,6 @@ class TestDataOutput : public DataOutputInternal {
     return *m_byteArray;
   }
 
- protected:
-  virtual const SerializationRegistry& getSerializationRegistry()
-      const override {
-    return m_serializationRegistry;
-  }
-
  private:
   mutable ByteArray* m_byteArray;
   SerializationRegistry m_serializationRegistry;
