@@ -134,7 +134,7 @@ void DataOutput::checkinBuffer(uint8_t* buffer, size_t size) {
 }
 
 void DataOutput::writeObjectInternal(const Serializable* ptr, bool isDelta) {
-  getSerializationRegistry().serialize(ptr, *this, isDelta);
+  m_cache->getSerializationRegistry()->serialize(ptr, *this, isDelta);
 }
 
 void DataOutput::acquireLock() { g_bigBufferLock.acquire(); }

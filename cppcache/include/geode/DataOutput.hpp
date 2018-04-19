@@ -35,7 +35,6 @@ namespace apache {
 namespace geode {
 namespace client {
 
-class SerializationRegistry;
 class DataOutputInternal;
 class CacheImpl;
 class Pool;
@@ -510,8 +509,6 @@ class APACHE_GEODE_EXPORT DataOutput {
    * Construct a new DataOutput.
    */
   DataOutput(const CacheImpl* cache, Pool* pool);
-
-  virtual const SerializationRegistry& getSerializationRegistry() const;
 
  private:
   void writeObjectInternal(const Serializable* ptr, bool isDelta = false);

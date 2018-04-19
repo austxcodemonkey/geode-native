@@ -274,7 +274,8 @@ class APACHE_GEODE_EXPORT CacheImpl : private NonCopyable,
 
   std::shared_ptr<PdxTypeRegistry> getPdxTypeRegistry() const;
 
-  std::shared_ptr<SerializationRegistry> getSerializationRegistry() const;
+  virtual std::shared_ptr<SerializationRegistry> getSerializationRegistry() const;
+
   inline CachePerfStats& getCachePerfStats() { return *m_cacheStats; }
 
   PoolManager& getPoolManager() const { return *m_poolManager; }
