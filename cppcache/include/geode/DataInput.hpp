@@ -187,7 +187,8 @@ class APACHE_GEODE_EXPORT DataInput {
    */
   inline int32_t readInt32() {
     _GEODE_CHECK_BUFFER_SIZE(4);
-    int32_t tmp = *(m_buf++);
+    int32_t tmp;
+    tmp = *(m_buf++);
     tmp = (tmp << 8) | *(m_buf++);
     tmp = (tmp << 8) | *(m_buf++);
     tmp = (tmp << 8) | *(m_buf++);
