@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
+#include "begin_native.hpp"
 #include <GeodeTypeIdsImpl.hpp>
 #include "CacheImpl.hpp"
 #include "CacheRegionHelper.hpp"
 #include "DataOutputInternal.hpp"
-#include "begin_native.hpp"
 #include "end_native.hpp"
 
 #include "Cache.hpp"

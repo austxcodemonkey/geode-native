@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
+#include "begin_native.hpp"
 #include <GeodeTypeIdsImpl.hpp>
 #include <geode/Cache.hpp>
 #include "CacheImpl.hpp"
 #include "CacheRegionHelper.hpp"
 #include "DataInputInternal.hpp"
 #include "SerializationRegistry.hpp"
-#include "begin_native.hpp"
 #include "end_native.hpp"
 
 #include "Cache.hpp"
