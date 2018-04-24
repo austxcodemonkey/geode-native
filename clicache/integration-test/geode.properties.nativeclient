@@ -14,3 +14,5 @@
 # limitations under the License.
 #cache-server-version=5.0
 #license-file=../../../../hidden/internal.license.nativeclientonly.zip
+log-file=clitests.log
+log-level=debug

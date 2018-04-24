@@ -44,6 +44,11 @@ class APACHE_GEODE_EXPORT CqAttributes {
  public:
   typedef std::vector<std::shared_ptr<CqListener>> listener_container_type;
 
+  ~CqAttributes() {
+    int x = 7;
+    x++;
+  }
+
   /**
    * Get the CqListeners set with the CQ.
    * Returns all the Listeners associated with this CQ.

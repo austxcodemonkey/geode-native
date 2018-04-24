@@ -572,6 +572,8 @@ namespace Apache.Geode.Client.UnitTests
 
     public static void InitConfig(Properties<string, string> config, string cacheXml, IAuthInitialize authIntialize)
     {
+      System.Diagnostics.Debugger.Launch();
+
       //Console.WriteLine(" in InitConfig1 " + System.AppDomain.CurrentDomain.Id);
       if (cacheXml != null)
       {
@@ -636,6 +638,8 @@ namespace Apache.Geode.Client.UnitTests
 
     public static void InitClient()
     {
+      System.Diagnostics.Debugger.Launch();
+
       CacheHelper.Close();
       Properties<string, string> config = new Properties<string, string>();
       config.Load("geode.properties");

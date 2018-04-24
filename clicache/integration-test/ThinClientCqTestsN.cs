@@ -598,6 +598,8 @@ namespace Apache.Geode.Client.UnitTests
 
     public void ProcessCQ(string locators)
     {
+      Util.Log("****** In ProcessCq");
+
       CacheHelper.CreateTCRegion_Pool<object, object>(QERegionName, true, true,
       null, locators, "__TESTPOOL1_", true);
 
@@ -635,8 +637,8 @@ namespace Apache.Geode.Client.UnitTests
       region["1"] = p4;
       Thread.Sleep(18000); // sleep 0.3min to allow server c query to complete
 
-      qry1 = qs.GetCq<object, object>("CQ1");
-      cqAttr = qry1.GetCqAttributes();
+      //qry1 = qs.GetCq<object, object>("CQ1");
+      //cqAttr = qry1.GetCqAttributes();
       ICqListener<object, object>[] vl = cqAttr.getCqListeners();
       Assert.IsNotNull(vl);
       Assert.AreEqual(2, vl.Length);
@@ -961,19 +963,19 @@ namespace Apache.Geode.Client.UnitTests
       Util.Log("Locator stopped");
     }
 
-    [Test]
-    public void CqQueryTest()
-    {
-      runCqQueryTest();
-    }
+    //[Test]
+    //public void CqQueryTest()
+    //{
+    //  runCqQueryTest();
+    //}
 
-    [Test]
-    public void CqQueryPdxTest()
-    {
-      m_usePdxObjects = true;
-      runCqQueryTest();
-      m_usePdxObjects = false;
-    }
+    //[Test]
+    //public void CqQueryPdxTest()
+    //{
+    //  m_usePdxObjects = true;
+    //  runCqQueryTest();
+    //  m_usePdxObjects = false;
+    //}
 
     // [Test]
     // public void CqFailover()
@@ -992,17 +994,17 @@ namespace Apache.Geode.Client.UnitTests
     //  }
     //  }
 
-    [Test]
-    public void CqQueryStatusTest()
-    {
-      runCqQueryStatusTest();
-    }
+    //[Test]
+    //public void CqQueryStatusTest()
+    //{
+    //  runCqQueryStatusTest();
+    //}
 
-    [Test]
-    public void CqQueryStatusTest2()
-    {
-      runCqQueryStatusTest2();
-    }
+    //[Test]
+    //public void CqQueryStatusTest2()
+    //{
+    //  runCqQueryStatusTest2();
+    //}
 
     [Test]
     public void CqQueryStatusTest3()

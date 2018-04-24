@@ -232,7 +232,7 @@ namespace Apache.Geode.DUnitFramework
         clientId = GetClientId().ToString();
       }
       this.ID = clientId;
-      string localArgs = "--id=" + clientId + " --driver=tcp://" +
+      string localArgs = "--log=c:\\temp\\client.log" + "--id=" + clientId + " --driver=tcp://" +
 				Util.IPAddressString + ':' + Util.DriverPort + '/' +
         CommConstants.DriverService + " --bbServer=";
       if (Util.ExternalBBServer != null)
