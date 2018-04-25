@@ -64,7 +64,6 @@ namespace Apache.Geode.Client.UnitTests
     [TestFixtureSetUp]
     public override void InitTests()
     {
-      System.Diagnostics.Debugger.Launch();
       base.InitTests();
       string extraPropsFile = ExtraPropertiesFile;
       if (extraPropsFile != null)
