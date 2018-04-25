@@ -33,7 +33,6 @@
 #include "CacheRegionHelper.hpp"
 #include "ThinClientPoolDM.hpp"
 #include "DataInputInternal.hpp"
-#include "DataOutputInternal.hpp"
 
 namespace apache {
 namespace geode {
@@ -54,9 +53,8 @@ void PdxHelper::serializePdx(DataOutput& output,
 void PdxHelper::serializePdx(
     DataOutput& output, const std::shared_ptr<PdxSerializable>& pdxObject) {
   auto pdxII = std::dynamic_pointer_cast<PdxInstanceImpl>(pdxObject);
-  auto cacheImpl = CacheRegionHelper::getCacheImpl(output.getCache());
-  auto pdxTypeRegistry = cacheImpl->getPdxTypeRegistry();
-  auto& cachePerfStats = cacheImpl->getCachePerfStats();
+  auto pdxTypeRegistry = output.getPdxTypeRegistry();
+  auto& cachePerfStats = output.getCachePerfStats();
 
   if (pdxII != nullptr) {
     auto piPt = pdxII->getPdxType();
@@ -65,7 +63,7 @@ void PdxHelper::serializePdx(
             0)  // from pdxInstance factory need to get typeid from server
     {
       int typeId = pdxTypeRegistry->getPDXIdForType(
-          piPt, DataOutputInternal::getPool(output));
+          piPt, output.getPool());
       pdxII->setPdxId(typeId);
     }
     auto plw = PdxLocalWriter(output, piPt, pdxTypeRegistry);
@@ -92,20 +90,20 @@ void PdxHelper::serializePdx(
 
     nType->InitializeType();
     int32_t nTypeId = pdxTypeRegistry->getPDXIdForType(
-        className.c_str(), DataOutputInternal::getPool(output), nType, true);
+        className, output.getPool(), nType, true);
     nType->setTypeId(nTypeId);
 
     ptc.endObjectWriting();
     pdxTypeRegistry->addLocalPdxType(className, nType);
     pdxTypeRegistry->addPdxType(nTypeId, nType);
 
-    if (cacheImpl != nullptr) {
-      uint8_t* stPos = const_cast<uint8_t*>(output.getBuffer()) +
-                       ptc.getStartPositionOffset();
-      int pdxLen = PdxHelper::readInt32(stPos);
-      cachePerfStats.incPdxSerialization(
-          pdxLen + 1 + 2 * 4);  // pdxLen + 93 DSID + len + typeID
-    }
+
+    uint8_t* stPos = const_cast<uint8_t*>(output.getBuffer()) +
+                     ptc.getStartPositionOffset();
+    int pdxLen = PdxHelper::readInt32(stPos);
+    cachePerfStats.incPdxSerialization(
+        pdxLen + 1 + 2 * 4);  // pdxLen + 93 DSID + len + typeID
+
 
   } else  // we know locasl type, need to see preerved data
   {
@@ -129,14 +127,12 @@ void PdxHelper::serializePdx(
     pdxObject->toData(prw);
     prw.endObjectWriting();
 
-    //[ToDo] need to write bytes for stats
-    if (cacheImpl != nullptr) {
-      uint8_t* stPos = const_cast<uint8_t*>(output.getBuffer()) +
-                       prw.getStartPositionOffset();
-      int pdxLen = PdxHelper::readInt32(stPos);
-      cachePerfStats.incPdxSerialization(
-          pdxLen + 1 + 2 * 4);  // pdxLen + 93 DSID + len + typeID
-    }
+  //[ToDo] need to write bytes for stats
+    uint8_t* stPos = const_cast<uint8_t*>(output.getBuffer()) +
+                     prw.getStartPositionOffset();
+    int pdxLen = PdxHelper::readInt32(stPos);
+    cachePerfStats.incPdxSerialization(
+        pdxLen + 1 + 2 * 4);  // pdxLen + 93 DSID + len + typeID
   }
 }
 

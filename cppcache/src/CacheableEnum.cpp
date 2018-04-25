@@ -44,7 +44,7 @@ CacheableEnum::CacheableEnum(std::string enumClassName, std::string enumName,
 void CacheableEnum::toData(apache::geode::client::DataOutput& output) const {
   int enumVal = PdxHelper::getEnumValue(
       m_enumClassName.c_str(), m_enumName.c_str(), m_ordinal,
-      CacheRegionHelper::getCacheImpl(output.getCache())->getPdxTypeRegistry());
+      output.getPdxTypeRegistry());
   output.write(static_cast<int8_t>(GeodeTypeIds::CacheableEnum));
   output.write(int8_t(enumVal >> 24));
   output.writeArrayLen(enumVal & 0xFFFFFF);

@@ -28,10 +28,10 @@
 
 #include <geode/CacheFactory.hpp>
 #include <geode/DataInput.hpp>
+#include <geode/DataOutput.hpp>
 #include <memory>
 #include "ByteArrayFixture.hpp"
 #include "DataInputInternal.hpp"
-#include "DataOutputInternal.hpp"
 #include "SerializationRegistry.hpp"
 
 namespace {
@@ -250,7 +250,7 @@ TEST_F(DataInputTest, CanReadIntWithAMaxSizeUnsigned64BitIntInput) {
 
 TEST_F(DataInputTest, CanReadUTFWithAnUTFStringInput) {
   const std::string expectedString = "foobar";
-  DataOutputInternal stream;
+  DataOutput stream;
   stream.writeUTF(expectedString);
 
   DataInputUnderTest dataInput(stream.getBufferCopy(),

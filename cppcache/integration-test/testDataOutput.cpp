@@ -23,7 +23,6 @@
 #include <geode/DataInput.hpp>
 #include "SerializationRegistry.hpp"
 #include "DataInputInternal.hpp"
-#include "DataOutputInternal.hpp"
 
 #include "fw_helper.hpp"
 
@@ -51,7 +50,7 @@ void dumpnwords(const uint32_t* buf, size_t length) {
 
 BEGIN_TEST(Byte)
   {
-    DataOutputInternal dataOutput;
+    DataOutput dataOutput;
 
     dataOutput.write(static_cast<uint8_t>(0x11));
     const uint8_t* buffer = dataOutput.getBuffer();
@@ -66,7 +65,7 @@ END_TEST(Byte)
 
 BEGIN_TEST(Boolean)
   {
-    DataOutputInternal dataOutput(nullptr);
+    DataOutput dataOutput;
 
     dataOutput.writeBoolean(true);
     dataOutput.writeBoolean(false);
@@ -85,7 +84,7 @@ END_TEST(Boolean)
 
 BEGIN_TEST(Short)
   {
-    DataOutputInternal dataOutput;
+    DataOutput dataOutput;
 
     dataOutput.writeInt(static_cast<int16_t>(0x1122));
     const uint8_t* buffer = dataOutput.getBuffer();
@@ -100,7 +99,7 @@ END_TEST(Short)
 
 BEGIN_TEST(int_t)
   {
-    DataOutputInternal dataOutput;
+    DataOutput dataOutput;
 
     dataOutput.writeInt((int32_t)0x11223344);
     const uint8_t* buffer = dataOutput.getBuffer();
@@ -118,7 +117,7 @@ END_TEST(int_t)
 
 BEGIN_TEST(Long)
   {
-    DataOutputInternal dataOutput;
+    DataOutput dataOutput;
 
     int64_t value = ((static_cast<int64_t>(0x11223344)) << 32) | 0x55667788;
     dataOutput.writeInt(value);
@@ -140,7 +139,7 @@ END_TEST(Long)
 
 BEGIN_TEST(Float)
   {
-    DataOutputInternal dataOutput;
+    DataOutput dataOutput;
 
     dataOutput.writeFloat(1.2f);
     const uint8_t* buffer = dataOutput.getBuffer();
@@ -157,7 +156,7 @@ END_TEST(Float)
 
 BEGIN_TEST(Double)
   {
-    DataOutputInternal dataOutput;
+    DataOutput dataOutput;
 
     dataOutput.writeDouble(1.2);
     const uint8_t* buffer = dataOutput.getBuffer();
@@ -179,7 +178,7 @@ END_TEST(Double)
 // Test data output numbers.
 BEGIN_TEST(Numbers)
   {
-    DataOutputInternal dataOutput;
+    DataOutput dataOutput;
 
     dataOutput.write(static_cast<uint8_t>(0x11));
     dataOutput.write(static_cast<uint8_t>(0xAA));
@@ -201,7 +200,7 @@ END_TEST(Numbers)
 
 BEGIN_TEST(WideStrings)
   {
-    DataOutputInternal dataOutput;
+    DataOutput dataOutput;
 
     wchar_t* strOrig = new wchar_t[40];
     strOrig[0] = 0;

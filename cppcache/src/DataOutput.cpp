@@ -114,8 +114,13 @@ TSSDataOutput::~TSSDataOutput() {
 
 ACE_TSS<TSSDataOutput> TSSDataOutput::s_tssDataOutput;
 
-DataOutput::DataOutput(const CacheImpl* cache, Pool* pool)
-    : m_size(0), m_haveBigBuffer(false), m_cache(cache), m_pool(pool) {
+DataOutput::DataOutput() : m_size(0), m_haveBigBuffer(false) {
+  m_bytes.reset(DataOutput::checkoutBuffer(&m_size));
+  m_buf = m_bytes.get();
+}
+
+DataOutput::DataOutput(std::shared_ptr<SerializationRegistry> serializationRegistry, std::shared_ptr<PdxTypeRegistry> pdxTypeRegistry, CachePerfStats* cachePerfStats, Pool* pool)
+    : m_size(0), m_haveBigBuffer(false), m_serializationRegistry(serializationRegistry), m_pdxTypeRegistry(pdxTypeRegistry), m_cachePerfStats(cachePerfStats), m_pool(pool) {
   m_bytes.reset(DataOutput::checkoutBuffer(&m_size));
   m_buf = m_bytes.get();
 }
@@ -134,18 +139,12 @@ void DataOutput::checkinBuffer(uint8_t* buffer, size_t size) {
 }
 
 void DataOutput::writeObjectInternal(const Serializable* ptr, bool isDelta) {
-  m_cache->getSerializationRegistry()->serialize(ptr, *this, isDelta);
+  m_serializationRegistry->serialize(ptr, *this, isDelta);
 }
 
 void DataOutput::acquireLock() { g_bigBufferLock.acquire(); }
 
 void DataOutput::releaseLock() { g_bigBufferLock.release(); }
-
-const SerializationRegistry& DataOutput::getSerializationRegistry() const {
-  return *m_cache->getSerializationRegistry();
-}
-
-Cache* DataOutput::getCache() const { return m_cache->getCache(); }
 
 template <class _Traits, class _Allocator>
 void DataOutput::writeJavaModifiedUtf8(

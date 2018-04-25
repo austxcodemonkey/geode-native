@@ -45,7 +45,7 @@
 #include <util/concurrent/spinlock_mutex.hpp>
 
 #include "config.h"
-
+#include <geode/QueryService.hpp>
 namespace apache {
 namespace geode {
 namespace client {

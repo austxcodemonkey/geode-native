@@ -27,7 +27,6 @@
 
 #include "SerializationRegistry.hpp"
 #include "DataInputInternal.hpp"
-#include "DataOutputInternal.hpp"
 
 #include "testobject_export.h"
 
@@ -41,17 +40,17 @@ class TESTOBJECT_EXPORT ArrayOfByte {
   static std::shared_ptr<CacheableBytes> init(int size, bool encodeKey,
                                               bool encodeTimestamp) {
     if (encodeKey) {
-      DataOutputInternal dos;
+      DataOutput dataOutput;
       try {
         int32_t index = 1234;
-        dos.writeInt(index);
+        dataOutput.writeInt(index);
         if (encodeTimestamp) {
           ACE_Time_Value startTime;
           startTime = ACE_OS::gettimeofday();
           ACE_UINT64 tusec = 0;
           startTime.to_usec(tusec);
           int64_t timestamp = tusec * 1000;
-          dos.writeInt(timestamp);
+          dataOutput.writeInt(timestamp);
         }
       } catch (Exception &e) {
         FWKEXCEPTION("Unable to write to stream " << e.what());
@@ -61,7 +60,7 @@ class TESTOBJECT_EXPORT ArrayOfByte {
       memset(buf, 'V', bufSize);
       int32_t rsiz = (bufSize <= 20) ? bufSize : 20;
       GsRandom::getAlphanumericString(rsiz, buf);
-      memcpy(buf, dos.getBuffer(), dos.getBufferLength());
+      memcpy(buf, dataOutput.getBuffer(), dataOutput.getBufferLength());
       return CacheableBytes::create(std::vector<int8_t>(buf, buf + bufSize));
     } else if (encodeTimestamp) {
       FWKEXCEPTION("Should not happen");
@@ -104,15 +103,15 @@ class TESTOBJECT_EXPORT ArrayOfByte {
     } catch (Exception &e) {
       FWKEXCEPTION("Unable to read from stream " << e.what());
     }
-    DataOutputInternal dos;
+    DataOutput dataOutput;
     try {
-      dos.writeInt(index);
+      dataOutput.writeInt(index);
       ACE_Time_Value startTime;
       startTime = ACE_OS::gettimeofday();
       ACE_UINT64 tusec = 0;
       startTime.to_usec(tusec);
       int64_t timestamp = tusec * 1000;
-      dos.writeInt(timestamp);
+      dataOutput.writeInt(timestamp);
     } catch (Exception &e) {
       FWKEXCEPTION("Unable to write to stream " << e.what());
     }

@@ -26,19 +26,17 @@
 
 #include "gtest_extensions.h"
 #include "ByteArrayFixture.hpp"
-#include "DataOutputInternal.hpp"
 #include "SerializationRegistry.hpp"
 #include "DataInputInternal.hpp"
-#include "DataOutputInternal.hpp"
 
 namespace {
 
 using namespace apache::geode::client;
 
-class TestDataOutput : public DataOutputInternal {
+class TestDataOutput : public DataOutput {
  public:
   TestDataOutput()
-      : DataOutputInternal(), m_byteArray(nullptr), m_serializationRegistry() {
+      : DataOutput(), m_byteArray(nullptr), m_serializationRegistry() {
     // NOP
   }
 
@@ -96,7 +94,7 @@ TEST_F(CacheableStringTests, CreateFromStdStringLValue) {
 
 TEST_F(CacheableStringTests, TestToDataAscii) {
   auto origStr = CacheableString::create("You had me at meat tornado.");
-  DataOutputInternal out;
+  DataOutput out;
   origStr->toData(out);
 
   EXPECT_EQ("001b596f7520686164206d65206174206d65617420746f726e61646f2e",
@@ -106,7 +104,7 @@ TEST_F(CacheableStringTests, TestToDataAscii) {
 TEST_F(CacheableStringTests, TestFromDataAscii) {
   std::string utf8("You had me at meat tornado.");
   auto origStr = CacheableString::create(utf8.c_str());
-  DataOutputInternal out;
+  DataOutput out;
   origStr->toData(out);
 
   auto str = std::dynamic_pointer_cast<CacheableString>(
@@ -119,7 +117,7 @@ TEST_F(CacheableStringTests, TestFromDataAscii) {
 
 TEST_F(CacheableStringTests, TestToDataNonAscii) {
   auto origStr = CacheableString::create(u8"You had me at meat tornad\u00F6.");
-  DataOutputInternal out;
+  DataOutput out;
   origStr->toData(out);
 
   EXPECT_EQ("001c596f7520686164206d65206174206d65617420746f726e6164c3b62e",
@@ -129,7 +127,7 @@ TEST_F(CacheableStringTests, TestToDataNonAscii) {
 TEST_F(CacheableStringTests, TestFromDataNonAscii) {
   std::string utf8(u8"You had me at meat tornad\u00F6.");
   auto origStr = CacheableString::create(utf8);
-  DataOutputInternal out;
+  DataOutput out;
   origStr->toData(out);
 
   auto str = std::dynamic_pointer_cast<CacheableString>(
@@ -164,7 +162,7 @@ TEST_F(CacheableStringTests, TestFromDataAsciiHuge) {
   utf8.append("a");
 
   auto origStr = CacheableString::create(utf8.c_str());
-  DataOutputInternal out;
+  DataOutput out;
   origStr->toData(out);
 
   auto str = std::dynamic_pointer_cast<CacheableString>(
@@ -202,7 +200,7 @@ TEST_F(CacheableStringTests, TestFromDataNonAsciiHuge) {
   utf8.append(u8"\u00E4");
 
   auto origStr = CacheableString::create(utf8);
-  DataOutputInternal out;
+  DataOutput out;
   origStr->toData(out);
 
   auto str = std::dynamic_pointer_cast<CacheableString>(

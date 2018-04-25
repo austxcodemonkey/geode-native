@@ -28,7 +28,6 @@
 
 #include "GeodeTypeIdsImpl.hpp"
 #include "DistributedSystem.hpp"
-#include "DataOutputInternal.hpp"
 #include "Version.hpp"
 
 #define ADDRSIZE 4
@@ -95,13 +94,14 @@ ClientProxyMembershipID::ClientProxyMembershipID(
                  std::chrono::seconds::zero(), DCPORT, vmPID, VMKIND, 0, dsname,
                  uniqueTag, vmViewId);
 }
+
 void ClientProxyMembershipID::initObjectVars(
     const char* hostname, uint8_t* hostAddr, uint32_t hostAddrLen,
     bool hostAddrLocalMem, uint32_t hostPort, const char* durableClientId,
     const std::chrono::seconds durableClntTimeOut, int32_t dcPort, int32_t vPID,
     int8_t vmkind, int8_t splitBrainFlag, const char* dsname,
     const char* uniqueTag, uint32_t vmViewId) {
-  DataOutputInternal m_memID;
+
   if (dsname == nullptr) {
     m_dsname = std::string("");
   } else {
@@ -118,38 +118,40 @@ void ClientProxyMembershipID::initObjectVars(
   }
 
   m_vmViewId = vmViewId;
-  m_memID.write(static_cast<int8_t>(GeodeTypeIdsImpl::FixedIDByte));
-  m_memID.write(
+
+  DataOutput dataOutput;
+  dataOutput.write(static_cast<int8_t>(GeodeTypeIdsImpl::FixedIDByte));
+  dataOutput.write(
       static_cast<int8_t>(GeodeTypeIdsImpl::InternalDistributedMember));
-  m_memID.writeArrayLen(ADDRSIZE);
+  dataOutput.writeArrayLen(ADDRSIZE);
   // writing first 4 bytes of the address. This will be same until
   // IPV6 support is added in the client
   uint32_t temp;
   memcpy(&temp, hostAddr, 4);
-  m_memID.writeInt(static_cast<int32_t>(temp));
-  // m_memID.writeInt((int32_t)hostPort);
-  m_memID.writeInt((int32_t)synch_counter);
-  m_memID.writeString(hostname);
-  m_memID.write(splitBrainFlag);  // splitbrain flags
+  dataOutput.writeInt(static_cast<int32_t>(temp));
+  // dataOutput.writeInt((int32_t)hostPort);
+  dataOutput.writeInt((int32_t)synch_counter);
+  dataOutput.writeString(hostname);
+  dataOutput.write(splitBrainFlag);  // splitbrain flags
 
-  m_memID.writeInt(dcPort);
+  dataOutput.writeInt(dcPort);
 
-  m_memID.writeInt(vPID);
-  m_memID.write(vmkind);
-  m_memID.writeArrayLen(ROLEARRLENGTH);
-  m_memID.writeString(dsname);
-  m_memID.writeString(uniqueTag);
+  dataOutput.writeInt(vPID);
+  dataOutput.write(vmkind);
+  dataOutput.writeArrayLen(ROLEARRLENGTH);
+  dataOutput.writeString(dsname);
+  dataOutput.writeString(uniqueTag);
 
   if (durableClientId != nullptr &&
       durableClntTimeOut != std::chrono::seconds::zero()) {
-    m_memID.writeString(durableClientId);
+    dataOutput.writeString(durableClientId);
     const auto int32ptr = CacheableInt32::create(
         static_cast<int32_t>(durableClntTimeOut.count()));
-    int32ptr->toData(m_memID);
+    int32ptr->toData(dataOutput);
   }
-  writeVersion(Version::getOrdinal(), m_memID);
+  writeVersion(Version::getOrdinal(), dataOutput);
   size_t len;
-  char* buf = (char*)m_memID.getBuffer(&len);
+  char* buf = (char*)dataOutput.getBuffer(&len);
   m_memIDStr.append(buf, len);
 
   char PID[15] = {0};

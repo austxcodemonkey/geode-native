@@ -36,7 +36,6 @@
 #include "DiskVersionTag.hpp"
 #include "CacheRegionHelper.hpp"
 #include "DataInputInternal.hpp"
-#include "DataOutputInternal.hpp"
 #include "util/JavaModifiedUtf8.hpp"
 
 using namespace apache::geode::client;

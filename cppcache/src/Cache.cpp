@@ -170,7 +170,7 @@ DataInput Cache::createDataInput(const uint8_t* buffer,
 }
 
 DataOutput Cache::createDataOutput() const {
-  return DataOutput(DataOutput(m_cacheImpl.get(), getPoolManager().getDefaultPool().get()));
+  return DataOutput(m_cacheImpl->getSerializationRegistry(), m_cacheImpl->getPdxTypeRegistry(), m_cacheImpl->getCachePerfStatsPtr(), getPoolManager().getDefaultPool().get());
 }
 
 }  // namespace client

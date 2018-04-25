@@ -35,9 +35,11 @@ namespace apache {
 namespace geode {
 namespace client {
 
-class DataOutputInternal;
 class CacheImpl;
+class CachePerfStats;
+class PdxTypeRegistry;
 class Pool;
+class SerializationRegistry;
 
 /**
  * Provide operations for writing primitive data values, byte arrays,
@@ -46,7 +48,7 @@ class Pool;
  */
 class APACHE_GEODE_EXPORT DataOutput {
  public:
-  DataOutput() = default;
+  DataOutput();
   DataOutput(const DataOutput&) = delete;
   DataOutput& operator=(const DataOutput&) = delete;
 
@@ -502,13 +504,21 @@ class APACHE_GEODE_EXPORT DataOutput {
 
   static void safeDelete(uint8_t* src) { _GEODE_SAFE_DELETE(src); }
 
-  virtual Cache* getCache() const;
+  std::shared_ptr<PdxTypeRegistry> getPdxTypeRegistry() const {
+    return m_pdxTypeRegistry;
+  }
+
+  CachePerfStats& getCachePerfStats() const { return *m_cachePerfStats; }
+
+  Pool* getPool() const { return m_pool; }
 
  protected:
   /**
    * Construct a new DataOutput.
    */
-  DataOutput(const CacheImpl* cache, Pool* pool);
+  DataOutput(std::shared_ptr<SerializationRegistry> serializationRegistry,
+             std::shared_ptr<PdxTypeRegistry> pdxTypeRegistry,
+             CachePerfStats* cachePerfStats, Pool* pool);
 
  private:
   void writeObjectInternal(const Serializable* ptr, bool isDelta = false);
@@ -527,7 +537,9 @@ class APACHE_GEODE_EXPORT DataOutput {
   static size_t m_highWaterMark;
   // flag to indicate we have a big buffer
   volatile bool m_haveBigBuffer;
-  const CacheImpl* m_cache;
+  std::shared_ptr<SerializationRegistry> m_serializationRegistry;
+  std::shared_ptr<PdxTypeRegistry> m_pdxTypeRegistry;
+  CachePerfStats* m_cachePerfStats;
   Pool* m_pool;
 
   inline void writeAscii(const std::string& value) {
@@ -741,14 +753,11 @@ class APACHE_GEODE_EXPORT DataOutput {
     writeNoCheck(static_cast<uint8_t>(value));
   }
 
-  Pool* getPool() const { return m_pool; }
-
   static uint8_t* checkoutBuffer(size_t* size);
   static void checkinBuffer(uint8_t* buffer, size_t size);
 
   friend Cache;
   friend CacheImpl;
-  friend DataOutputInternal;
   friend CacheableString;
 };
 

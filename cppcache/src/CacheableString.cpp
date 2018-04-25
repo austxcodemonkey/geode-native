@@ -29,7 +29,6 @@
 #include <geode/ExceptionTypes.hpp>
 #include <geode/GeodeTypeIds.hpp>
 
-#include "DataOutputInternal.hpp"
 #include "SerializationRegistry.hpp"
 #include "Utils.hpp"
 #include "util/string.hpp"

@@ -35,6 +35,7 @@ namespace apache {
 namespace geode {
 namespace client {
 
+class DataOutput;
 class ClientProxyMembershipID;
 
 class ClientProxyMembershipID : public DSMemberForVersionStamp {

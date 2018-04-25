@@ -19,7 +19,7 @@
 
 #include <ClientConnectionResponse.hpp>
 #include <DataInputInternal.hpp>
-#include <DataOutputInternal.hpp>
+#include <geode/DataOutput.hpp>
 using namespace apache::geode::client;
 
 TEST(ClientConnectionResponseTest, testDefaultServerFound) {
@@ -28,18 +28,18 @@ TEST(ClientConnectionResponseTest, testDefaultServerFound) {
 }
 
 TEST(ClientConnectionResponseTest, testReadServerFound) {
-  DataOutputInternal dataOutputInternal;
+  DataOutput dataOutput;
 
-  dataOutputInternal.writeBoolean(false);
-  dataOutputInternal.writeBoolean(true);
+  dataOutput.writeBoolean(false);
+  dataOutput.writeBoolean(true);
 
   // The following are necessary to meet subsequent calls
-  dataOutputInternal.writeString("hello");
-  dataOutputInternal.writeInt(static_cast<int64_t>(103334));
+  dataOutput.writeString("hello");
+  dataOutput.writeInt(static_cast<int64_t>(103334));
 
   // Put it into a datainput so it can be read.
-  DataInputInternal dataInput(dataOutputInternal.getBuffer(),
-                              dataOutputInternal.getBufferLength());
+  DataInputInternal dataInput(dataOutput.getBuffer(),
+                              dataOutput.getBufferLength());
 
   ClientConnectionResponse clientConnectionResponse;
   clientConnectionResponse.fromData(dataInput);
