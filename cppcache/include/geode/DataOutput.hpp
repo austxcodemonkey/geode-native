@@ -35,8 +35,10 @@ namespace apache {
 namespace geode {
 namespace client {
 
+class CacheableEnum;
 class CacheImpl;
 class CachePerfStats;
+class PdxHelper;
 class PdxTypeRegistry;
 class Pool;
 class SerializationRegistry;
@@ -504,14 +506,6 @@ class APACHE_GEODE_EXPORT DataOutput {
 
   static void safeDelete(uint8_t* src) { _GEODE_SAFE_DELETE(src); }
 
-  std::shared_ptr<PdxTypeRegistry> getPdxTypeRegistry() const {
-    return m_pdxTypeRegistry;
-  }
-
-  CachePerfStats& getCachePerfStats() const { return *m_cachePerfStats; }
-
-  Pool* getPool() const { return m_pool; }
-
  protected:
   /**
    * Construct a new DataOutput.
@@ -521,6 +515,14 @@ class APACHE_GEODE_EXPORT DataOutput {
              CachePerfStats* cachePerfStats, Pool* pool);
 
  private:
+  CachePerfStats& getCachePerfStats() const { return *m_cachePerfStats; }
+
+  std::shared_ptr<PdxTypeRegistry> getPdxTypeRegistry() const {
+    return m_pdxTypeRegistry;
+  }
+
+  Pool* getPool() const { return m_pool; }
+
   void writeObjectInternal(const Serializable* ptr, bool isDelta = false);
 
   static void acquireLock();
@@ -758,7 +760,9 @@ class APACHE_GEODE_EXPORT DataOutput {
 
   friend Cache;
   friend CacheImpl;
+  friend CacheableEnum;
   friend CacheableString;
+  friend PdxHelper;
 };
 
 template void DataOutput::writeJavaModifiedUtf8(const std::u16string&);
