@@ -28,6 +28,7 @@
 #include "CacheImpl.hpp"
 #include "UserAttributes.hpp"
 #include "ProxyRegion.hpp"
+#include "DataOutputInternal.hpp"
 
 namespace apache {
 namespace geode {
@@ -166,11 +167,11 @@ SystemProperties& Cache::getSystemProperties() const {
 
 DataInput Cache::createDataInput(const uint8_t* buffer,
                                   size_t len) const {
-  return DataInput(buffer, len, m_cacheImpl.get(), getPoolManager().getDefaultPool().get());
+  return m_cacheImpl->createDataInput(buffer, len, getPoolManager().getDefaultPool().get());
 }
 
 DataOutput Cache::createDataOutput() const {
-  return DataOutput(m_cacheImpl->getSerializationRegistry(), m_cacheImpl->getPdxTypeRegistry(), m_cacheImpl->getCachePerfStatsPtr(), getPoolManager().getDefaultPool().get());
+  return m_cacheImpl->createDataOutput(getPoolManager().getDefaultPool().get());
 }
 
 }  // namespace client

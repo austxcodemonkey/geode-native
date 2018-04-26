@@ -38,10 +38,13 @@ namespace client {
 class CacheableEnum;
 class CacheImpl;
 class CachePerfStats;
+class DataOutputInternal;
 class PdxHelper;
 class PdxTypeRegistry;
 class Pool;
 class SerializationRegistry;
+class PdxLocalWriter;
+class PdxSerializer;
 
 /**
  * Provide operations for writing primitive data values, byte arrays,
@@ -512,13 +515,19 @@ class APACHE_GEODE_EXPORT DataOutput {
    */
   DataOutput(std::shared_ptr<SerializationRegistry> serializationRegistry,
              std::shared_ptr<PdxTypeRegistry> pdxTypeRegistry,
-             CachePerfStats* cachePerfStats, Pool* pool);
+             std::shared_ptr<PdxSerializer> pdxSerializer,
+             CachePerfStats* cachePerfStats,
+             Pool* pool);
 
  private:
   CachePerfStats& getCachePerfStats() const { return *m_cachePerfStats; }
 
   std::shared_ptr<PdxTypeRegistry> getPdxTypeRegistry() const {
     return m_pdxTypeRegistry;
+  }
+
+  std::shared_ptr<PdxSerializer> getPdxSerializer() const {
+    return m_pdxSerializer;
   }
 
   Pool* getPool() const { return m_pool; }
@@ -541,6 +550,7 @@ class APACHE_GEODE_EXPORT DataOutput {
   volatile bool m_haveBigBuffer;
   std::shared_ptr<SerializationRegistry> m_serializationRegistry;
   std::shared_ptr<PdxTypeRegistry> m_pdxTypeRegistry;
+  std::shared_ptr<PdxSerializer> m_pdxSerializer;
   CachePerfStats* m_cachePerfStats;
   Pool* m_pool;
 
@@ -758,11 +768,12 @@ class APACHE_GEODE_EXPORT DataOutput {
   static uint8_t* checkoutBuffer(size_t* size);
   static void checkinBuffer(uint8_t* buffer, size_t size);
 
-  friend Cache;
   friend CacheImpl;
   friend CacheableEnum;
   friend CacheableString;
+  friend DataOutputInternal;
   friend PdxHelper;
+  friend PdxLocalWriter;
 };
 
 template void DataOutput::writeJavaModifiedUtf8(const std::u16string&);

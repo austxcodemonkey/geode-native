@@ -119,8 +119,8 @@ DataOutput::DataOutput() : m_size(0), m_haveBigBuffer(false) {
   m_buf = m_bytes.get();
 }
 
-DataOutput::DataOutput(std::shared_ptr<SerializationRegistry> serializationRegistry, std::shared_ptr<PdxTypeRegistry> pdxTypeRegistry, CachePerfStats* cachePerfStats, Pool* pool)
-    : m_size(0), m_haveBigBuffer(false), m_serializationRegistry(serializationRegistry), m_pdxTypeRegistry(pdxTypeRegistry), m_cachePerfStats(cachePerfStats), m_pool(pool) {
+DataOutput::DataOutput(std::shared_ptr<SerializationRegistry> serializationRegistry, std::shared_ptr<PdxTypeRegistry> pdxTypeRegistry, std::shared_ptr<PdxSerializer> pdxSerializer, CachePerfStats* cachePerfStats, Pool* pool)
+    : m_size(0), m_haveBigBuffer(false), m_serializationRegistry(serializationRegistry), m_pdxTypeRegistry(pdxTypeRegistry), m_pdxSerializer(pdxSerializer), m_cachePerfStats(cachePerfStats), m_pool(pool) {
   m_bytes.reset(DataOutput::checkoutBuffer(&m_size));
   m_buf = m_bytes.get();
 }

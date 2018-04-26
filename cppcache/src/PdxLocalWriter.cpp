@@ -26,6 +26,7 @@
 #include "PdxTypeRegistry.hpp"
 #include <geode/CacheableEnum.hpp>
 #include "GeodeTypeIdsImpl.hpp"
+#include "DataOutputInternal.hpp"
 
 namespace apache {
 namespace geode {
@@ -139,7 +140,7 @@ PdxWriter& PdxLocalWriter::writeUnreadFields(
 }
 
 std::shared_ptr<PdxSerializer> PdxLocalWriter::getPdxSerializer() const {
-  return m_dataOutput->getCache()->getTypeRegistry().getPdxSerializer();
+  return m_dataOutput->getPdxSerializer();
 }
 
 int32_t PdxLocalWriter::calculateLenWithOffsets() {

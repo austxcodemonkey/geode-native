@@ -817,7 +817,7 @@ DataOutput CacheImpl::createDataOutput(Pool* pool) const {
     pool = this->getPoolManager().getDefaultPool().get();
   }
 
-  return DataOutput(m_serializationRegistry, m_pdxTypeRegistry, m_cacheStats, pool);
+  return DataOutput(m_serializationRegistry, m_pdxTypeRegistry, m_typeRegistry->getPdxSerializer(), m_cacheStats, pool);
 }
 
 DataInput CacheImpl::createDataInput(const uint8_t* buffer,
