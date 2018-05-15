@@ -4,6 +4,7 @@ using System.Net;
 using System.IO;
 using System.Net.Sockets;
 using Xunit;
+using System.Collections.Generic;
 
 public class GeodeServer : IDisposable
 {
@@ -15,7 +16,7 @@ public class GeodeServer : IDisposable
 
     #region Public methods
 
-    public GeodeServer(string regionName = "testRegion", bool readSerialized = false)
+    public void init(List<string> regionNames, bool readSerialized = false)
     {
         try
         {
@@ -35,18 +36,22 @@ public class GeodeServer : IDisposable
 
         var readSerializedStr = readSerialized ? "--read-serialized=true" : "--read-serialized=false";
 
-        var gfsh = new Process
+        var gfshCommand = " -e \"start locator --bind-address=localhost --port=" + LocatorPort +
+                    " --J=-Dgemfire.jmx-manager-port=" + locatorJmxPort + " --http-service-port=0\"" +
+                    " -e \"connect --locator=localhost[" + LocatorPort + "]\"" +
+                    " -e \"configure pdx " + readSerializedStr + "\"" +
+                    " -e \"start server --bind-address=localhost --server-port=0 --log-level=all\"";
+        foreach (var regionName in regionNames)
         {
-            StartInfo =
+          gfshCommand += " -e \"create region --name=" + regionName + " --type=PARTITION\"";
+        }
+
+    var gfsh = new Process
+    {
+      StartInfo =
             {
                 FileName = Config.GeodeGfsh,
-                Arguments = " -e \"start locator --bind-address=localhost --port=" + LocatorPort +
-                            " --J=-Dgemfire.jmx-manager-port=" + locatorJmxPort + " --http-service-port=0\"" +
-                            " -e \"connect --locator=localhost[" + LocatorPort + "]\"" +
-                            " -e \"configure pdx " + readSerializedStr + "\"" +
-                            " -e \"start server --bind-address=localhost --server-port=0 --log-level=all\"" +
-                            " -e \"create region --name=" + regionName + " --type=PARTITION\"" +
-                            " -e \"create region --name=testRegion1 --type=PARTITION\"",
+                Arguments = gfshCommand,
                 WindowStyle = ProcessWindowStyle.Hidden,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
@@ -77,6 +82,15 @@ public class GeodeServer : IDisposable
 
         Assert.True(gfsh.HasExited);
         Assert.Equal(0, gfsh.ExitCode);
+    }
+
+    public GeodeServer(List<string> regionNames, bool readSerialized = false)
+    {
+      init(regionNames, readSerialized);
+    }
+    public GeodeServer(string regionName = "testRegion", bool readSerialized = false)
+    {
+      init(new List<string> { regionName, "testRegion1" }, readSerialized);
     }
 
     public void Dispose()
