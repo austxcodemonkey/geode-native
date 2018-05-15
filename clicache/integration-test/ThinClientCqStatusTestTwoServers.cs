@@ -253,13 +253,10 @@ namespace Apache.Geode.Client.UnitTests
   public class ThinClientCqStatusTestTwoServers : ThinClientRegionSteps
   {
     #region Private members
-    private static bool m_usePdxObjects = false;
     private UnitProcess m_client1;
     private UnitProcess m_client2;
     private static string[] QueryRegionNames = { "Portfolios", "Positions", "Portfolios2",
       "Portfolios3" };
-    private static string QERegionName = "Portfolios";
-    private static string CqName = "MyCq";
 
     private static string CqName1 = "testCQAllServersLeave";
     private static string CqName2 = "testCQAllServersLeave1";

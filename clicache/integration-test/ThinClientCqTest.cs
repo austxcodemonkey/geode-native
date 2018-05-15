@@ -258,14 +258,6 @@ namespace Apache.Geode.Client.UnitTests
       "Portfolios3" };
     private static string QERegionName = "Portfolios";
     private static string CqName = "MyCq";
-
-    private static string CqName1 = "testCQAllServersLeave";
-    private static string CqName2 = "testCQAllServersLeave1";
-
-    private static string CqQuery1 = "select * from /DistRegionAck";
-    private static string CqQuery2 = "select * from /DistRegionAck1";
-    //private static string CqName1 = "MyCq1";
-
     #endregion
 
     protected override ClientBase[] GetClients()
