@@ -26,24 +26,24 @@ namespace Apache.Geode.Client.IntegrationTests
   [Trait("Category", "Integration")]
   public class PdxTests : IDisposable
   {
-    private GeodeServer geodeServer;
-    private CacheXml cacheXml;
+    private GeodeServer _geodeServer;
 
     private const string _CLIENT1NAME = "Client-1";
+    private const string _CLIENT2NAME = "Client-2";
+    private const string _TESTPOOL1NAME = "__TESTPOOL1_";
+    private List<string> _defaultRegionNames = new List<string> { "DistRegionAck", "DistRegionNoAck" };
 
     public PdxTests()
     {
-      geodeServer = new GeodeServer()
-                        .SetRegionNames(new List<string> { "DistRegionAck", "DistRegionNoAck", "testRegion" })
+      _geodeServer = new GeodeServer()
+                        .SetRegionNames(_defaultRegionNames)
                         .SetReadSerialized(false)
                         .Execute();
-      cacheXml = new CacheXml(new FileInfo("cache.xml"), geodeServer);
     }
 
     public void Dispose()
     {
-      cacheXml.Dispose();
-      geodeServer.Dispose();
+      _geodeServer.Dispose();
     }
 
     [Fact]
@@ -51,24 +51,23 @@ namespace Apache.Geode.Client.IntegrationTests
     {
       var properties = Properties<string, string>.Create();
       properties.Insert("name", _CLIENT1NAME);
-//      properties.Insert("ssl-enabled", "true");
-//      properties.Insert("ssl-keystore", "integration-test/keystore/client_keystore.pem");
-//      properties.Insert("ssl-truststore", "integration-test/keystore/client_truststore.pem");
       var cacheFactory = new CacheFactory(properties);
       var cache = cacheFactory.Create();
 
-      cache.InitializeDeclarativeCache(cacheXml.File.FullName);
+      var poolFactory = cache.GetPoolFactory()
+                            .AddLocator("localhost", _geodeServer.LocatorPort);
+      poolFactory.Create(_TESTPOOL1NAME);
 
-//      var poolFactory = cache.GetPoolFactory();
-//      poolFactory.SetSubscriptionEnabled(true);
-//      poolFactory.AddLocator("localhost", geodeServer.LocatorPort);
-//      poolFactory.Create("default");
+      var regionFactory = cache.CreateRegionFactory(RegionShortcut.PROXY)
+          .SetPoolName(_TESTPOOL1NAME);
+      var distRegionAck = regionFactory.Create<string, string>(_defaultRegionNames[0]);
+      //      poolFactory.SetSubscriptionEnabled(true);
+      //      poolFactory.AddLocator("localhost", geodeServer.LocatorPort);
 
-      var distRegionAck = cache.GetRegion<string, string>("testRegion1");
 //      var distRegionNoAck = cache.GetRegion<object, object>("DistRegionNoAck");
 
       distRegionAck.Put("key-0", "AAAAA", null);
-      var clientNameOne = distRegionAck.Get("clientName1", null);
+      var clientNameOne = distRegionAck["clientName1"];
 
       Assert.Equal(_CLIENT1NAME, clientNameOne);
     }
