@@ -12,11 +12,13 @@ public class GeodeServer : IDisposable
 
     public int LocatorPort { get; private set; }
 
+    private List<string> _regionNames;
+    private bool _readSerialized;
+
     #endregion
 
     #region Public methods
-
-    private void Init(List<string> regionNames, bool readSerialized = false)
+    public GeodeServer Execute()
     {
         try
         {
@@ -34,21 +36,21 @@ public class GeodeServer : IDisposable
         LocatorPort = FreeTcpPort();
         var locatorJmxPort = FreeTcpPort();
 
-        var readSerializedStr = readSerialized ? "--read-serialized=true" : "--read-serialized=false";
+        var readSerializedStr = _readSerialized ? "--read-serialized=true" : "--read-serialized=false";
 
         var gfshCommand = " -e \"start locator --bind-address=localhost --port=" + LocatorPort +
                     " --J=-Dgemfire.jmx-manager-port=" + locatorJmxPort + " --http-service-port=0\"" +
                     " -e \"connect --locator=localhost[" + LocatorPort + "]\"" +
                     " -e \"configure pdx " + readSerializedStr + "\"" +
                     " -e \"start server --bind-address=localhost --server-port=0 --log-level=all\"";
-        foreach (var regionName in regionNames)
+        foreach (var regionName in _regionNames)
         {
           gfshCommand += " -e \"create region --name=" + regionName + " --type=PARTITION\"";
         }
 
-    var gfsh = new Process
-    {
-      StartInfo =
+        var gfsh = new Process
+        {
+          StartInfo =
             {
                 FileName = Config.GeodeGfsh,
                 Arguments = gfshCommand,
@@ -82,15 +84,25 @@ public class GeodeServer : IDisposable
 
         Assert.True(gfsh.HasExited);
         Assert.Equal(0, gfsh.ExitCode);
+        return this;
     }
 
-    public GeodeServer(List<string> regionNames, bool readSerialized = false)
+    public GeodeServer()
     {
-      Init(regionNames, readSerialized);
+        _regionNames = new List<string>();
+        _regionNames.Add("testRegion1");
     }
-    public GeodeServer(string regionName = "testRegion", bool readSerialized = false)
+
+    public GeodeServer SetRegionNames(List<string> regionNames)
     {
-      Init(new List<string> { regionName, "testRegion1" }, readSerialized);
+        _regionNames = regionNames;
+        return this;
+    }
+
+    public GeodeServer SetReadSerialized(bool readSerialized)
+    {
+        _readSerialized = readSerialized;
+        return this;
     }
 
     public void Dispose()

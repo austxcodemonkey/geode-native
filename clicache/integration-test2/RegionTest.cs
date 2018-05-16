@@ -44,7 +44,7 @@ namespace Apache.Geode.Client.IntegrationTests
     [Fact]
     public void PutOnOneCacheGetOnAnotherCache()
     {
-      var geodeServer = new GeodeServer();
+      var geodeServer = new GeodeServer().Execute();
       var cacheXml = new CacheXml(new FileInfo("cache.xml"), geodeServer);
 
       var cacheFactory = new CacheFactory();

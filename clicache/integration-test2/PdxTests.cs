@@ -28,9 +28,15 @@ namespace Apache.Geode.Client.IntegrationTests
   {
     private GeodeServer geodeServer;
     private CacheXml cacheXml;
+
+    private const string _CLIENT1NAME = "Client-1";
+
     public PdxTests()
     {
-      geodeServer = new GeodeServer(new List<string>{"REGION_NAME", "testRegion2", "testRegion1"});
+      geodeServer = new GeodeServer()
+                        .SetRegionNames(new List<string> { "DistRegionAck", "DistRegionNoAck", "testRegion" })
+                        .SetReadSerialized(false)
+                        .Execute();
       cacheXml = new CacheXml(new FileInfo("cache.xml"), geodeServer);
     }
 
@@ -44,7 +50,7 @@ namespace Apache.Geode.Client.IntegrationTests
     public void NobodyKnowsWhatBug866IsAnyMoreButThisTestsIt()
     {
       var properties = Properties<string, string>.Create();
-      properties.Insert("name", "Client-1");
+      properties.Insert("name", _CLIENT1NAME);
 //      properties.Insert("ssl-enabled", "true");
 //      properties.Insert("ssl-keystore", "integration-test/keystore/client_keystore.pem");
 //      properties.Insert("ssl-truststore", "integration-test/keystore/client_truststore.pem");
@@ -64,7 +70,7 @@ namespace Apache.Geode.Client.IntegrationTests
       distRegionAck.Put("key-0", "AAAAA", null);
       var clientNameOne = distRegionAck.Get("clientName1", null);
 
-      Assert.Equal("Client-1", clientNameOne);
+      Assert.Equal(_CLIENT1NAME, clientNameOne);
     }
   }
 }
