@@ -16,7 +16,7 @@ public class GeodeServer : IDisposable
 
     #region Public methods
 
-    public void init(List<string> regionNames, bool readSerialized = false)
+    private void Init(List<string> regionNames, bool readSerialized = false)
     {
         try
         {
@@ -86,11 +86,11 @@ public class GeodeServer : IDisposable
 
     public GeodeServer(List<string> regionNames, bool readSerialized = false)
     {
-      init(regionNames, readSerialized);
+      Init(regionNames, readSerialized);
     }
     public GeodeServer(string regionName = "testRegion", bool readSerialized = false)
     {
-      init(new List<string> { regionName, "testRegion1" }, readSerialized);
+      Init(new List<string> { regionName, "testRegion1" }, readSerialized);
     }
 
     public void Dispose()

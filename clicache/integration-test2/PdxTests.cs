@@ -16,6 +16,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
@@ -23,29 +24,47 @@ namespace Apache.Geode.Client.IntegrationTests
 {
 
   [Trait("Category", "Integration")]
-  public class PdxTests
+  public class PdxTests : IDisposable
   {
-    Cache cacheOne;
-    Cache cacheTwo;
-
+    private GeodeServer geodeServer;
+    private CacheXml cacheXml;
     public PdxTests()
     {
-      var cacheFactory = new CacheFactory();
-      cacheOne = cacheFactory.Create();
-      cacheTwo = cacheFactory.Create();
+      geodeServer = new GeodeServer(new List<string>{"REGION_NAME", "testRegion2", "testRegion1"});
+      cacheXml = new CacheXml(new FileInfo("cache.xml"), geodeServer);
     }
 
     public void Dispose()
     {
-      cacheOne.Close();
-      cacheTwo.Close();
+      cacheXml.Dispose();
+      geodeServer.Dispose();
     }
 
     [Fact]
     public void NobodyKnowsWhatBug866IsAnyMoreButThisTestsIt()
     {
-      var geodeServer = new GeodeServer();
-      geodeServer.Dispose();
+      var properties = Properties<string, string>.Create();
+      properties.Insert("name", "Client-1");
+//      properties.Insert("ssl-enabled", "true");
+//      properties.Insert("ssl-keystore", "integration-test/keystore/client_keystore.pem");
+//      properties.Insert("ssl-truststore", "integration-test/keystore/client_truststore.pem");
+      var cacheFactory = new CacheFactory(properties);
+      var cache = cacheFactory.Create();
+
+      cache.InitializeDeclarativeCache(cacheXml.File.FullName);
+
+//      var poolFactory = cache.GetPoolFactory();
+//      poolFactory.SetSubscriptionEnabled(true);
+//      poolFactory.AddLocator("localhost", geodeServer.LocatorPort);
+//      poolFactory.Create("default");
+
+      var distRegionAck = cache.GetRegion<string, string>("testRegion1");
+//      var distRegionNoAck = cache.GetRegion<object, object>("DistRegionNoAck");
+
+      distRegionAck.Put("key-0", "AAAAA", null);
+      var clientNameOne = distRegionAck.Get("clientName1", null);
+
+      Assert.Equal("Client-1", clientNameOne);
     }
   }
 }
