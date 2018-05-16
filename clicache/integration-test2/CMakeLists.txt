@@ -28,6 +28,7 @@ add_library( ${PROJECT_NAME} SHARED
     GeodeServerTests.cs
     CacheXml.cs
     CacheXmlTests.cs
+    Bug866Tests.cs
     PdxTests.cs
     RegionTest.cs
     cache.xml

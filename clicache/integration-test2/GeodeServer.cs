@@ -89,8 +89,7 @@ public class GeodeServer : IDisposable
 
     public GeodeServer()
     {
-        _regionNames = new List<string>();
-        _regionNames.Add("testRegion1");
+        _regionNames = new List<string> {"testRegion1"};
     }
 
     public GeodeServer SetRegionNames(List<string> regionNames)
