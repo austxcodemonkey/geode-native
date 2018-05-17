@@ -17,59 +17,191 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
+using PdxTests;
 using Xunit;
 
 namespace Apache.Geode.Client.IntegrationTests
 {
-
   [Trait("Category", "Integration")]
   public class PdxTests : IDisposable
   {
-    private GeodeServer _geodeServer;
+    private readonly GeodeServer _geodeServer;
+    private readonly Cache _cacheOne;
+    private readonly Cache _cacheTwo;
+    private readonly IRegion<object, object> _distRegionAckFromCacheOne;
+    private readonly IRegion<object, object> _distRegionAckFromCacheTwo;
 
-    private const string _CLIENT1NAME = "Client-1";
-    private const string _CLIENT2NAME = "Client-2";
-    private const string _TESTPOOL1NAME = "__TESTPOOL1_";
-    private List<string> _defaultRegionNames = new List<string> { "DistRegionAck", "DistRegionNoAck" };
+    private const string Testpool1Name = "__TESTPOOL1_";
+    private readonly List<string> _defaultRegionNames = new List<string> {"DistRegionAck"};
 
     public PdxTests()
     {
       _geodeServer = new GeodeServer()
-                        .SetRegionNames(_defaultRegionNames)
-                        .SetReadSerialized(false)
-                        .Execute();
+        .SetRegionNames(_defaultRegionNames)
+        .Execute();
+
+      var cacheFactory = new CacheFactory();
+      _cacheOne = cacheFactory.Create();
+      _cacheTwo = cacheFactory.Create();
+
+      _cacheOne.GetPoolFactory()
+        .AddLocator("localhost", _geodeServer.LocatorPort)
+        .Create(Testpool1Name);
+
+      _cacheTwo.GetPoolFactory()
+        .AddLocator("localhost", _geodeServer.LocatorPort)
+        .Create(Testpool1Name);
+
+      _distRegionAckFromCacheOne = _cacheOne.CreateRegionFactory(RegionShortcut.PROXY)
+        .SetPoolName(Testpool1Name).Create<object, object>(_defaultRegionNames[0]);
+
+      _distRegionAckFromCacheTwo = _cacheTwo.CreateRegionFactory(RegionShortcut.PROXY)
+        .SetPoolName(Testpool1Name).Create<object, object>(_defaultRegionNames[0]);
     }
 
     public void Dispose()
     {
       _geodeServer.Dispose();
+      _cacheOne.Close();
+      _cacheTwo.Close();
     }
 
     [Fact]
-    public void NobodyKnowsWhatBug866IsAnyMoreButThisTestsIt()
+    public void PutAndGetOnePdxType()
     {
-      var properties = Properties<string, string>.Create();
-      properties.Insert("name", _CLIENT1NAME);
-      var cacheFactory = new CacheFactory(properties);
-      var cache = cacheFactory.Create();
+      _cacheOne.TypeRegistry.RegisterPdxType(PdxType.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PdxType.CreateDeserializable);
 
-      var poolFactory = cache.GetPoolFactory()
-                            .AddLocator("localhost", _geodeServer.LocatorPort);
-      poolFactory.Create(_TESTPOOL1NAME);
+      var expectedPdxType = new PdxType();
+      _distRegionAckFromCacheOne.Put(1, expectedPdxType, null);
 
-      var regionFactory = cache.CreateRegionFactory(RegionShortcut.PROXY)
-          .SetPoolName(_TESTPOOL1NAME);
-      var distRegionAck = regionFactory.Create<string, string>(_defaultRegionNames[0]);
-      //      poolFactory.SetSubscriptionEnabled(true);
-      //      poolFactory.AddLocator("localhost", geodeServer.LocatorPort);
+      var actualPdxTypeFromCacheOne = _distRegionAckFromCacheOne.Get(1, null);
+      var actualPdxTypeFromCacheTwo = _distRegionAckFromCacheTwo.Get(1, null);
 
-//      var distRegionNoAck = cache.GetRegion<object, object>("DistRegionNoAck");
+      Assert.Equal(expectedPdxType, actualPdxTypeFromCacheOne);
+      Assert.Equal(expectedPdxType, actualPdxTypeFromCacheTwo);
+      Assert.False(_cacheOne.GetPdxReadSerialized());
+    }
 
-      distRegionAck.Put("key-0", "AAAAA", null);
-      var clientNameOne = distRegionAck["clientName1"];
+    [Fact]
+    public void PutAndGetManyPdxTypes()
+    {
+      _cacheOne.TypeRegistry.RegisterPdxType(PdxTypes1.CreateDeserializable);
+      _cacheOne.TypeRegistry.RegisterPdxType(PdxTypes2.CreateDeserializable);
+      _cacheOne.TypeRegistry.RegisterPdxType(PdxTypes3.CreateDeserializable);
+      _cacheOne.TypeRegistry.RegisterPdxType(PdxTypes4.CreateDeserializable);
+      _cacheOne.TypeRegistry.RegisterPdxType(PdxTypes5.CreateDeserializable);
+      _cacheOne.TypeRegistry.RegisterPdxType(PdxTypes6.CreateDeserializable);
+      _cacheOne.TypeRegistry.RegisterPdxType(PdxTypes7.CreateDeserializable);
+      _cacheOne.TypeRegistry.RegisterPdxType(PdxTypes8.CreateDeserializable);
+      _cacheOne.TypeRegistry.RegisterPdxType(PdxTypes9.CreateDeserializable);
+      _cacheOne.TypeRegistry.RegisterPdxType(PortfolioPdx.CreateDeserializable);
+      _cacheOne.TypeRegistry.RegisterPdxType(PositionPdx.CreateDeserializable);
+      _cacheOne.TypeRegistry.RegisterPdxType(AllPdxTypes.Create);
 
-      Assert.Equal(_CLIENT1NAME, clientNameOne);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PdxTypes1.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PdxTypes2.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PdxTypes3.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PdxTypes4.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PdxTypes5.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PdxTypes6.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PdxTypes7.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PdxTypes8.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PdxTypes9.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PortfolioPdx.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(PositionPdx.CreateDeserializable);
+      _cacheTwo.TypeRegistry.RegisterPdxType(AllPdxTypes.Create);
+
+      var expectedPdxType1 = new PdxTypes1();
+      _distRegionAckFromCacheOne.Put(11, expectedPdxType1, null);
+      var actualPdxType1FromCacheOne = (PdxTypes1) _distRegionAckFromCacheOne.Get(11, null);
+      var actualPdxType1FromCacheTwo = (PdxTypes1) _distRegionAckFromCacheTwo.Get(11, null);
+      Assert.Equal(expectedPdxType1, actualPdxType1FromCacheOne);
+      Assert.Equal(expectedPdxType1, actualPdxType1FromCacheTwo);
+
+      var expectedPdxType2 = new PdxTypes2();
+      _distRegionAckFromCacheOne.Put(12, expectedPdxType2, null);
+      var actualPdxType2FromCacheOne = (PdxTypes2) _distRegionAckFromCacheOne.Get(12, null);
+      var actualPdxType2FromCacheTwo = (PdxTypes2) _distRegionAckFromCacheTwo.Get(12, null);
+      Assert.Equal(expectedPdxType2, actualPdxType2FromCacheOne);
+      Assert.Equal(expectedPdxType2, actualPdxType2FromCacheTwo);
+
+      var expectedPdxType3 = new PdxTypes3();
+      _distRegionAckFromCacheOne.Put(13, expectedPdxType3, null);
+      var actualPdxType3FromCacheOne = (PdxTypes3) _distRegionAckFromCacheOne.Get(13, null);
+      var actualPdxType3FromCacheTwo = (PdxTypes3) _distRegionAckFromCacheTwo.Get(13, null);
+      Assert.Equal(expectedPdxType3, actualPdxType3FromCacheOne);
+      Assert.Equal(expectedPdxType3, actualPdxType3FromCacheTwo);
+
+      var expectedPdxType4 = new PdxTypes4();
+      _distRegionAckFromCacheOne.Put(14, expectedPdxType4, null);
+      var actualPdxType4FromCacheOne = (PdxTypes4) _distRegionAckFromCacheOne.Get(14, null);
+      var actualPdxType4FromCacheTwo = (PdxTypes4) _distRegionAckFromCacheTwo.Get(14, null);
+      Assert.Equal(expectedPdxType4, actualPdxType4FromCacheOne);
+      Assert.Equal(expectedPdxType4, actualPdxType4FromCacheTwo);
+
+      var expectedPdxType5 = new PdxTypes5();
+      _distRegionAckFromCacheOne.Put(15, expectedPdxType5, null);
+      var actualPdxType5FromCacheOne = (PdxTypes5) _distRegionAckFromCacheOne.Get(15, null);
+      var actualPdxType5FromCacheTwo = (PdxTypes5) _distRegionAckFromCacheTwo.Get(15, null);
+      Assert.Equal(expectedPdxType5, actualPdxType5FromCacheOne);
+      Assert.Equal(expectedPdxType5, actualPdxType5FromCacheTwo);
+
+      var expectedPdxType6 = new PdxTypes6();
+      _distRegionAckFromCacheOne.Put(16, expectedPdxType6, null);
+      var actualPdxType6FromCacheOne = (PdxTypes6) _distRegionAckFromCacheOne.Get(16, null);
+      var actualPdxType6FromCacheTwo = (PdxTypes6) _distRegionAckFromCacheTwo.Get(16, null);
+      Assert.Equal(expectedPdxType6, actualPdxType6FromCacheOne);
+      Assert.Equal(expectedPdxType6, actualPdxType6FromCacheTwo);
+
+      var expectedPdxType7 = new PdxTypes7();
+      _distRegionAckFromCacheOne.Put(17, expectedPdxType7, null);
+      var actualPdxType7FromCacheOne = (PdxTypes7) _distRegionAckFromCacheOne.Get(17, null);
+      var actualPdxType7FromCacheTwo = (PdxTypes7) _distRegionAckFromCacheTwo.Get(17, null);
+      Assert.Equal(expectedPdxType7, actualPdxType7FromCacheOne);
+      Assert.Equal(expectedPdxType7, actualPdxType7FromCacheTwo);
+
+      var expectedPdxType8 = new PdxTypes8();
+      _distRegionAckFromCacheOne.Put(18, expectedPdxType8, null);
+      var actualPdxType8FromCacheOne = (PdxTypes8) _distRegionAckFromCacheOne.Get(18, null);
+      var actualPdxType8FromCacheTwo = (PdxTypes8) _distRegionAckFromCacheTwo.Get(18, null);
+      Assert.Equal(expectedPdxType8, actualPdxType8FromCacheOne);
+      Assert.Equal(expectedPdxType8, actualPdxType8FromCacheTwo);
+
+      var expectedPdxType9 = new PdxTypes9();
+      _distRegionAckFromCacheOne.Put(19, expectedPdxType9, null);
+      var actualPdxType9FromCacheOne = (PdxTypes9) _distRegionAckFromCacheOne.Get(19, null);
+      var actualPdxType9FromCacheTwo = (PdxTypes9) _distRegionAckFromCacheTwo.Get(19, null);
+      Assert.Equal(expectedPdxType9, actualPdxType9FromCacheOne);
+      Assert.Equal(expectedPdxType9, actualPdxType9FromCacheTwo);
+
+      var expectedPortfolioPdx = new PortfolioPdx(1001, 10);
+      _distRegionAckFromCacheOne.Put(20, expectedPortfolioPdx, null);
+      var actualPortfolioPdxFromCacheOne = (PortfolioPdx) _distRegionAckFromCacheOne.Get(20, null);
+      var actualPortfolioPdxFromCacheTwo = (PortfolioPdx) _distRegionAckFromCacheTwo.Get(20, null);
+//      Assert.Equal(expectedPdxTypef, actualPortfolioPdxFromCacheOne);
+//      Assert.Equal(expectedPdxTypef, actualPortfolioPdxFromCacheTwo);
+
+      var expectedPortfolioPdx2 = new PortfolioPdx(1001, 10, new[] {"one", "two", "three"});
+      _distRegionAckFromCacheOne.Put(21, expectedPortfolioPdx2, null);
+      var actualPortfolioPdx2FromCacheOne = (PortfolioPdx) _distRegionAckFromCacheOne.Get(21, null);
+      var actualPortfolioPdx2FromCacheTwo = (PortfolioPdx) _distRegionAckFromCacheTwo.Get(21, null);
+//      Assert.Equal(expectedPdxTypef2, actualPortfolioPdx2FromCacheOne);
+//      Assert.Equal(expectedPdxTypef2, actualPortfolioPdx2FromCacheTwo);
+
+      var expectedPdxType10 = new PdxTypes10();
+      _distRegionAckFromCacheOne.Put(22, expectedPdxType10, null);
+      var actualPdxType10FromCacheOne = (PdxTypes10) _distRegionAckFromCacheOne.Get(22, null);
+      var actualPdxType10FromCacheTwo = (PdxTypes10) _distRegionAckFromCacheTwo.Get(22, null);
+      Assert.Equal(expectedPdxType10, actualPdxType10FromCacheOne);
+      Assert.Equal(expectedPdxType10, actualPdxType10FromCacheTwo);
+
+      var expectedAllPdxTypes = new AllPdxTypes(true);
+      _distRegionAckFromCacheOne.Put(23, expectedAllPdxTypes, null);
+      var actualAllPdxTypesFromCacheOne = (AllPdxTypes) _distRegionAckFromCacheOne.Get(23, null);
+      var actualAllPdxTypesFromCacheTwo = (AllPdxTypes) _distRegionAckFromCacheTwo.Get(23, null);
+      Assert.Equal(expectedAllPdxTypes, actualAllPdxTypesFromCacheOne);
+      Assert.Equal(expectedAllPdxTypes, actualAllPdxTypesFromCacheTwo);
     }
   }
 }
