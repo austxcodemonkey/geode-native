@@ -203,5 +203,143 @@ namespace Apache.Geode.Client.IntegrationTests
       Assert.Equal(expectedAllPdxTypes, actualAllPdxTypesFromCacheOne);
       Assert.Equal(expectedAllPdxTypes, actualAllPdxTypesFromCacheTwo);
     }
+
+    [Fact]
+    public void DataOutputAdvance()
+    {
+      _cacheOne.TypeRegistry.RegisterPdxType(MyClass.Create);
+      _cacheOne.TypeRegistry.RegisterPdxType(MyClasses.Create);
+
+      var expectedMyClasses = new MyClasses("1", 1000);
+      _distRegionAckFromCacheOne.Put(1, expectedMyClasses, null);
+      var acutalMyClasses = _distRegionAckFromCacheOne.Get(1, null);
+
+      Assert.Equal(expectedMyClasses, acutalMyClasses);
+    }
+
+    private class MyClasses : IPdxSerializable
+    {
+      [PdxIdentityField] private string _key;
+      private List<object> _children;
+
+      private MyClasses()
+      {
+      }
+
+      public MyClasses(string key, int nClasses)
+      {
+        _key = key;
+        _children = new List<object>(nClasses);
+        for (var i = 0; i < nClasses; i++)
+        {
+          var my = new MyClass(i);
+          _children.Add(my);
+        }
+      }
+
+      public static IPdxSerializable Create()
+      {
+        return new MyClasses();
+      }
+
+      public override bool Equals(object obj)
+      {
+        var other = obj as MyClasses;
+        if (other == null)
+          return false;
+
+        return _children.Count == other._children.Count;
+      }
+
+      public override int GetHashCode()
+      {
+        return base.GetHashCode();
+      }
+
+      #region IPdxSerializable Members
+
+      public void FromData(IPdxReader reader)
+      {
+        _key = reader.ReadString("Key");
+        _children = (List<object>) (reader.ReadObject("Children"));
+      }
+
+      public void ToData(IPdxWriter writer)
+      {
+        writer.WriteString("Key", _key);
+        writer.WriteObject("Children", _children);
+      }
+
+      #endregion
+    }
+
+    private class MyClass : IPdxSerializable
+    {
+      [PdxIdentityField] private string _key;
+      private int _secKey;
+      private double _shareQuantity;
+      private double _cost;
+      private double _price;
+      private int _settleSecKey;
+      private double _settleFxRate;
+      private double _valueBasis;
+      private double _openDate;
+      private double _strategy;
+
+      private MyClass()
+      {
+      }
+
+      public MyClass(int key)
+      {
+        _key = key.ToString();
+        _secKey = key;
+        _shareQuantity = key * 9278;
+        _cost = _shareQuantity * 100;
+        _price = _cost * 10;
+        _settleSecKey = _secKey + 100000;
+        _settleFxRate = _price * 1.5;
+        _valueBasis = 1.5;
+        _openDate = 100000;
+        _strategy = 3.6;
+      }
+
+      public static IPdxSerializable Create()
+      {
+        return new MyClass();
+      }
+
+      #region IPdxSerializable Members
+
+      public void FromData(IPdxReader reader)
+      {
+        _key = reader.ReadString("Key");
+        _secKey = reader.ReadInt("SecKey");
+        _shareQuantity = reader.ReadDouble("ShareQuantity");
+        _cost = reader.ReadDouble("Cost");
+        _price = reader.ReadDouble("Price");
+        _settleSecKey = reader.ReadInt("SettleSecKey");
+        _settleFxRate = reader.ReadDouble("SettleFxRate");
+        _valueBasis = reader.ReadDouble("ValueBasis");
+        _openDate = reader.ReadDouble("OpenDate");
+        _strategy = reader.ReadDouble("Strategy");
+      }
+
+      public void ToData(IPdxWriter writer)
+      {
+        writer.WriteString("Key", _key);
+        writer.WriteInt("SecKey", _secKey);
+        writer.WriteDouble("ShareQuantity", _shareQuantity);
+        writer.WriteDouble("Cost", _cost);
+        writer.WriteDouble("Price", _price);
+        writer.WriteInt("SettleSecKey", _settleSecKey);
+        writer.WriteDouble("SettleFxRate", _settleFxRate);
+        writer.WriteDouble("ValueBasis", _valueBasis);
+        writer.WriteDouble("OpenDate", _openDate);
+        writer.WriteDouble("Strategy", _strategy);
+      }
+
+      #endregion
+    }
   }
 }
