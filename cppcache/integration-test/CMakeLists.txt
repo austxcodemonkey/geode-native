@@ -12,10 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 cmake_minimum_required(VERSION 3.10)
 project(nativeclient.tests.cppcache LANGUAGES CXX)
-
 set(TEST_UTILS_LIB test-cppcache-utils)
 add_library(${TEST_UTILS_LIB} STATIC
   fw_dunit.cpp
@@ -38,7 +36,6 @@ target_include_directories(${TEST_UTILS_LIB}
   PRIVATE
     $<TARGET_PROPERTY:apache-geode,SOURCE_DIR>/../src
 )
-
 add_library(unit_test_callbacks SHARED LibraryCallbacks.cpp)
 target_link_libraries(unit_test_callbacks
   PRIVATE
@@ -51,9 +48,7 @@ target_include_directories(unit_test_callbacks
   PRIVATE
     $<TARGET_PROPERTY:apache-geode,SOURCE_DIR>/../src
 )
-
 enable_testing()
-
 # Function to resolve both config and generate stage variables.
 macro(generate_config INPUT TEMP OUTPUT)
     configure_file(${INPUT} ${TEMP})
@@ -62,7 +57,6 @@ macro(generate_config INPUT TEMP OUTPUT)
       CONDITION 1
     )
 endmacro()
-
 # Add lazy loaded shared library paths to test environment
 foreach( lib ssl xerces-c sqlite )
   get_target_property(library_path ${lib} INTERFACE_LIBRARY_DIR)
@@ -70,9 +64,7 @@ foreach( lib ssl xerces-c sqlite )
   get_target_property(runtime_path ${lib} INTERFACE_RUNTIME_DIR)
   set(PATH ${PATH} ${runtime_path})
 endforeach()
-
 set (PORT 20000)
-
 file(GLOB SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "test*.cpp")
 foreach(FILE ${SOURCES})
   string(REGEX REPLACE "\\.cpp" "" TEST ${FILE})
@@ -80,7 +72,6 @@ foreach(FILE ${SOURCES})
   add_dependencies(integration-tests ${TEST})
   add_executable(${TEST} ${FILE})
   set_target_properties(${TEST} PROPERTIES FOLDER test/cppTests)
-
   target_link_libraries(${TEST}
     PRIVATE
       ACE
@@ -96,41 +87,28 @@ foreach(FILE ${SOURCES})
   target_include_directories(${TEST} PRIVATE
     $<TARGET_PROPERTY:apache-geode,SOURCE_DIR>/../src
   )
-
   # Some tests depend on these library
   add_dependencies(${TEST} securityImpl cryptoImpl DHImpl SqLiteImpl)
-
   set(TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/.tests/${TEST})
-
   math(EXPR PORT "${PORT} + 1")
-
   if (WIN32)
     set (TEST_SCRIPT_SUFFIX .bat)
     generate_config(${CMAKE_CURRENT_SOURCE_DIR}/test.bat.in ${CMAKE_CURRENT_BINARY_DIR}/.${TEST}.bat.in $<TARGET_FILE:${TEST}>${TEST_SCRIPT_SUFFIX})
-
     set(TEST_COMMAND $<TARGET_FILE:${TEST}>${TEST_SCRIPT_SUFFIX})
-
   else()
     set (TEST_SCRIPT_SUFFIX .sh)
     generate_config(${CMAKE_CURRENT_SOURCE_DIR}/test.sh.in ${CMAKE_CURRENT_BINARY_DIR}/.${TEST}.sh.in $<TARGET_FILE:${TEST}>${TEST_SCRIPT_SUFFIX})
-
     # TODO fix file permissions on .sh
     set(TEST_COMMAND bash $<TARGET_FILE:${TEST}>${TEST_SCRIPT_SUFFIX})
-
   endif()
-
   add_test(NAME ${TEST}
       COMMAND ${TEST_COMMAND}
   )
-
   set_property(TEST ${TEST} PROPERTY LABELS STABLE)
 endforeach()
-
 configure_file(CTestCustom.cmake.in CTestCustom.cmake)
-
 #TODO this is really bad that we include the root of tests
 include_directories(${CMAKE_SOURCE_DIR}/tests/cpp)
-
 set_property(TEST testDataOutput PROPERTY LABELS STABLE QUICK)
 set_property(TEST testFWHelper PROPERTY LABELS STABLE QUICK)
 set_property(TEST testLRUList PROPERTY LABELS STABLE QUICK)
@@ -150,32 +128,13 @@ set_property(TEST testSpinLock PROPERTY LABELS STABLE QUICK)
 set_property(TEST testThinClientSSLAuthFail PROPERTY LABELS STABLE QUICK)
 set_property(TEST testThinClientSSLAuthCorrupt PROPERTY LABELS STABLE QUICK)
 set_property(TEST testThinClientSSLAuthUntrusted PROPERTY LABELS STABLE QUICK)
-
 set_property(TEST testOverflowPutGetSqLite PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientAfterRegionLive PROPERTY LABELS FLAKY)
 set_property(TEST testThinClientCacheables PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientCq PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientCqFailover PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientCqHAFailover PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientDurableConnect PROPERTY LABELS FLAKY)
 set_property(TEST testThinClientDurableDisconnectNormal PROPERTY LABELS FLAKY)
 set_property(TEST testThinClientDurableDisconnectTimeout PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientDurableFailoverClientClosedNoRedundancy PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientDurableFailoverClientNotClosedRedundancy PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientDurableKeepAliveFalseTimeout PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientDurableKeepAliveTrueNormal PROPERTY LABELS FLAKY)
 set_property(TEST testThinClientDurableReconnect PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientFailover PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientFailover2 PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientFailoverInterest PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientFailoverInterest2 PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientFailoverRegex PROPERTY LABELS FLAKY)
 set_property(TEST testThinClientFixedPartitionResolver PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientHADistOps PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientHAEventIDMap PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientHAFailover PROPERTY LABELS FLAKY)
 set_property(TEST testThinClientHAMixedRedundancy PROPERTY LABELS FLAKY)
-set_property(TEST testThinClientHAQueryFailover PROPERTY LABELS FLAKY)
 set_property(TEST testThinClientLRUExpiration PROPERTY LABELS FLAKY)
 set_property(TEST testThinClientLargePutAllWithCallBackArg PROPERTY LABELS FLAKY)
 set_property(TEST testThinClientLocatorFailover PROPERTY LABELS FLAKY)
@@ -217,7 +176,6 @@ set_property(TEST testThinClientTicket303 PROPERTY LABELS OMITTED)
 set_property(TEST testThinClientTicket304 PROPERTY LABELS OMITTED)
 set_property(TEST testThinClientTracking PROPERTY LABELS OMITTED)
 set_property(TEST testThinClientWriterException PROPERTY LABELS OMITTED)
-
 add_custom_target(run-stable-cppcache-integration-tests
   COMMAND ctest -C $<CONFIGURATION> -L STABLE
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -227,7 +185,6 @@ set_target_properties(run-stable-cppcache-integration-tests PROPERTIES
     EXCLUDE_FROM_ALL TRUE
     EXCLUDE_FROM_DEFAULT_BUILD TRUE
 )
-
 add_custom_target(run-quick-cppcache-integration-tests
   COMMAND ctest -C $<CONFIGURATION> -L QUICK -j 4
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -236,3 +193,5 @@ set_target_properties(run-quick-cppcache-integration-tests PROPERTIES
     EXCLUDE_FROM_ALL TRUE
     EXCLUDE_FROM_DEFAULT_BUILD TRUE
 )
+
+
