@@ -15,6 +15,16 @@
 
 project(nativeclient.tests.cpp LANGUAGES NONE)
 
+if ("SunOS" STREQUAL ${CMAKE_SYSTEM_NAME})
+    set( _SOLARIS 1 )
+elseif ("Linux" STREQUAL ${CMAKE_SYSTEM_NAME} )
+    set( _LINUX 1 )
+elseif ("Darwin" STREQUAL ${CMAKE_SYSTEM_NAME} )
+    set( _MACOSX 1 )
+elseif ("Windows" STREQUAL ${CMAKE_SYSTEM_NAME} )
+    set( _WIN32 1 )
+endif()
+
 add_subdirectory(fwklib)
 add_subdirectory(fwk)
 add_subdirectory(testobject)

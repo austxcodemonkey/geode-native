@@ -54,6 +54,7 @@ class ACE_Export ACE_Hash<int64_t> {
 };
 
 }  // namespace ACE_VERSIONED_NAMESPACE_NAME
+#else
 #endif
 
 namespace apache {
