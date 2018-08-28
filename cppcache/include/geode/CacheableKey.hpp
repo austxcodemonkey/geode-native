@@ -39,11 +39,10 @@ namespace client {
 /** Represents a cacheable key */
 class APACHE_GEODE_EXPORT CacheableKey : public virtual Cacheable {
  protected:
-  CacheableKey() = default;
   ~CacheableKey() override = default;
 
-
  public:
+  CacheableKey() = default;
   /** return true if this key matches other. */
   virtual bool operator==(const CacheableKey& other) const = 0;
 

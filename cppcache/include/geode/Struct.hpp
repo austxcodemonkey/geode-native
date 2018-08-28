@@ -51,6 +51,8 @@ class APACHE_GEODE_EXPORT Struct
  public:
   typedef std::vector<std::shared_ptr<Serializable>>::iterator iterator;
 
+  Struct() = default;
+
   /**
    * Constructor - meant only for internal use.
    */

@@ -389,8 +389,6 @@ class APACHE_GEODE_EXPORT RegionAttributes
   friend class Region;
   friend class RegionInternal;
   friend class RegionXmlCreation;
-
- private:
 };
 
 }  // namespace client
