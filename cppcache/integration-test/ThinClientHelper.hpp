@@ -36,10 +36,6 @@
 #define ROOT_NAME "ThinClientHelper"
 #endif
 
-#ifndef ROOT_SCOPE
-#define ROOT_SCOPE DISTRIBUTED_ACK
-#endif
-
 #include "CacheHelper.hpp"
 
 using apache::geode::client::CacheableInt32;

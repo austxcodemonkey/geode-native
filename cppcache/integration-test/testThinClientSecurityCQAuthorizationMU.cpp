@@ -26,7 +26,6 @@
 #include <string>
 
 #define ROOT_NAME "testThinClientSecurityCQAuthorizationMU"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
 

@@ -48,10 +48,6 @@
 #define ROOT_NAME "Root"
 #endif
 
-#ifndef ROOT_SCOPE
-#define ROOT_SCOPE LOCAL
-#endif
-
 #if defined(WIN32)
 #define GFSH "gfsh.bat"
 #define COPY_COMMAND "copy /y"

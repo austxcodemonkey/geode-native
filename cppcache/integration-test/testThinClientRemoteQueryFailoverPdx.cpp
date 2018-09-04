@@ -21,7 +21,6 @@
 #include <string>
 
 #define ROOT_NAME "testThinClientRemoteQueryFailoverPdx"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "ThinClientHelper.hpp"
 

@@ -25,7 +25,6 @@
 #include <geode/Struct.hpp>
 #include <geode/CqResults.hpp>
 #define ROOT_NAME "TestThinClientCqWithIR"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
 

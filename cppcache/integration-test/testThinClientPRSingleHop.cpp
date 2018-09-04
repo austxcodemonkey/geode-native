@@ -16,7 +16,6 @@
  */
 
 #define ROOT_NAME "testThinClientPRSingleHop"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include <string>
 

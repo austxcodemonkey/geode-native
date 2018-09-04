@@ -41,16 +41,6 @@
 #include "QueryStrings.hpp"
 #include "fw_dunit.hpp"
 
-//#include <geode/Struct.hpp>
-
-//#ifndef ROOT_NAME
-// ROOT_NAME+++ DEFINE ROOT_NAME before including QueryHelper.hpp
-//#endif
-
-#ifndef ROOT_SCOPE
-#define ROOT_SCOPE LOCAL
-#endif
-
 using apache::geode::client::CacheableKey;
 using apache::geode::client::CacheableStringArray;
 using apache::geode::client::CacheRegionHelper;

@@ -27,7 +27,6 @@
 
 
 #define ROOT_NAME "testThinClientHAEventIDMap"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
 

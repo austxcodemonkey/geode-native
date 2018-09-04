@@ -20,7 +20,6 @@
 #include <string>
 
 #define ROOT_NAME "testThinClientIntResPolKeysInv"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
 

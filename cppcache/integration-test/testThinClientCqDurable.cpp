@@ -31,8 +31,6 @@
 #include "fw_dunit.hpp"
 #include "ThinClientHelper.hpp"
 
-#define ROOT_SCOPE DISTRIBUTED_ACK
-
 #include <geode/Query.hpp>
 #include <geode/QueryService.hpp>
 #include <geode/RegionShortcut.hpp>

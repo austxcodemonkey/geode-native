@@ -25,7 +25,6 @@
 #include <geode/internal/chrono/duration.hpp>
 
 #define ROOT_NAME "testThinClientLRUExpiration"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
 #include "TallyListener.hpp"

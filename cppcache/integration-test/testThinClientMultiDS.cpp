@@ -22,7 +22,6 @@
 #include <string>
 
 #define ROOT_NAME "testThinClientMultiDS"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "ThinClientSecurityHelper.hpp"
 

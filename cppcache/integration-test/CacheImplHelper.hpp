@@ -29,11 +29,7 @@
 ROOT_NAME++ + DEFINE ROOT_NAME before including CacheHelper.hpp
 #endif
 
-#ifndef ROOT_SCOPE
-#define ROOT_SCOPE LOCAL
-#endif
-
-              using apache::geode::client::Properties;
+using apache::geode::client::Properties;
 using apache::geode::client::Properties;
 using apache::geode::client::RegionAttributesFactory;
 

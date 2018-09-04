@@ -20,7 +20,6 @@
 #include <string>
 
 #define ROOT_NAME "testThinClientRemoteQuerySS"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "ThinClientHelper.hpp"
 

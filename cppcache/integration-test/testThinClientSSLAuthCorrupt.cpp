@@ -21,7 +21,6 @@
 #include <string>
 
 #define ROOT_NAME "ThinClientSSLAuthCorrupt"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
 

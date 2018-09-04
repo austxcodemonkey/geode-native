@@ -17,8 +17,6 @@
 
 #include "fw_dunit.hpp"
 
-#define ROOT_SCOPE DISTRIBUTED_ACK
-
 #include "ThinClientHelper.hpp"
 #include "TallyListener.hpp"
 

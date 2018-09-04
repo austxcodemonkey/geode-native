@@ -40,10 +40,6 @@
 #define ROOT_NAME "Root"
 #endif
 
-#ifndef ROOT_SCOPE
-#define ROOT_SCOPE LOCAL
-#endif
-
 namespace apache {
 namespace geode {
 namespace client {

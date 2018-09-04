@@ -16,7 +16,6 @@
  */
 
 #define ROOT_NAME "testThinClientPRPutAllFailover"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "fw_dunit.hpp"
 #include "BuiltinCacheableWrappers.hpp"

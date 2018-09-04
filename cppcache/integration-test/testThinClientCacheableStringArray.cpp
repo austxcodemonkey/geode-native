@@ -21,7 +21,6 @@
 #include <string>
 
 #define ROOT_NAME "TestThinClientCacheableStringArray"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
 #include "ThinClientHelper.hpp"

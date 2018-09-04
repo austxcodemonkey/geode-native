@@ -16,7 +16,6 @@
  */
 
 #define ROOT_NAME "TestThinClientHeapLRU"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "fw_dunit.hpp"
 #include <ace/OS.h>

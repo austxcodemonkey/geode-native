@@ -40,7 +40,6 @@ END_MAIN*/
 #include <geode/FunctionService.hpp>
 
 #define ROOT_NAME "testThinClientPdxTests"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "ThinClientHelper.hpp"
 #include "testobject/PdxClassV1.hpp"

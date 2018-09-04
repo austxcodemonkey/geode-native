@@ -32,7 +32,6 @@
 #include "LocalRegion.hpp"
 
 #define ROOT_NAME "testThinClientPdxInstance"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
 #include "CacheImpl.hpp"

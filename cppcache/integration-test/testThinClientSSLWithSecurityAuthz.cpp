@@ -20,7 +20,6 @@
 #include <geode/CqAttributesFactory.hpp>
 
 #define ROOT_NAME "testThinClientSSLWithSecurityAuthz"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
 #include "ThinClientHelper.hpp"

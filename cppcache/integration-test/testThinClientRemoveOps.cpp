@@ -24,7 +24,6 @@
 #include <string>
 
 #define ROOT_NAME "testThinClientRemoveOps"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
 
