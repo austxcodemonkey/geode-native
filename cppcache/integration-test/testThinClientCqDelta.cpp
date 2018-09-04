@@ -18,7 +18,11 @@
 #include "testobject/DeltaTestImpl.hpp"
 #include "fw_dunit.hpp"
 #include <string>
+
+#define CacheHelperOwner
+#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
+
 #include <geode/CqAttributesFactory.hpp>
 #include <geode/CqAttributes.hpp>
 #include <geode/CqListener.hpp>
@@ -40,8 +44,6 @@ using apache::geode::client::CqListener;
 using apache::geode::client::IllegalStateException;
 using apache::geode::client::QueryService;
 
-CacheHelper* cacheHelper = nullptr;
-
 #include "locator_globals.hpp"
 
 #define CLIENT1 s1p1
@@ -50,11 +52,6 @@ CacheHelper* cacheHelper = nullptr;
 #include "LocatorHelper.hpp"
 
 using testobject::DeltaTestImpl;
-
-CacheHelper* getHelper() {
-  ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
-  return cacheHelper;
-}
 
 class CqDeltaListener : public CqListener {
  public:
@@ -87,37 +84,9 @@ class CqDeltaListener : public CqListener {
 
 std::shared_ptr<CqDeltaListener> g_CqListener;
 
-void initClient(const bool isthinClient) {
-  if (cacheHelper == nullptr) {
-    cacheHelper = new CacheHelper(isthinClient);
-  }
-  ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
-
 void initClientNoPools() {
   cacheHelper = new CacheHelper(0);
   ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
-
-void cleanProc() {
-  if (cacheHelper != nullptr) {
-    delete cacheHelper;
-    cacheHelper = nullptr;
-  }
-}
-
-void createPooledRegion(const char* name, bool ackMode, const char* locators,
-                        const char* poolname,
-                        bool clientNotificationEnabled = false,
-                        bool cachingEnable = true) {
-  LOG("createRegion_Pool() entered.");
-  fprintf(stdout, "Creating region --  %s  ackMode is %d\n", name, ackMode);
-  fflush(stdout);
-  auto regPtr =
-      getHelper()->createPooledRegion(name, ackMode, locators, poolname,
-                                      cachingEnable, clientNotificationEnabled);
-  ASSERT(regPtr != nullptr, "Failed to create region.");
-  LOG("Pooled Region created.");
 }
 
 void createPooledLRURegion(const char* name, bool ackMode, const char* locators,

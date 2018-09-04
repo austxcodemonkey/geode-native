@@ -28,8 +28,9 @@
 #include <limits>
 
 #define ROOT_NAME "ThinClientDistOps"
-#define ROOT_SCOPE DISTRIBUTED_ACK
 
+#define CacheHelperOwner
+#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 #define CLIENT1 s1p1
@@ -49,7 +50,6 @@ using apache::geode::client::EntryExistsException;
 using apache::geode::client::IllegalArgumentException;
 using apache::geode::client::Properties;
 
-CacheHelper* cacheHelper = nullptr;
 static bool isLocalServer = false;
 static bool isLocator = false;
 static int numberOfLocators = 0;
@@ -67,123 +67,26 @@ DUNIT_TASK_DEFINITION(CLIENT2, Alter_Client_Grid_Property_2)
   { g_isGridClient = !g_isGridClient; }
 END_TASK_DEFINITION
 
+namespace thinclientdistops {
+
 void initClient(const bool isthinClient, const bool redirectLog) {
-  if (cacheHelper == nullptr) {
-    auto config = Properties::create();
-    if (g_isGridClient) {
-      config->insert("grid-client", "true");
-    }
-    config->insert("log-level", "finer");
-
-    if (redirectLog) {
-      config->insert("log-file", CacheHelper::unitTestOutputFile());
-    }
-
-    cacheHelper = new CacheHelper(isthinClient, config);
+  auto config = Properties::create();
+  if (g_isGridClient) {
+    config->insert("grid-client", "true");
   }
-  ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
+  config->insert("log-level", "finer");
+
+  if (redirectLog) {
+    config->insert("log-file", CacheHelper::unitTestOutputFile());
+  }
+
+  ::initClient(isthinClient, config);
 }
 
-void initClient(const bool isthinClient) { initClient(isthinClient, false); }
-
-void cleanProc() {
-  if (cacheHelper != nullptr) {
-    delete cacheHelper;
-    cacheHelper = nullptr;
-  }
+void initClient(const bool isthinClient) {
+  thinclientdistops::initClient(isthinClient, false);
 }
 
-CacheHelper* getHelper() {
-  ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
-  return cacheHelper;
-}
-
-void _verifyEntry(const char* name, const char* key, const char* val,
-                  bool noKey) {
-  // Verify key and value exist in this region, in this process.
-  const char* value = val ? val : "";
-  char* buf =
-      reinterpret_cast<char*>(malloc(1024 + strlen(key) + strlen(value)));
-  ASSERT(buf, "Unable to malloc buffer for logging.");
-  if (noKey) {
-    sprintf(buf, "Verify key %s does not exist in region %s", key, name);
-  } else if (!val) {
-    sprintf(buf, "Verify value for key %s does not exist in region %s", key,
-            name);
-  } else {
-    sprintf(buf, "Verify value for key %s is: %s in region %s", key, value,
-            name);
-  }
-  LOG(buf);
-  free(buf);
-
-  auto regPtr = getHelper()->getRegion(name);
-  ASSERT(regPtr != nullptr, "Region not found.");
-
-  auto keyPtr = CacheableKey::create(key);
-
-  // if the region is no ack, then we may need to wait...
-  if (noKey == false) {  // need to find the key!
-    ASSERT(regPtr->containsKey(keyPtr), "Key not found in region.");
-  }
-  if (val != nullptr) {  // need to have a value!
-    ASSERT(regPtr->containsValueForKey(keyPtr), "Value not found in region.");
-  }
-
-  // loop up to MAX times, testing condition
-  uint32_t MAX = 100;
-  uint32_t SLEEP = 10;  // milliseconds
-  uint32_t containsKeyCnt = 0;
-  uint32_t containsValueCnt = 0;
-  uint32_t testValueCnt = 0;
-
-  for (int i = MAX; i >= 0; i--) {
-    if (noKey) {
-      if (regPtr->containsKey(keyPtr)) {
-        containsKeyCnt++;
-      } else {
-        break;
-      }
-      ASSERT(containsKeyCnt < MAX, "Key found in region.");
-    }
-    if (val == nullptr) {
-      if (regPtr->containsValueForKey(keyPtr)) {
-        containsValueCnt++;
-      } else {
-        break;
-      }
-      ASSERT(containsValueCnt < MAX, "Value found in region.");
-    }
-
-    if (val != nullptr) {
-      auto checkPtr =
-          std::dynamic_pointer_cast<CacheableString>(regPtr->get(keyPtr));
-
-      ASSERT(checkPtr != nullptr, "Value Ptr should not be null.");
-      char buf[1024];
-      sprintf(buf, "In verify loop, get returned %s for key %s",
-              checkPtr->value().c_str(), key);
-      LOG(buf);
-      if (strcmp(checkPtr->value().c_str(), value) != 0) {
-        testValueCnt++;
-      } else {
-        break;
-      }
-      ASSERT(testValueCnt < MAX, "Incorrect value found.");
-    }
-    dunit::sleep(SLEEP);
-  }
-}
-
-#define verifyEntry(x, y, z) _verifyEntry(x, y, z, __LINE__)
-
-void _verifyEntry(const char* name, const char* key, const char* val,
-                  int line) {
-  char logmsg[1024];
-  sprintf(logmsg, "verifyEntry() called from %d.\n", line);
-  LOG(logmsg);
-  _verifyEntry(name, key, val, false);
-  LOG("Entry verified.");
 }
 
 void createRegion(const char* name, bool ackMode, const char* endpoints,
@@ -196,19 +99,6 @@ void createRegion(const char* name, bool ackMode, const char* endpoints,
                                           endpoints, clientNotificationEnabled);
   ASSERT(regPtr != nullptr, "Failed to create region.");
   LOG("Region created.");
-}
-void createPooledRegion(const char* name, bool ackMode, const char* locators,
-                        const char* poolname,
-                        bool clientNotificationEnabled = false,
-                        bool cachingEnable = true) {
-  LOG("createRegion_Pool() entered.");
-  fprintf(stdout, "Creating region --  %s  ackMode is %d\n", name, ackMode);
-  fflush(stdout);
-  auto regPtr =
-      getHelper()->createPooledRegion(name, ackMode, locators, poolname,
-                                      cachingEnable, clientNotificationEnabled);
-  ASSERT(regPtr != nullptr, "Failed to create region.");
-  LOG("Pooled Region created.");
 }
 
 void createPooledRegionSticky(const char* name, bool ackMode,
@@ -223,31 +113,6 @@ void createPooledRegionSticky(const char* name, bool ackMode,
       clientNotificationEnabled);
   ASSERT(regPtr != nullptr, "Failed to create region.");
   LOG("Pooled Region created.");
-}
-
-void createEntry(const char* name, const char* key, const char* value) {
-  LOG("createEntry() entered.");
-  fprintf(stdout, "Creating entry -- key: %s  value: %s in region %s\n", key,
-          value, name);
-  fflush(stdout);
-  // Create entry, verify entry is correct
-  auto keyPtr = CacheableKey::create(key);
-  auto valPtr = CacheableString::create(value);
-
-  auto regPtr = getHelper()->getRegion(name);
-  ASSERT(regPtr != nullptr, "Region not found.");
-
-  ASSERT(!regPtr->containsKey(keyPtr),
-         "Key should not have been found in region.");
-  ASSERT(!regPtr->containsValueForKey(keyPtr),
-         "Value should not have been found in region.");
-
-  // regPtr->create( keyPtr, valPtr );
-  regPtr->put(keyPtr, valPtr);
-  LOG("Created entry.");
-
-  verifyEntry(name, key, value);
-  LOG("Entry created.");
 }
 
 void createAndVerifyEntry(const char* name) {
@@ -403,29 +268,6 @@ void createEntryTwice(const char* name, const char* key, const char* value) {
   return;  // This return will never reach
 }
 
-void updateEntry(const char* name, const char* key, const char* value) {
-  LOG("updateEntry() entered.");
-  fprintf(stdout, "Updating entry -- key: %s  value: %s in region %s\n", key,
-          value, name);
-  fflush(stdout);
-  // Update entry, verify entry is correct
-  auto keyPtr = CacheableKey::create(key);
-  auto valPtr = CacheableString::create(value);
-
-  auto regPtr = getHelper()->getRegion(name);
-  ASSERT(regPtr != nullptr, "Region not found.");
-
-  ASSERT(regPtr->containsKey(keyPtr), "Key should have been found in region.");
-  ASSERT(regPtr->containsValueForKey(keyPtr),
-         "Value should have been found in region.");
-
-  regPtr->put(keyPtr, valPtr);
-  LOG("Put entry.");
-
-  verifyEntry(name, key, value);
-  LOG("Entry updated.");
-}
-
 void doGetAgain(const char* name, const char* key, const char* value) {
   LOG("doGetAgain() entered.");
   fprintf(stdout,
@@ -456,45 +298,6 @@ void doGetAgain(const char* name, const char* key, const char* value) {
   LOG("GetAgain complete.");
 }
 
-void doNetsearch(const char* name, const char* key, const char* value) {
-  LOG("doNetsearch() entered.");
-  fprintf(
-      stdout,
-      "Netsearching for entry -- key: %s  expecting value: %s in region %s\n",
-      key, value, name);
-  fflush(stdout);
-  static int count = 0;
-  // Get entry created in Process A, verify entry is correct
-  auto keyPtr = CacheableKey::create(key);
-
-  auto regPtr = getHelper()->getRegion(name);
-  fprintf(stdout, "netsearch  region %s\n", regPtr->getName().c_str());
-  fflush(stdout);
-  ASSERT(regPtr != nullptr, "Region not found.");
-
-  if (count == 0) {
-    ASSERT(!regPtr->containsKey(keyPtr),
-           "Key should not have been found in region.");
-    ASSERT(!regPtr->containsValueForKey(keyPtr),
-           "Value should not have been found in region.");
-    count++;
-  }
-  auto checkPtr = std::dynamic_pointer_cast<CacheableString>(
-      regPtr->get(keyPtr));  // force a netsearch
-
-  if (checkPtr != nullptr) {
-    LOG("checkPtr is not null");
-    char buf[1024];
-    sprintf(buf, "In net search, get returned %s for key %s",
-            checkPtr->value().c_str(), key);
-    LOG(buf);
-  } else {
-    LOG("checkPtr is nullptr");
-  }
-  verifyEntry(name, key, value);
-  LOG("Netsearch complete.");
-}
-
 const char* keys[] = {"Key-1", "Key-2", "Key-3", "Key-4"};
 const char* vals[] = {"Value-1", "Value-2", "Value-3", "Value-4"};
 const char* nvals[] = {"New Value-1", "New Value-2", "New Value-3",
@@ -509,7 +312,7 @@ const bool NO_ACK = false;
 
 DUNIT_TASK_DEFINITION(CLIENT1, CreateNonexistentServerRegion_Pooled_Locator)
   {
-    initClient(true);
+    ::initClient(true);
     createPooledRegion("non-region", USE_ACK, locatorsG, "__TESTPOOL1_");
     try {
       createEntry("non-region", keys[0], vals[0]);
@@ -527,7 +330,7 @@ END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT1,
                       CreateNonexistentServerRegion_Pooled_Locator_Sticky)
   {
-    initClient(true);
+    ::initClient(true);
     createPooledRegionSticky("non-region", USE_ACK, locatorsG, "__TESTPOOL1_");
     try {
       createEntry("non-region", keys[0], vals[0]);
@@ -551,7 +354,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, CreatePoolForUpdateLocatorList)
     = -1, int connections = -1, int loadConditioningInterval = - 1, bool
     isMultiuserMode = false, int updateLocatorListInterval = 5000 )
     */
-    initClient(true, true);
+    thinclientdistops::initClient(true);
     getHelper()->createPool("__TESTPOOL1_", locatorsG, nullptr, 0, false,
                             std::chrono::milliseconds::zero(), -1, -1, false);
     LOG("CreatePoolForUpdateLocatorList complete.");
@@ -567,7 +370,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, CreatePoolForDontUpdateLocatorList)
     = -1, int connections = -1, int loadConditioningInterval = - 1, bool
     isMultiuserMode = false, int updateLocatorListInterval = 5000 )
     */
-    initClient(true, true);
+    thinclientdistops::initClient(true);
     getHelper()->createPool("__TESTPOOL1_", locatorsG, nullptr, 0, false,
                             std::chrono::milliseconds::zero(), -1, -1, false);
     LOG("CreatePoolForDontUpdateLocatorList complete.");

@@ -57,17 +57,6 @@ const char* locatorsG =
 
 #include "LocatorHelper.hpp"
 
-#define verifyEntry(a, b, c, d) _verifyEntry(a, b, c, d, __LINE__)
-
-void _verifyEntry(const std::string& name, const char* key, const char* val,
-                  bool checkLocal, int line) {
-  char logmsg[1024];
-  sprintf(logmsg, "verifyEntry() called from %d.\n", line);
-  LOG(logmsg);
-  _verifyEntry(name, key, val, false, checkLocal);
-  LOG("Entry verified.");
-}
-
 const char* _keys[] = {"Key-1", "Key-2", "Key-3", "Key-4"};
 const char* _vals[] = {"Value-1", "Value-2", "Value-3", "Value-4"};
 const char* _nvals[] = {"New Value-1", "New Value-2", "New Value-3",
@@ -218,8 +207,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, Client1GetAll)
     ASSERT(reg1->size() == 2, "Expected 2 entries in the region");
     auto regEntries = reg1->entries(false);
     ASSERT(regEntries.size() == 2, "Expected 2 entries in the region.entries");
-    verifyEntry(_regionNames[1], _keys[2], _nvals[2], true);
-    verifyEntry(_regionNames[1], _keys[3], _vals[3], true);
+    _verifyEntry(_regionNames[1], _keys[2], _nvals[2], true);
+    _verifyEntry(_regionNames[1], _keys[3], _vals[3], true);
 
     // also check with nullptr values that region is properly populated
     {
@@ -230,8 +219,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, Client1GetAll)
       regEntries = reg1->entries(false);
       ASSERT(regEntries.size() == 2,
              "Expected 2 entries in the region.entries");
-      verifyEntry(_regionNames[1], _keys[2], _nvals[2], true);
-      verifyEntry(_regionNames[1], _keys[3], _nvals[3], true);
+      _verifyEntry(_regionNames[1], _keys[2], _nvals[2], true);
+      _verifyEntry(_regionNames[1], _keys[3], _nvals[3], true);
     }
   }
 END_TASK_DEFINITION
@@ -297,8 +286,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, Client1GetAll_Pool)
       auto regEntries = reg1->entries(false);
       ASSERT(regEntries.size() == 2,
              "Expected 2 entries in the region.entries");
-      verifyEntry(_regionNames[1], _keys[2], _nvals[2], true);
-      verifyEntry(_regionNames[1], _keys[3], _vals[3], true);
+      _verifyEntry(_regionNames[1], _keys[2], _nvals[2], true);
+      _verifyEntry(_regionNames[1], _keys[3], _vals[3], true);
 
       // also check with nullptr values that region is properly populated
       reg1->localInvalidate(key3);
@@ -309,8 +298,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, Client1GetAll_Pool)
       regEntries = reg1->entries(false);
       ASSERT(regEntries.size() == 2,
              "Expected 2 entries in the region.entries");
-      verifyEntry(_regionNames[1], _keys[2], _nvals[2], true);
-      verifyEntry(_regionNames[1], _keys[3], _nvals[3], true);
+      _verifyEntry(_regionNames[1], _keys[2], _nvals[2], true);
+      _verifyEntry(_regionNames[1], _keys[3], _nvals[3], true);
     }
   }
 END_TASK_DEFINITION

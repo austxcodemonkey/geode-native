@@ -113,19 +113,6 @@ void verifyGetAllWithCallBackArg(std::shared_ptr<Region> region,
   verifyGetAll(region, vals, startIndex, callBack);
 }
 
-void createPooledRegion(const char* name, bool ackMode, const char* locators,
-                        const char* poolname,
-                        bool clientNotificationEnabled = false,
-                        bool cachingEnable = true) {
-  LOG("createRegion_Pool() entered.");
-  fprintf(stdout, "Creating region --  %s  ackMode is %d\n", name, ackMode);
-  fflush(stdout);
-  auto regPtr =
-      getHelper()->createPooledRegion(name, ackMode, locators, poolname,
-                                      cachingEnable, clientNotificationEnabled);
-  ASSERT(regPtr != nullptr, "Failed to create region.");
-  LOG("Pooled Region created.");
-}
 
 DUNIT_TASK_DEFINITION(CLIENT1, StepOne_Pooled_Locator)
   {
@@ -133,8 +120,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, StepOne_Pooled_Locator)
     // start 1st client with caching enable true and client notification true
     initClientWithPool(true, "__TEST_POOL1__", locatorsG, nullptr, nullptr, 0,
                        true);
-    createPooledRegion(_regionNames[0], USE_ACK, locatorsG, poolName, true,
-                       true);
+    createPooledRegion(_regionNames[0], USE_ACK, locatorsG, poolName, true);
     LOG("StepOne_Pooled_Locator complete.");
   }
 END_TASK_DEFINITION
@@ -144,8 +130,7 @@ DUNIT_TASK_DEFINITION(CLIENT2, StepTwo_Pooled_Locator)
     // start 1st client with caching enable true and client notification true
     initClientWithPool(true, "__TEST_POOL1__", locatorsG, nullptr, nullptr, 0,
                        true);
-    createPooledRegion(_regionNames[0], USE_ACK, locatorsG, poolName, true,
-                       true);
+    createPooledRegion(_regionNames[0], USE_ACK, locatorsG, poolName, true);
     LOG("StepTwo_Pooled_Locator complete.");
   }
 END_TASK_DEFINITION

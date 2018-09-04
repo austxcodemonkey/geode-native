@@ -28,6 +28,8 @@
 
 #define ROOT_NAME "testThinClientHAEventIDMap"
 
+#define CacheHelperOwner
+#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 using apache::geode::client::CacheableInt32;
@@ -88,7 +90,6 @@ class DupChecker : public CacheListener {
 #define SERVER1 s2p1
 #define SERVER2 s2p2
 
-CacheHelper* cacheHelper = nullptr;
 static bool isLocalServer = false;
 static bool isLocator = false;
 static int numberOfLocators = 1;
@@ -96,6 +97,8 @@ static int numberOfLocators = 1;
 const char* locatorsG =
     CacheHelper::getLocatorHostPort(isLocator, isLocalServer, numberOfLocators);
 int g_redundancyLevel = 0;
+
+namespace thinclienthaeventidmap {
 
 void initClient() {
   auto props = Properties::create();
@@ -108,231 +111,8 @@ void initClient() {
   ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
 }
 
-void cleanProc() {
-  if (cacheHelper != nullptr) {
-    delete cacheHelper;
-    cacheHelper = nullptr;
-  }
 }
 
-CacheHelper* getHelper() {
-  ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
-  return cacheHelper;
-}
-
-void _verifyEntry(const char* name, const char* key, const char* val,
-                  bool noKey, bool isCreated = false) {
-  // Verify key and value exist in this region, in this process.
-  const char* value = val ? val : "";
-  char* buf =
-      reinterpret_cast<char*>(malloc(1024 + strlen(key) + strlen(value)));
-  ASSERT(buf, "Unable to malloc buffer for logging.");
-  if (!isCreated) {
-    if (noKey) {
-      sprintf(buf, "Verify key %s does not exist in region %s", key, name);
-    } else if (!val) {
-      sprintf(buf, "Verify value for key %s does not exist in region %s", key,
-              name);
-    } else {
-      sprintf(buf, "Verify value for key %s is: %s in region %s", key, value,
-              name);
-    }
-    LOG(buf);
-  }
-  free(buf);
-
-  auto regPtr = getHelper()->getRegion(name);
-  ASSERT(regPtr != nullptr, "Region not found.");
-
-  auto keyPtr = CacheableKey::create(key);
-
-  // if the region is no ack, then we may need to wait...
-  if (!isCreated) {
-    if (noKey == false) {  // need to find the key!
-      ASSERT(regPtr->containsKey(keyPtr), "Key not found in region.");
-    }
-    if (val != nullptr) {  // need to have a value!
-      // ASSERT( regPtr->containsValueForKey( keyPtr ), "Value not found in
-      // region." );
-    }
-  }
-
-  // loop up to MAX times, testing condition
-  uint32_t MAX = 100;
-  //  changed sleep from 10 ms
-  uint32_t SLEEP = 10;  // milliseconds
-  uint32_t containsKeyCnt = 0;
-  uint32_t containsValueCnt = 0;
-  uint32_t testValueCnt = 0;
-
-  for (int i = MAX; i >= 0; i--) {
-    if (isCreated) {
-      if (!regPtr->containsKey(keyPtr)) {
-        containsKeyCnt++;
-      } else {
-        break;
-      }
-      ASSERT(containsKeyCnt < MAX, "Key has not been created in region.");
-    } else {
-      if (noKey) {
-        if (regPtr->containsKey(keyPtr)) {
-          containsKeyCnt++;
-        } else {
-          break;
-        }
-        ASSERT(containsKeyCnt < MAX, "Key found in region.");
-      }
-      if (val == nullptr) {
-        if (regPtr->containsValueForKey(keyPtr)) {
-          containsValueCnt++;
-        } else {
-          break;
-        }
-        ASSERT(containsValueCnt < MAX, "Value found in region.");
-      }
-
-      if (val != nullptr) {
-        auto checkPtr =
-            std::dynamic_pointer_cast<CacheableString>(regPtr->get(keyPtr));
-
-        ASSERT(checkPtr != nullptr, "Value Ptr should not be null.");
-        char buf[1024];
-        sprintf(buf, "In verify loop, get returned %s for key %s",
-                checkPtr->value().c_str(), key);
-        LOG(buf);
-        if (strcmp(checkPtr->value().c_str(), value) != 0) {
-          testValueCnt++;
-        } else {
-          break;
-        }
-        ASSERT(testValueCnt < MAX, "Incorrect value found.");
-      }
-    }
-    dunit::sleep(SLEEP);
-  }
-}
-
-void _verifyIntEntry(const char* name, const char* key, const int val,
-                     bool noKey, bool isCreated = false) {
-  // Verify key and value exist in this region, in this process.
-  int value = val;
-  char* buf = reinterpret_cast<char*>(malloc(1024 + strlen(key) + 20));
-  ASSERT(buf, "Unable to malloc buffer for logging.");
-  if (!isCreated) {
-    if (noKey) {
-      sprintf(buf, "Verify key %s does not exist in region %s", key, name);
-    } else if (val == 0) {
-      sprintf(buf, "Verify value for key %s does not exist in region %s", key,
-              name);
-    } else {
-      sprintf(buf, "Verify value for key %s is: %d in region %s", key, value,
-              name);
-    }
-    LOG(buf);
-  }
-  free(buf);
-
-  auto regPtr = getHelper()->getRegion(name);
-  ASSERT(regPtr != nullptr, "Region not found.");
-
-  auto keyPtr = CacheableKey::create(key);
-
-  // if the region is no ack, then we may need to wait...
-  if (!isCreated) {
-    if (noKey == false) {  // need to find the key!
-      ASSERT(regPtr->containsKey(keyPtr), "Key not found in region.");
-    }
-    if (val != 0) {  // need to have a value!
-      // ASSERT( regPtr->containsValueForKey( keyPtr ), "Value not found in
-      // region." );
-    }
-  }
-
-  // loop up to MAX times, testing condition
-  uint32_t MAX = 100;
-  //  changed sleep from 10 ms
-  uint32_t SLEEP = 10;  // milliseconds
-  uint32_t containsKeyCnt = 0;
-  uint32_t containsValueCnt = 0;
-  uint32_t testValueCnt = 0;
-
-  for (int i = MAX; i >= 0; i--) {
-    if (isCreated) {
-      if (!regPtr->containsKey(keyPtr)) {
-        containsKeyCnt++;
-      } else {
-        break;
-      }
-      ASSERT(containsKeyCnt < MAX, "Key has not been created in region.");
-    } else {
-      if (noKey) {
-        if (regPtr->containsKey(keyPtr)) {
-          containsKeyCnt++;
-        } else {
-          break;
-        }
-        ASSERT(containsKeyCnt < MAX, "Key found in region.");
-      }
-      if (val == 0) {
-        if (regPtr->containsValueForKey(keyPtr)) {
-          containsValueCnt++;
-        } else {
-          break;
-        }
-        ASSERT(containsValueCnt < MAX, "Value found in region.");
-      }
-
-      if (val != 0) {
-        auto checkPtr =
-            std::dynamic_pointer_cast<CacheableInt32>(regPtr->get(keyPtr));
-
-        ASSERT(checkPtr != nullptr, "Value Ptr should not be null.");
-        char buf[1024];
-        sprintf(buf, "In verify loop, get returned %d for key %s",
-                checkPtr->value(), key);
-        LOG(buf);
-        // if ( strcmp( checkPtr->value().c_str(), value ) != 0 ){
-        if (checkPtr->value() != value) {
-          testValueCnt++;
-        } else {
-          break;
-        }
-        ASSERT(testValueCnt < MAX, "Incorrect value found.");
-      }
-    }
-    dunit::sleep(SLEEP);
-  }
-}
-
-#define verifyEntry(x, y, z) _verifyEntry(x, y, z, __LINE__)
-
-void _verifyEntry(const char* name, const char* key, const char* val,
-                  int line) {
-  char logmsg[1024];
-  sprintf(logmsg, "verifyEntry() called from %d.\n", line);
-  LOG(logmsg);
-  _verifyEntry(name, key, val, false);
-  LOG("Entry verified.");
-}
-
-#define verifyIntEntry(x, y, z) _verifyIntEntry(x, y, z, __LINE__)
-
-void _verifyIntEntry(const char* name, const char* key, const int val,
-                     int line) {
-  char logmsg[1024];
-  sprintf(logmsg, "verifyIntEntry() called from %d.\n", line);
-  LOG(logmsg);
-  _verifyIntEntry(name, key, val, false);
-  LOG("Entry verified.");
-}
-
-void _verifyCreated(const char* name, const char* key, int line) {
-  char logmsg[1024];
-  sprintf(logmsg, "verifyCreated() called from %d.\n", line);
-  LOG(logmsg);
-  _verifyEntry(name, key, nullptr, false, true);
-  LOG("Entry created.");
-}
 
 void createRegion(const char* name, bool ackMode,
                   bool clientNotificationEnabled = true) {
@@ -345,31 +125,6 @@ void createRegion(const char* name, bool ackMode,
                                           endpoints, clientNotificationEnabled);
   ASSERT(regPtr != nullptr, "Failed to create region.");
   LOG("Region created.");
-}
-
-void createEntry(const char* name, const char* key, const char* value) {
-  LOG("createEntry() entered.");
-  fprintf(stdout, "Creating entry -- key: %s  value: %s in region %s\n", key,
-          value, name);
-  fflush(stdout);
-  // Create entry, verify entry is correct
-  auto keyPtr = CacheableKey::create(key);
-  auto valPtr = CacheableString::create(value);
-
-  auto regPtr = getHelper()->getRegion(name);
-  ASSERT(regPtr != nullptr, "Region not found.");
-
-  ASSERT(!regPtr->containsKey(keyPtr),
-         "Key should not have been found in region.");
-  ASSERT(!regPtr->containsValueForKey(keyPtr),
-         "Value should not have been found in region.");
-
-  // regPtr->create( keyPtr, valPtr );
-  regPtr->put(keyPtr, valPtr);
-  LOG("Created entry.");
-
-  verifyEntry(name, key, value);
-  LOG("Entry created.");
 }
 
 void createIntEntry(const char* name, const char* key, const int value) {
@@ -442,7 +197,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, InitClient1)
   {
-    initClient();
+    thinclienthaeventidmap::initClient();
     initClientAndRegion(1, false);
     LOG("Initialized client with redundancy level 1.");
   }
@@ -450,7 +205,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, InitClient2)
   {
-    initClient();
+    thinclienthaeventidmap::initClient();
     initClientAndRegion(1);
     LOG("Initialized client with redundancy level 1.");
 

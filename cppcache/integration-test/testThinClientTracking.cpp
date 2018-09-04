@@ -28,7 +28,7 @@
 putThread *thread1 = nullptr;
 putThread *thread2 = nullptr;
 
-void createAuthzRegion() {
+void createAuthRegion() {
   initCredentialGenerator();
   initClientAuth('A');
   std::shared_ptr<Region> rptr;
@@ -36,7 +36,8 @@ void createAuthzRegion() {
   rptr = getHelper()->getRegion(regionNamesAuth[0]);
   rptr->registerAllKeys();
 }
-void verifyEntry(const char *value) {
+
+void _verifyEntry(const char *value) {
   auto rptr = getHelper()->getRegion(regionNamesAuth[0]);
   auto entry = rptr->getEntry("key-1");
   ASSERT(entry != nullptr, "Key should have been found in region.");
@@ -51,6 +52,7 @@ void verifyEntry(const char *value) {
   ASSERT(strcmp(valuePtr->value().c_str(), value) == 0,
          "Updated value not found in region.");
 }
+
 DUNIT_TASK_DEFINITION(SERVER, StartServer1)
   {
     initCredentialGenerator();
@@ -79,13 +81,13 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, StartClient1)
   {
-    createAuthzRegion();
+    createAuthRegion();
     LOG("CLIENT1 started");
   }
 END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT2, StartClient2)
   {
-    createAuthzRegion();
+    createAuthRegion();
     LOG("CLIENT2 started");
   }
 END_TASK_DEFINITION
@@ -112,14 +114,14 @@ DUNIT_TASK_DEFINITION(CLIENT2, PutOnClient2)
 END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT1, VerifyOnClient1)
   {
-    verifyEntry("client2-value1");
+    _verifyEntry("client2-value1");
     LOG("VerifyOnClient1 completed");
   }
 END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT2, VerifyOnClient2)
   {
     SLEEP(5000);
-    verifyEntry("client2-value1");
+    _verifyEntry("client2-value1");
     LOG("VerifyOnClient2 completed");
   }
 END_TASK_DEFINITION
@@ -127,7 +129,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, VerifyOnClient12)
   {
     thread1->stop();
     delete thread1;
-    verifyEntry("client2-value1");
+    _verifyEntry("client2-value1");
 
     LOG("VerifyOnClient12 completed");
   }
@@ -192,19 +194,19 @@ DUNIT_TASK_DEFINITION(CLIENT2, PutTrackedMapOnClient2)
     thread2->start();
     thread2->stop();
     delete thread2;
-    verifyEntry("client2-value10");
+    _verifyEntry("client2-value10");
     LOG("PutTrackedMapOnClient2 completed");
   }
 END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT1, VerifyTrackedMapOnClient1)
   {
-    verifyEntry("client2-value10");
+    _verifyEntry("client2-value10");
     LOG("VerifyTrackedMapOnClient1 completed");
   }
 END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT2, VerifyTrackedMapOnClient2)
   {
-    verifyEntry("client2-value10");
+    _verifyEntry("client2-value10");
     LOG("VerifyTrackedMapOnClient2 completed");
   }
 END_TASK_DEFINITION
@@ -212,7 +214,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, VerifyTrackedMapOnClient12)
   {
     thread1->stop();
     delete thread1;
-    verifyEntry("client2-value10");
+    _verifyEntry("client2-value10");
     LOG("VerifyTrackedMapOnClient12 completed");
   }
 END_TASK_DEFINITION
