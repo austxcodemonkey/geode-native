@@ -92,7 +92,7 @@ namespace testframework {
 
 /** @brief Table of object enumeration data types */
 typedef enum eFwkDataType {
-  DATA_TYPE_nullptr,
+  DATA_TYPE_NULL,
   DATA_TYPE_CONTENT,
   DATA_TYPE_LIST,
   DATA_TYPE_ONEOF,
