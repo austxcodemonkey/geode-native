@@ -150,8 +150,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, StepSeven)
     verifyEntry(regionNames[0], keys[1], vals[1]);
     verifyEntry(regionNames[0], keys[2], vals[2]);
 
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[0], keys[3], vals[3]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[0], keys[3], vals[3]);
 
     updateEntry(regionNames[1], keys[0], nvals[0]);
     updateEntry(regionNames[1], keys[1], nvals[1]);

@@ -86,7 +86,7 @@ END_TASK(ConnectC1)
 
 DUNIT_TASK(CLIENT2, ConnectC2)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
     createEntry(regionNames[0], keys[1], vals[1]);
     LOG("ConnectC2 complete.");
   }
@@ -111,7 +111,7 @@ END_TASK(CloseServer1)
 
 DUNIT_TASK(CLIENT1, FailoverC1)
   {
-    doNetsearch(regionNames[0], keys[1], vals[1]);
+    doNetSearch(regionNames[0], keys[1], vals[1]);
     updateEntry(regionNames[0], keys[0], nvals[0]);
     LOG("FailoverC1 complete.");
   }
@@ -120,7 +120,7 @@ END_TASK(FailoverC1)
 DUNIT_TASK(CLIENT2, FailoverC2)
   {
     invalidateEntry(regionNames[0], keys[0]);
-    doNetsearch(regionNames[0], keys[0], nvals[0], false);
+    doNetSearch(regionNames[0], keys[0], nvals[0], false);
     updateEntry(regionNames[0], keys[1], nvals[1]);
     LOG("FailoverC2 complete.");
   }
@@ -157,7 +157,7 @@ DUNIT_TASK(CLIENT1, AgainFailoverC1)
   {
     try {
       invalidateEntry(regionNames[0], keys[1]);
-      doNetsearch(regionNames[0], keys[1], nvals[1], false);
+      doNetSearch(regionNames[0], keys[1], nvals[1], false);
       updateEntry(regionNames[0], keys[0], vals[0]);
       FAIL("Client Failover Should Fail");
     } catch (const NotConnectedException&) {
@@ -192,7 +192,7 @@ DUNIT_TASK(CLIENT2, AgainFailoverC2)
   {
     try {
       invalidateEntry(regionNames[0], keys[0]);
-      doNetsearch(regionNames[0], keys[0], vals[0], false);
+      doNetSearch(regionNames[0], keys[0], vals[0], false);
       updateEntry(regionNames[0], keys[1], vals[1]);
       FAIL("Client Failover Should Fail");
     } catch (const NotConnectedException& ex) {

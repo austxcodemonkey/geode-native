@@ -133,7 +133,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, StepThree)
     auto regPtr1 = getHelper()->getRegion(regionNames[1]);
     regPtr1->registerRegex(regkeys[1], false);
 
-    doNetsearch(
+    doNetSearch(
         regionNames[1], keys[1],
         nvals[1]);  // this should verify due to registerRegex() call before
 

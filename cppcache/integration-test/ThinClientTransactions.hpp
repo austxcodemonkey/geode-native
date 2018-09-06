@@ -59,8 +59,6 @@ static int numberOfLocators = 0;
 const char* locatorsG =
     CacheHelper::getLocatorHostPort(isLocator, isLocalServer, numberOfLocators);
 
-bool g_isGridClient = false;
-
 DUNIT_TASK_DEFINITION(CLIENT1, Alter_Client_Grid_Property_1)
   { g_isGridClient = !g_isGridClient; }
 END_TASK_DEFINITION
@@ -763,8 +761,8 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, CreateClient2Entries)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[1], keys[2], vals[2]);
+     doNetSearch(regionNames[0], keys[0], vals[0]);
+     doNetSearch(regionNames[1], keys[2], vals[2]);
     auto txManager = getHelper()->getCache()->getCacheTransactionManager();
     txManager->begin();
     createEntry(regionNames[0], keys[1], vals[1]);
@@ -800,8 +798,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, UpdateClient1Entries)
     ASSERT(key1 == keys[2] || key1 == keys[3],
            "Unexpected key in second region.");
 
-    doNetsearch(regionNames[0], keys[1], vals[1]);
-    doNetsearch(regionNames[1], keys[3], vals[3]);
+     doNetSearch(regionNames[0], keys[1], vals[1]);
+     doNetSearch(regionNames[1], keys[3], vals[3]);
     updateEntry(regionNames[0], keys[0], nvals[0]);
     updateEntry(regionNames[1], keys[2], nvals[2]);
     LOG("StepFive complete.");
@@ -809,8 +807,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, UpdateClient1Entries)
 END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT2, UpdateClient2Entries)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[1], keys[2], vals[2]);
+     doNetSearch(regionNames[0], keys[0], vals[0]);
+     doNetSearch(regionNames[1], keys[2], vals[2]);
     auto txManager = getHelper()->getCache()->getCacheTransactionManager();
     txManager->begin();
     updateEntry(regionNames[0], keys[1], nvals[1]);
@@ -866,8 +864,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, CreateClient1KeyThriceWithSticky)
     reg1->localInvalidate(CacheableKey::create(keys[3]));
     auto pool = getHelper()->getCache()->getPoolManager().find("__TESTPOOL1_");
     ASSERT(pool != nullptr, "Pool Should have been found");
-    doNetsearch(regionNames[0], keys[1], nvals[1]);
-    doNetsearch(regionNames[1], keys[3], nvals[3]);
+     doNetSearch(regionNames[0], keys[1], nvals[1]);
+     doNetSearch(regionNames[1], keys[3], nvals[3]);
     pool->releaseThreadLocalConnection();
     updateEntry(regionNames[0], keys[0], nvals[0]);
     updateEntry(regionNames[1], keys[2], nvals[2]);

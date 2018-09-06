@@ -63,7 +63,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, doGetOperations)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
     LOG("do get operation from client 2 completed");
   }
 END_TASK_DEFINITION

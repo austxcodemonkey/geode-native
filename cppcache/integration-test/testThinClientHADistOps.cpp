@@ -222,8 +222,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, RegisterClient1Keys)
     ASSERT(key1 == keys[2] || key1 == keys[3],
            "Unexpected key in second region.");
 
-    doNetsearch(regionNames[0], keys[1], vals[1]);
-    doNetsearch(regionNames[1], keys[3], vals[3]);
+    doNetSearch(regionNames[0], keys[1], vals[1]);
+    doNetSearch(regionNames[1], keys[3], vals[3]);
 
     auto keyPtr1 = CacheableKey::create(keys[1]);
     auto keyPtr3 = CacheableKey::create(keys[3]);
@@ -242,8 +242,8 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, RegisterClient2Keys)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[1], keys[2], vals[2]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[1], keys[2], vals[2]);
 
     auto keyPtr0 = CacheableKey::create(keys[0]);
     auto keyPtr2 = CacheableKey::create(keys[2]);

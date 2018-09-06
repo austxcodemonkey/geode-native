@@ -67,11 +67,11 @@ void verifyEntries(int keyIndex, bool netSearch = false,
     verifyEntry(poolRegNames[2], keys[keyIndex],
                 newValue ? nvals[keyIndex] : vals[keyIndex]);
   } else {
-    doNetsearch(poolRegNames[0], keys[keyIndex],
+    doNetSearch(poolRegNames[0], keys[keyIndex],
                 newValue ? nvals[keyIndex] : vals[keyIndex]);
-    doNetsearch(poolRegNames[1], keys[keyIndex],
+    doNetSearch(poolRegNames[1], keys[keyIndex],
                 newValue ? nvals[keyIndex] : vals[keyIndex]);
-    doNetsearch(poolRegNames[2], keys[keyIndex],
+    doNetSearch(poolRegNames[2], keys[keyIndex],
                 newValue ? nvals[keyIndex] : vals[keyIndex]);
   }
 }

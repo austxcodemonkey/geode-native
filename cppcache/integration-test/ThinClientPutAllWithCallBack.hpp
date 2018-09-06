@@ -281,8 +281,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, VerifyInitialEntries)
     verifyEntry(regionNames[0], keys[0], vals[0]);
     verifyEntry(regionNames[0], keys[1], vals[1]);
 
-    // doNetsearch( regionNames[1], keys[2], vals[2] );
-    // doNetsearch( regionNames[1], keys[3], vals[3] );
+    // doNetSearch( regionNames[1], keys[2], vals[2] );
+    // doNetSearch( regionNames[1], keys[3], vals[3] );
 
     verifyCreated(regionNames[1], keys[2]);
     verifyCreated(regionNames[1], keys[3]);

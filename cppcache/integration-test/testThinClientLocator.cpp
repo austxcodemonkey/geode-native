@@ -75,8 +75,8 @@ DUNIT_TASK(CLIENT1, StepThree)
 END_TASK(StepThree)
 DUNIT_TASK(CLIENT2, StepFour)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[1], keys[2], vals[2]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[1], keys[2], vals[2]);
     createEntry(regionNames[0], keys[1], vals[1]);
     createEntry(regionNames[1], keys[3], vals[3]);
     LOG("StepFour complete.");
@@ -84,8 +84,8 @@ DUNIT_TASK(CLIENT2, StepFour)
 END_TASK(StepFour)
 DUNIT_TASK(CLIENT1, StepFive)
   {
-    doNetsearch(regionNames[0], keys[1], vals[1]);
-    doNetsearch(regionNames[1], keys[3], vals[3]);
+    doNetSearch(regionNames[0], keys[1], vals[1]);
+    doNetSearch(regionNames[1], keys[3], vals[3]);
     updateEntry(regionNames[0], keys[0], nvals[0]);
     updateEntry(regionNames[1], keys[2], nvals[2]);
     LOG("StepFive complete.");
@@ -93,8 +93,8 @@ DUNIT_TASK(CLIENT1, StepFive)
 END_TASK(StepFive)
 DUNIT_TASK(CLIENT2, StepSix)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0], false);
-    doNetsearch(regionNames[1], keys[2], vals[2], false);
+    doNetSearch(regionNames[0], keys[0], vals[0], false);
+    doNetSearch(regionNames[1], keys[2], vals[2], false);
     updateEntry(regionNames[0], keys[1], nvals[1]);
     updateEntry(regionNames[1], keys[3], nvals[3]);
     LOG("StepSix complete.");

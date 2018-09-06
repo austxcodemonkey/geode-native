@@ -184,8 +184,8 @@ DUNIT_TASK_DEFINITION(CLIENT2, StepFour)
     verifyCreated(regionNames[1], keys[2]);
     verifyEntry(regionNames[0], keys[0], vals[0]);
     verifyEntry(regionNames[1], keys[2], vals[2]);
-    doNetsearch(regionNames[0], keys[1], vals[1]);
-    doNetsearch(regionNames[1], keys[3], vals[3]);
+    doNetSearch(regionNames[0], keys[1], vals[1]);
+    doNetSearch(regionNames[1], keys[3], vals[3]);
     LOG("StepFour complete.");
   }
 END_TASK_DEFINITION

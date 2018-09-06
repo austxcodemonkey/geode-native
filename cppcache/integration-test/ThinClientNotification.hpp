@@ -144,8 +144,8 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, FindEvenAndCreateOddValues)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[1], keys[2], vals[2]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[1], keys[2], vals[2]);
     createEntry(regionNames[0], keys[1], vals[1]);
     createEntry(regionNames[1], keys[3], vals[3]);
     LOG("FindEvenAndCreateOddValues complete.");
@@ -154,8 +154,8 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, FindOddAndUpdateEvenValues)
   {
-    doNetsearch(regionNames[0], keys[1], vals[1]);
-    doNetsearch(regionNames[1], keys[3], vals[3]);
+    doNetSearch(regionNames[0], keys[1], vals[1]);
+    doNetSearch(regionNames[1], keys[3], vals[3]);
     updateEntry(regionNames[0], keys[0], nvals[0]);
     updateEntry(regionNames[1], keys[2], nvals[2]);
     LOG("FindOddAndUpdateEvenValues complete.");

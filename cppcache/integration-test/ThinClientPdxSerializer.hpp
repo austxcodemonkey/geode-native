@@ -54,7 +54,7 @@ const char* locHostPort =
     CacheHelper::getLocatorHostPort(isLocator, isLocalServer, 1);
 bool isPoolConfig = false;  // To track if pool case is running
 
-void initClient(const bool isthinClient, bool isPdxIgnoreUnreadFields) {
+void _initClient(const bool isthinClient, bool isPdxIgnoreUnreadFields) {
   LOGINFO("initClient: isPdxIgnoreUnreadFields = %d ", isPdxIgnoreUnreadFields);
   if (cacheHelper == nullptr) {
     cacheHelper = new CacheHelper(isthinClient, isPdxIgnoreUnreadFields, false,
@@ -65,7 +65,7 @@ void initClient(const bool isthinClient, bool isPdxIgnoreUnreadFields) {
 
 void stepOne(bool isPdxIgnoreUnreadFields = false) {
   // Create just one pool and attach all regions to that.
-  initClient(true, isPdxIgnoreUnreadFields);
+  _initClient(true, isPdxIgnoreUnreadFields);
   isPoolConfig = true;
   createPool(poolNames[0], locHostPort, nullptr, 0, true);
   createRegionAndAttachPool("DistRegionAck", USE_ACK, poolNames[0],

@@ -12,6 +12,7 @@
 extern CacheHelper* cacheHelper;
 #else
 CacheHelper* cacheHelper = nullptr;
+bool g_isGridClient = false;
 #endif
 
 /*
@@ -280,6 +281,22 @@ void initClient(const bool isthinClient,
   ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
 }
 
+void initClient(const bool isThinClient, const bool redirectLog) {
+  if (cacheHelper == nullptr) {
+    auto config = Properties::create();
+    if (g_isGridClient) {
+      config->insert("grid-client", "true");
+    }
+    config->insert("log-level", "finer");
+
+    if (redirectLog) {
+      config->insert("log-file", CacheHelper::unitTestOutputFile());
+    }
+
+    initClient(isThinClient, config);
+  }
+}
+
 void cleanProc() {
   if (cacheHelper != nullptr) {
     delete cacheHelper;
@@ -379,8 +396,8 @@ void updateEntry(const char* name, const char* key, const char* value,
   LOG("Entry updated.");
 }
 
-void doNetsearch(const char *name, const char *key, const char *value) {
-  LOG("doNetsearch() entered.");
+void doNetSearch(const char *name, const char *key, const char *value) {
+  LOG("doNetSearch() entered.");
   fprintf(
       stdout,
       "Netsearching for entry -- key: %s  expecting value: %s in region %s\n",
@@ -410,9 +427,9 @@ void doNetsearch(const char *name, const char *key, const char *value) {
   LOG("Netsearch complete.");
 }
 
-void doNetsearch(const char* name, const char* key, const char* value,
+void doNetSearch(const char* name, const char* key, const char* value,
                  bool checkVal) {
-  LOG("doNetsearch() entered.");
+  LOG("doNetSearch() entered.");
   fprintf(
       stdout,
       "Netsearching for entry -- key: %s  expecting value: %s in region %s\n",

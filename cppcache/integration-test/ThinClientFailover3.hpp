@@ -111,8 +111,8 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, Client2CreateEntries)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[1], keys[2], vals[2]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[1], keys[2], vals[2]);
     createEntry(regionNames[0], keys[1], vals[1]);
     createEntry(regionNames[1], keys[3], vals[3]);
     LOG("Client2CreateEntries complete.");
@@ -138,8 +138,8 @@ DUNIT_TASK_DEFINITION(SERVER1, CloseServer1)
 END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT1, Client1UpdateEntries)
   {
-    doNetsearch(regionNames[0], keys[1], vals[1]);
-    doNetsearch(regionNames[1], keys[3], vals[3]);
+    doNetSearch(regionNames[0], keys[1], vals[1]);
+    doNetSearch(regionNames[1], keys[3], vals[3]);
     updateEntry(regionNames[0], keys[0], nvals[0]);
     updateEntry(regionNames[1], keys[2], nvals[2]);
     LOG("Client1UpdateEntries complete.");
@@ -147,8 +147,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, Client1UpdateEntries)
 END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT2, Client2UpdateEntries)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[1], keys[2], vals[2]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[1], keys[2], vals[2]);
     updateEntry(regionNames[0], keys[1], nvals[1]);
     updateEntry(regionNames[1], keys[3], nvals[3]);
     LOG("Client2UpdateEntries complete.");

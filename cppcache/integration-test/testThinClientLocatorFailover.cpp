@@ -73,7 +73,7 @@ END_TASK(ConnectC1_All)
 
 DUNIT_TASK(CLIENT2, ConnectC2_All)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
     createEntry(regionNames[0], keys[1], vals[1]);
     LOG("ConnectC2 complete.");
   }
@@ -108,7 +108,7 @@ END_TASK(CloseServer1_All)
 
 DUNIT_TASK(CLIENT1, FailoverC1_All)
   {
-    doNetsearch(regionNames[0], keys[1], vals[1]);
+    doNetSearch(regionNames[0], keys[1], vals[1]);
     updateEntry(regionNames[0], keys[0], nvals[0]);
     LOG("FailoverC1_All complete.");
   }
@@ -117,7 +117,7 @@ END_TASK(FailoverC1_All)
 DUNIT_TASK(CLIENT2, FailoverC2_All)
   {
     invalidateEntry(regionNames[0], keys[0]);
-    doNetsearch(regionNames[0], keys[0], nvals[0], false);
+    doNetSearch(regionNames[0], keys[0], nvals[0], false);
     updateEntry(regionNames[0], keys[1], nvals[1]);
     LOG("FailoverC2_All complete.");
   }
@@ -156,7 +156,7 @@ DUNIT_TASK(CLIENT1, AgainFailoverC1_All)
   {
     SLEEP(30000);
     invalidateEntry(regionNames[0], keys[1]);
-    doNetsearch(regionNames[0], keys[1], nvals[1], false);
+    doNetSearch(regionNames[0], keys[1], nvals[1], false);
     updateEntry(regionNames[0], keys[0], vals[0]);
   }
 END_TASK(AgainFailoverC1_All)
@@ -173,7 +173,7 @@ END_TASK(SwapLocators2)
 DUNIT_TASK(CLIENT2, AgainFailoverC2_All)
   {
     invalidateEntry(regionNames[0], keys[0]);
-    doNetsearch(regionNames[0], keys[0], vals[0], false);
+    doNetSearch(regionNames[0], keys[0], vals[0], false);
     updateEntry(regionNames[0], keys[1], vals[1]);
   }
 END_TASK(AgainFailoverC2_All)
@@ -210,7 +210,7 @@ DUNIT_TASK(CLIENT1, AgainAgainFailoverC1_All)
   {
     try {
       invalidateEntry(regionNames[0], keys[0]);
-      doNetsearch(regionNames[0], keys[0], vals[0], false);
+      doNetSearch(regionNames[0], keys[0], vals[0], false);
       updateEntry(regionNames[0], keys[1], vals[1]);
       FAIL(
           "No locator exception should "

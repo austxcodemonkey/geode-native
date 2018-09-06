@@ -74,7 +74,7 @@ bool isPoolConfig = false;  // To track if pool case is running
 // const char * qRegionNames[] = { "Portfolios", "Positions", "Portfolios2",
 // "Portfolios3" };
 
-void initClient(const bool isthinClient, bool isPdxIgnoreUnreadFields,
+void _initClient(const bool isthinClient, bool isPdxIgnoreUnreadFields,
 	const std::shared_ptr<Properties>& configPtr = nullptr) {
 	LOGINFO("isPdxIgnoreUnreadFields = %d ", isPdxIgnoreUnreadFields);
 	if (cacheHelper == nullptr) {

@@ -164,10 +164,10 @@ DUNIT_TASK_DEFINITION(CLIENT2, StepTwo)
     }
     createCommRegions(1);
 
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[0], keys[1], vals[1]);
-    doNetsearch(regionNames[1], keys[2], vals[2]);
-    doNetsearch(regionNames[1], keys[3], vals[3]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[0], keys[1], vals[1]);
+    doNetSearch(regionNames[1], keys[2], vals[2]);
+    doNetSearch(regionNames[1], keys[3], vals[3]);
 
     auto regPtr0 = getHelper()->getRegion(regionNames[0]);
     auto regPtr1 = getHelper()->getRegion(regionNames[1]);
@@ -194,10 +194,10 @@ DUNIT_TASK_DEFINITION(CLIENT3, StepThree)
     }
     createCommRegions(2);
 
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[0], keys[1], vals[1]);
-    doNetsearch(regionNames[1], keys[2], vals[2]);
-    doNetsearch(regionNames[1], keys[3], vals[3]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[0], keys[1], vals[1]);
+    doNetSearch(regionNames[1], keys[2], vals[2]);
+    doNetSearch(regionNames[1], keys[3], vals[3]);
 
     auto regPtr0 = getHelper()->getRegion(regionNames[0]);
     auto regPtr1 = getHelper()->getRegion(regionNames[1]);

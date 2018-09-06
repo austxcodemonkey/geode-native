@@ -54,8 +54,6 @@ static int numberOfLocators = 0;
 const char* locatorsG =
     CacheHelper::getLocatorHostPort(isLocator, isLocalServer, numberOfLocators);
 
-bool g_isGridClient = false;
-
 DUNIT_TASK_DEFINITION(CLIENT1, Alter_Client_Grid_Property_1)
   { g_isGridClient = !g_isGridClient; }
 END_TASK_DEFINITION

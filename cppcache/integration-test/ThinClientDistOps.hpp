@@ -57,8 +57,6 @@ static int numberOfLocators = 0;
 const char* locatorsG =
     CacheHelper::getLocatorHostPort(isLocator, isLocalServer, numberOfLocators);
 
-bool g_isGridClient = false;
-
 DUNIT_TASK_DEFINITION(CLIENT1, Alter_Client_Grid_Property_1)
   { g_isGridClient = !g_isGridClient; }
 END_TASK_DEFINITION
@@ -66,28 +64,6 @@ END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT2, Alter_Client_Grid_Property_2)
   { g_isGridClient = !g_isGridClient; }
 END_TASK_DEFINITION
-
-namespace thinclientdistops {
-
-void initClient(const bool isthinClient, const bool redirectLog) {
-  auto config = Properties::create();
-  if (g_isGridClient) {
-    config->insert("grid-client", "true");
-  }
-  config->insert("log-level", "finer");
-
-  if (redirectLog) {
-    config->insert("log-file", CacheHelper::unitTestOutputFile());
-  }
-
-  ::initClient(isthinClient, config);
-}
-
-void initClient(const bool isthinClient) {
-  thinclientdistops::initClient(isthinClient, false);
-}
-
-}
 
 void createRegion(const char* name, bool ackMode, const char* endpoints,
                   bool clientNotificationEnabled = false,
@@ -168,7 +144,6 @@ void createAndVerifyEntry(const char* name) {
   /*5.create new with entry userobject cantain all cacheable type ( like
    * cacheableInt,CacheableDouble, CacheableString,CacheableHashMap etc) key and
    * null value*/
-  // serializationRegistry->addPdxType(PdxTests::PdxType::createDeserializable);
   auto keyObject1 = std::make_shared<PdxTests::PdxType>();
   regPtr->create(keyObject1, x);
   auto retVal = regPtr->get(keyObject1);
@@ -215,34 +190,6 @@ void createAndVerifyEntry(const char* name) {
   auto objVal =
       std::dynamic_pointer_cast<PdxTests::PdxType>(regPtr->get(keyObject4));
   ASSERT(valObject == objVal, "valObject and objVal should match.");
-
-  /*9.create new entry witn non serialize object. IllegalArgumentException
-   * thrown*/
-  // This gives compile time error
-  //  class Person
-  //  {
-  //    int age;
-  //    char *name;
-  //    public:
-  //      Person()
-  //      {
-  //        age= 1;
-  //        name="testuser";
-  //      }
-  //  };
-  //  try{
-  //    regPtr->create(new Person(), 1);
-  //    FAIL("Expected IllegalArgumentException here");
-  //  }catch(IllegalArgumentException ex){
-  //    LOG("Expected IllegalArgumentException : %s");
-  //  }
-  //
-  //  try{
-  //    regPtr->create(100,new Person());
-  //    FAIL("Expected IllegalArgumentException here");
-  //  }catch(IllegalArgumentException ex){
-  //    LOG("Expected IllegalArgumentException : %s");
-  //  }
 }
 
 void createEntryTwice(const char* name, const char* key, const char* value) {
@@ -312,8 +259,8 @@ const bool NO_ACK = false;
 
 DUNIT_TASK_DEFINITION(CLIENT1, CreateNonexistentServerRegion_Pooled_Locator)
   {
-    ::initClient(true);
-    createPooledRegion("non-region", USE_ACK, locatorsG, "__TESTPOOL1_");
+   initClient(true);
+     createPooledRegion("non-region", USE_ACK, locatorsG, "__TESTPOOL1_");
     try {
       createEntry("non-region", keys[0], vals[0]);
       FAIL(
@@ -330,8 +277,8 @@ END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT1,
                       CreateNonexistentServerRegion_Pooled_Locator_Sticky)
   {
-    ::initClient(true);
-    createPooledRegionSticky("non-region", USE_ACK, locatorsG, "__TESTPOOL1_");
+   initClient(true);
+     createPooledRegionSticky("non-region", USE_ACK, locatorsG, "__TESTPOOL1_");
     try {
       createEntry("non-region", keys[0], vals[0]);
       FAIL(
@@ -354,7 +301,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, CreatePoolForUpdateLocatorList)
     = -1, int connections = -1, int loadConditioningInterval = - 1, bool
     isMultiuserMode = false, int updateLocatorListInterval = 5000 )
     */
-    thinclientdistops::initClient(true);
+   initClient(true, true);
     getHelper()->createPool("__TESTPOOL1_", locatorsG, nullptr, 0, false,
                             std::chrono::milliseconds::zero(), -1, -1, false);
     LOG("CreatePoolForUpdateLocatorList complete.");
@@ -370,7 +317,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, CreatePoolForDontUpdateLocatorList)
     = -1, int connections = -1, int loadConditioningInterval = - 1, bool
     isMultiuserMode = false, int updateLocatorListInterval = 5000 )
     */
-    thinclientdistops::initClient(true);
+   initClient(true, true);
     getHelper()->createPool("__TESTPOOL1_", locatorsG, nullptr, 0, false,
                             std::chrono::milliseconds::zero(), -1, -1, false);
     LOG("CreatePoolForDontUpdateLocatorList complete.");
@@ -419,40 +366,40 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, StepOne_Pooled_Locator)
   {
-    createPooledRegion(regionNames[0], USE_ACK, locatorsG, "__TESTPOOL1_");
-    createPooledRegion(regionNames[1], NO_ACK, locatorsG, "__TESTPOOL1_");
-    createPooledRegion(regionNames[3], NO_ACK, locatorsG, "__TESTPOOL1_");
+     createPooledRegion(regionNames[0], USE_ACK, locatorsG, "__TESTPOOL1_");
+     createPooledRegion(regionNames[1], NO_ACK, locatorsG, "__TESTPOOL1_");
+     createPooledRegion(regionNames[3], NO_ACK, locatorsG, "__TESTPOOL1_");
     LOG("StepOne_Pooled complete.");
   }
 END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, StepOne_Pooled_Locator_Sticky)
   {
-    createPooledRegionSticky(regionNames[0], USE_ACK, locatorsG,
+     createPooledRegionSticky(regionNames[0], USE_ACK, locatorsG,
                              "__TESTPOOL1_");
-    createPooledRegionSticky(regionNames[1], NO_ACK, locatorsG, "__TESTPOOL1_");
-    createPooledRegionSticky(regionNames[3], NO_ACK, locatorsG, "__TESTPOOL1_");
+     createPooledRegionSticky(regionNames[1], NO_ACK, locatorsG, "__TESTPOOL1_");
+     createPooledRegionSticky(regionNames[3], NO_ACK, locatorsG, "__TESTPOOL1_");
     LOG("StepOne_Pooled_Locator_Sticky complete.");
   }
 END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, StepTwo_Pooled_Locator)
   {
-    initClient(true);
-    createPooledRegion(regionNames[0], USE_ACK, locatorsG, "__TESTPOOL1_");
-    createPooledRegion(regionNames[1], NO_ACK, locatorsG, "__TESTPOOL1_");
-    createPooledRegion(regionNames[3], NO_ACK, locatorsG, "__TESTPOOL1_");
+   initClient(true);
+     createPooledRegion(regionNames[0], USE_ACK, locatorsG, "__TESTPOOL1_");
+     createPooledRegion(regionNames[1], NO_ACK, locatorsG, "__TESTPOOL1_");
+     createPooledRegion(regionNames[3], NO_ACK, locatorsG, "__TESTPOOL1_");
     LOG("StepTwo complete.");
   }
 END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, StepTwo_Pooled_Locator_Sticky)
   {
-    initClient(true);
-    createPooledRegionSticky(regionNames[0], USE_ACK, locatorsG,
+   initClient(true);
+     createPooledRegionSticky(regionNames[0], USE_ACK, locatorsG,
                              "__TESTPOOL1_");
-    createPooledRegionSticky(regionNames[1], NO_ACK, locatorsG, "__TESTPOOL1_");
-    createPooledRegionSticky(regionNames[3], NO_ACK, locatorsG, "__TESTPOOL1_");
+     createPooledRegionSticky(regionNames[1], NO_ACK, locatorsG, "__TESTPOOL1_");
+     createPooledRegionSticky(regionNames[3], NO_ACK, locatorsG, "__TESTPOOL1_");
     LOG("StepTwo complete.");
   }
 END_TASK_DEFINITION
@@ -476,8 +423,8 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, StepFour)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[1], keys[2], vals[2]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[1], keys[2], vals[2]);
     createEntry(regionNames[0], keys[1], vals[1]);
     createEntry(regionNames[1], keys[3], vals[3]);
     LOG("StepFour complete.");
@@ -509,8 +456,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, StepFive)
     ASSERT(key1 == keys[2] || key1 == keys[3],
            "Unexpected key in second region.");
 
-    doNetsearch(regionNames[0], keys[1], vals[1]);
-    doNetsearch(regionNames[1], keys[3], vals[3]);
+    doNetSearch(regionNames[0], keys[1], vals[1]);
+    doNetSearch(regionNames[1], keys[3], vals[3]);
     updateEntry(regionNames[0], keys[0], nvals[0]);
     updateEntry(regionNames[1], keys[2], nvals[2]);
     LOG("StepFive complete.");
@@ -519,8 +466,8 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, StepSix)
   {
-    doNetsearch(regionNames[0], keys[0], vals[0]);
-    doNetsearch(regionNames[1], keys[2], vals[2]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[1], keys[2], vals[2]);
     updateEntry(regionNames[0], keys[1], nvals[1]);
     updateEntry(regionNames[1], keys[3], nvals[3]);
     LOG("StepSix complete.");
@@ -533,7 +480,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, StepEight_Pool)
   {
-    createPooledRegion(regionNames[2], NO_ACK, locatorsG, "__TESTPOOL1_", false,
+     createPooledRegion(regionNames[2], NO_ACK, locatorsG, "__TESTPOOL1_", false,
                        false);
     auto reg = getHelper()->getRegion(regionNames[2]);
     LOG("REGION Created with Caching Enabled false");
@@ -561,7 +508,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, StepEight_Pool_Sticky)
   {
-    createPooledRegionSticky(regionNames[2], NO_ACK, locatorsG, "__TESTPOOL1_",
+     createPooledRegionSticky(regionNames[2], NO_ACK, locatorsG, "__TESTPOOL1_",
                              false, false);
     auto reg = getHelper()->getRegion(regionNames[2]);
     LOG("REGION Created with Caching Enabled false");
@@ -574,8 +521,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, StepEight_Pool_Sticky)
     reg1->localInvalidate(CacheableKey::create(keys[3]));
     auto pool = getHelper()->getCache()->getPoolManager().find("__TESTPOOL1_");
     ASSERT(pool != nullptr, "Pool Should have been found");
-    doNetsearch(regionNames[0], keys[1], nvals[1]);
-    doNetsearch(regionNames[1], keys[3], nvals[3]);
+    doNetSearch(regionNames[0], keys[1], nvals[1]);
+    doNetSearch(regionNames[1], keys[3], nvals[3]);
     pool->releaseThreadLocalConnection();
     updateEntry(regionNames[0], keys[0], nvals[0]);
     updateEntry(regionNames[1], keys[2], nvals[2]);

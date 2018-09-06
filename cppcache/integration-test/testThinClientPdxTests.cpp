@@ -120,7 +120,7 @@ bool genericValCompare(T1 value1, T2 value2) /*const*/
   return true;
 }
 
-void initClient(const bool isthinClient, bool isPdxIgnoreUnreadFields,
+void _initClient(const bool isthinClient, bool isPdxIgnoreUnreadFields,
                 const std::shared_ptr<Properties>& configPtr = nullptr) {
   LOGINFO("isPdxIgnoreUnreadFields = %d ", isPdxIgnoreUnreadFields);
   if (cacheHelper == nullptr) {
@@ -132,7 +132,7 @@ void initClient(const bool isthinClient, bool isPdxIgnoreUnreadFields,
 
 //////////
 
-void initClientN(const bool isthinClient, bool isPdxIgnoreUnreadFields,
+void _initClientN(const bool isthinClient, bool isPdxIgnoreUnreadFields,
                  bool isPdxReadSerialized = false,
                  const std::shared_ptr<Properties>& configPtr = nullptr) {
   LOGINFO("isPdxIgnoreUnreadFields = %d ", isPdxIgnoreUnreadFields);
@@ -153,7 +153,7 @@ void stepOneN(bool isPdxIgnoreUnreadFields = false,
     // ignore exception
   }
   // Create just one pool and attach all regions to that.
-  initClientN(true, isPdxIgnoreUnreadFields, isPdxReadSerialized, config);
+  _initClientN(true, isPdxIgnoreUnreadFields, isPdxReadSerialized, config);
 
   isPoolConfig = true;
   createPool(poolNames[0], locHostPort, nullptr, 0, true);
@@ -178,7 +178,7 @@ DUNIT_TASK_DEFINITION(CLIENT2, StepTwoPoolLoc1)
 END_TASK_DEFINITION
 ///////////////
 
-void initClient1WithClientName(
+void _initClient1WithClientName(
     const bool isthinClient,
     const std::shared_ptr<Properties>& configPtr = nullptr) {
   if (cacheHelper == nullptr) {
@@ -192,7 +192,7 @@ void initClient1WithClientName(
   ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
 }
 
-void initClient2WithClientName(
+void _initClient2WithClientName(
     const bool isthinClient,
     const std::shared_ptr<Properties>& configPtr = nullptr) {
   if (cacheHelper == nullptr) {
@@ -208,7 +208,7 @@ void initClient2WithClientName(
 
 void stepOneForClient1() {
   // Create just one pool and attach all regions to that.
-  initClient1WithClientName(true);
+  _initClient1WithClientName(true);
 
   isPoolConfig = true;
   createPool(poolNames[0], locHostPort, nullptr, 0, true);
@@ -219,7 +219,7 @@ void stepOneForClient1() {
 
 void stepOneForClient2() {
   // Create just one pool and attach all regions to that.
-  initClient2WithClientName(true);
+  _initClient2WithClientName(true);
 
   isPoolConfig = true;
   createPool(poolNames[0], locHostPort, nullptr, 0, true);
@@ -236,7 +236,7 @@ void stepOne(bool isPdxIgnoreUnreadFields = false,
     // ignore exception
   }
   // Create just one pool and attach all regions to that.
-  initClient(true, isPdxIgnoreUnreadFields, config);
+  _initClient(true, isPdxIgnoreUnreadFields, config);
   isPoolConfig = true;
   createPool(poolNames[0], locHostPort, nullptr, 0, true);
   createRegionAndAttachPool("DistRegionAck", USE_ACK, poolNames[0],
@@ -244,9 +244,9 @@ void stepOne(bool isPdxIgnoreUnreadFields = false,
   LOG("StepOne complete.");
 }
 
-void initClient1(bool isPdxIgnoreUnreadFields = false) {
+void _initClient1(bool isPdxIgnoreUnreadFields = false) {
   // Create just one pool and attach all regions to that.
-  initClient(true, isPdxIgnoreUnreadFields);
+  _initClient(true, isPdxIgnoreUnreadFields);
   isPoolConfig = true;
   createPool(poolNames[0], locHostPort, nullptr, 0, false);
   createRegionAndAttachPool("DistRegionAck", USE_ACK, poolNames[0],
@@ -254,9 +254,9 @@ void initClient1(bool isPdxIgnoreUnreadFields = false) {
   LOG("StepOne complete.");
 }
 
-void initClient2(bool isPdxIgnoreUnreadFields = false) {
+void _initClient2(bool isPdxIgnoreUnreadFields = false) {
   // Create just one pool and attach all regions to that.
-  initClient(true, isPdxIgnoreUnreadFields);
+  _initClient(true, isPdxIgnoreUnreadFields);
   isPoolConfig = true;
   createPool(poolNames[0], locHostPort, nullptr, 0,
              true /*ClientNotification enabled*/);
@@ -265,9 +265,9 @@ void initClient2(bool isPdxIgnoreUnreadFields = false) {
   LOG("StepOne complete.");
 }
 
-void initClient3(bool isPdxIgnoreUnreadFields = false) {
+void _initClient3(bool isPdxIgnoreUnreadFields = false) {
   // Create just one pool and attach all regions to that.
-  initClient(true, isPdxIgnoreUnreadFields);
+  _initClient(true, isPdxIgnoreUnreadFields);
   isPoolConfig = true;
   createPool(poolNames[0], locHostPort, nullptr, 0,
              true /*ClientNotification enabled*/);
@@ -322,7 +322,7 @@ END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT1, StepOnePoolLoc_PdxMetadataTest)
   {
     LOG("Starting Step One with Pool + Locator lists");
-    initClient1();
+    _initClient1();
   }
 END_TASK_DEFINITION
 
@@ -407,14 +407,14 @@ END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT2, StepTwoPoolLoc_PdxMetadataTest)
   {
     LOG("Starting Step Two with Pool + Locator");
-    initClient2();
+    _initClient2();
   }
 END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT3, StepThreePoolLoc_PdxMetadataTest)
   {
     LOG("Starting Step Two with Pool + Locator");
-    initClient3();
+    _initClient3();
   }
 END_TASK_DEFINITION
 
@@ -3512,7 +3512,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, StepFour)
   {
-    // initClient(true);
+    // _initClient(true);
     auto regPtr0 = getHelper()->getRegion("DistRegionAck");
 
     // QueryHelper * qh = &QueryHelper::getHelper();
