@@ -190,8 +190,8 @@ END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT2, StepSix)
   {
     LOG("StepSix started");
-    verifyEntry(regionNames[0], keys[0], nvals[0]);
-    verifyEntry(regionNames[1], keys[2], nvals[2]);
+    verifyEntry(regionNames[0], keys[0], nullptr);
+    verifyEntry(regionNames[1], keys[2], nullptr);
     updateEntry(regionNames[0], keys[1], nvals[1]);
     updateEntry(regionNames[1], keys[3], nvals[3]);
     LOG("StepSix complete.");
@@ -202,8 +202,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, StepSeven)
   {
     verifyInvalid(regionNames[0], keys[1]);
     verifyInvalid(regionNames[1], keys[3]);
-    verifyEntry(regionNames[0], keys[1], nvals[1]);
-    verifyEntry(regionNames[1], keys[3], nvals[3]);
+    verifyEntry(regionNames[0], keys[1], nullptr);
+    verifyEntry(regionNames[1], keys[3], nullptr);
     invalidateEntry(regionNames[0], keys[0]);
     invalidateEntry(regionNames[1], keys[2]);
     LOG("StepSeven complete.");
@@ -212,8 +212,8 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, StepEight)
   {
-    verifyEntry(regionNames[0], keys[0], nvals[0]);
-    verifyEntry(regionNames[1], keys[2], nvals[2]);
+    verifyEntry(regionNames[0], keys[0], nullptr);
+    verifyEntry(regionNames[1], keys[2], nullptr);
     invalidateEntry(regionNames[0], keys[1]);
     invalidateEntry(regionNames[1], keys[3]);
     LOG("StepEight complete.");
@@ -222,8 +222,8 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, StepNine)
   {
-    verifyEntry(regionNames[0], keys[1], nvals[1]);
-    verifyEntry(regionNames[1], keys[3], nvals[3]);
+    verifyEntry(regionNames[0], keys[1], nullptr);
+    verifyEntry(regionNames[1], keys[3], nullptr);
     destroyEntry(regionNames[0], keys[0]);
     destroyEntry(regionNames[1], keys[2]);
     LOG("StepNine complete.");
