@@ -9,9 +9,9 @@
 #include "fw_dunit.hpp"
 
 #ifndef CacheHelperOwner
-extern CacheHelper* cacheHelper;
+extern apache::geode::client::CacheHelper* cacheHelper;
 #else
-CacheHelper* cacheHelper = nullptr;
+apache::geode::client::CacheHelper* cacheHelper = nullptr;
 bool g_isGridClient = false;
 #endif
 
@@ -32,7 +32,7 @@ bool g_isGridClient = false;
  * limitations under the License.
  */
 
-CacheHelper* getHelper() {
+apache::geode::client::CacheHelper* getHelper() {
   ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
   return cacheHelper;
 }
@@ -193,7 +193,7 @@ void _verifyIntEntry(const char* name, const char* key, const int val,
   auto regPtr = getHelper()->getRegion(name);
   ASSERT(regPtr != nullptr, "Region not found.");
 
-  auto keyPtr = CacheableKey::create(key);
+  auto keyPtr = apache::geode::client::CacheableKey::create(key);
 
   // if the region is no ack, then we may need to wait...
   if (!isCreated) {
@@ -242,7 +242,7 @@ void _verifyIntEntry(const char* name, const char* key, const int val,
 
       if (val != 0) {
         auto checkPtr =
-            std::dynamic_pointer_cast<CacheableInt32>(regPtr->get(keyPtr));
+            std::dynamic_pointer_cast<apache::geode::client::CacheableInt32>(regPtr->get(keyPtr));
 
         ASSERT(checkPtr != nullptr, "Value Ptr should not be null.");
         char buf[1024];
@@ -274,23 +274,23 @@ void _verifyIntEntry(const char* name, const char* key, const int val,
 }
 
 void initClient(const bool isthinClient,
-                const std::shared_ptr<Properties>& configPtr = nullptr) {
+                const std::shared_ptr<apache::geode::client::Properties>& configPtr = nullptr) {
   if (cacheHelper == nullptr) {
-    cacheHelper = new CacheHelper(isthinClient, configPtr);
+    cacheHelper = new apache::geode::client::CacheHelper(isthinClient, configPtr);
   }
   ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
 }
 
 void initClient(const bool isThinClient, const bool redirectLog) {
   if (cacheHelper == nullptr) {
-    auto config = Properties::create();
+    auto config = apache::geode::client::Properties::create();
     if (g_isGridClient) {
       config->insert("grid-client", "true");
     }
     config->insert("log-level", "finer");
 
     if (redirectLog) {
-      config->insert("log-file", CacheHelper::unitTestOutputFile());
+      config->insert("log-file", apache::geode::client::CacheHelper::unitTestOutputFile());
     }
 
     initClient(isThinClient, config);
@@ -318,17 +318,17 @@ void createPooledRegion(const char *name, bool ackMode, const char *locators,
   LOG("Pooled Region created.");
 }
 
-std::shared_ptr<Region> createPooledRegion(
+std::shared_ptr<apache::geode::client::Region> createPooledRegion(
     const char* name, bool ackMode, const char* locators, const char* poolname,
     bool clientNotificationEnabled,
-    const std::shared_ptr<CacheListener>& listener,
+    const std::shared_ptr<apache::geode::client::CacheListener>& listener,
     bool caching = true) {
   LOG("createPooledRegion() entered.");
   fprintf(stdout, "Creating region --  %s  ackMode is %d\n", name, ackMode);
   fflush(stdout);
 
   if (cacheHelper == nullptr) {
-    cacheHelper = new CacheHelper(true, poolname, locators, nullptr);
+    cacheHelper = new apache::geode::client::CacheHelper(true, poolname, locators, nullptr);
   }
 
   // ack, caching
@@ -348,8 +348,8 @@ void createEntry(const char *name, const char *key, const char *value) {
           value, name);
   fflush(stdout);
   // Create entry, verify entry is correct
-  auto keyPtr = CacheableKey::create(key);
-  auto valPtr = CacheableString::create(value);
+  auto keyPtr = apache::geode::client::CacheableKey::create(key);
+  auto valPtr = apache::geode::client::CacheableString::create(value);
 
   auto regPtr = getHelper()->getRegion(name);
   ASSERT(regPtr != nullptr, "Region not found.");
@@ -374,8 +374,8 @@ void updateEntry(const char* name, const char* key, const char* value,
           value, name);
   fflush(stdout);
   // Update entry, verify entry is correct
-  auto keyPtr = CacheableKey::create(key);
-  auto valPtr = CacheableString::create(value);
+  auto keyPtr = apache::geode::client::CacheableKey::create(key);
+  auto valPtr = apache::geode::client::CacheableString::create(value);
 
   auto regPtr = getHelper()->getRegion(name);
   ASSERT(regPtr != nullptr, "Region not found.");
@@ -404,14 +404,14 @@ void doNetSearch(const char *name, const char *key, const char *value) {
       key, value, name);
   fflush(stdout);
   // Get entry created in Process A, verify entry is correct
-  auto keyPtr = CacheableKey::create(key);
+  auto keyPtr = apache::geode::client::CacheableKey::create(key);
 
   auto regPtr = getHelper()->getRegion(name);
   fprintf(stdout, "netsearch  region %s\n", regPtr->getName().c_str());
   fflush(stdout);
   ASSERT(regPtr != nullptr, "Region not found.");
 
-  auto checkPtr = std::dynamic_pointer_cast<CacheableString>(
+  auto checkPtr = std::dynamic_pointer_cast<apache::geode::client::CacheableString>(
       regPtr->get(keyPtr));  // force a netsearch
 
   if (checkPtr != nullptr) {
@@ -436,7 +436,7 @@ void doNetSearch(const char* name, const char* key, const char* value,
       key, value, name);
   fflush(stdout);
   // Get entry created in Process A, verify entry is correct
-  auto keyPtr = CacheableKey::create(key);
+  auto keyPtr = apache::geode::client::CacheableKey::create(key);
 
   auto regPtr = getHelper()->getRegion(name);
   fprintf(stdout, "netsearch  region %s\n", regPtr->getName().c_str());
@@ -450,7 +450,7 @@ void doNetSearch(const char* name, const char* key, const char* value,
            "Value should not have been found in region.");
   }
 
-  auto checkPtr = std::dynamic_pointer_cast<CacheableString>(
+  auto checkPtr = std::dynamic_pointer_cast<apache::geode::client::CacheableString>(
       regPtr->get(keyPtr));  // force a netsearch
 
   if (checkPtr != nullptr) {
