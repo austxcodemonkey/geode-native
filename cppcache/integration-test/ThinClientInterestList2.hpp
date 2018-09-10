@@ -111,8 +111,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, UpdateClient1Entries)
     verifyEntry(regionNames[0], keys[1], vals[1]);
     verifyEntry(regionNames[1], keys[3], vals[3]);
 
-    updateEntry(regionNames[0], keys[0], nvals[0]);
-    updateEntry(regionNames[1], keys[2], nvals[2]);
+    updateEntry(regionNames[0], keys[0], nvals[0], false);
+    updateEntry(regionNames[1], keys[2], nvals[2], false);
 
     auto regPtr1 = getHelper()->getRegion(regionNames[1]);
     regPtr1->unregisterAllKeys();
