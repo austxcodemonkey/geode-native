@@ -342,7 +342,7 @@ std::shared_ptr<apache::geode::client::Region> createPooledRegion(
   return regPtr;
 }
 
-void createEntry(const char *name, const char *key, const char *value) {
+void createEntry(const char *name, const char *key, const char *value, bool verify = true) {
   LOG("createEntry() entered.");
   fprintf(stdout, "Creating entry -- key: %s  value: %s in region %s\n", key,
           value, name);
@@ -363,7 +363,9 @@ void createEntry(const char *name, const char *key, const char *value) {
   regPtr->put(keyPtr, valPtr);
   LOG("Created entry.");
 
-  verifyEntry(name, key, value);
+  if (verify) {
+    verifyEntry(name, key, value);
+  }
   LOG("Entry created.");
 }
 

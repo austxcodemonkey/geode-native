@@ -67,22 +67,6 @@ DUNIT_TASK_DEFINITION(CLIENT2, Alter_Client_Grid_Property_2)
   { g_isGridClient = !g_isGridClient; }
 END_TASK_DEFINITION
 
-namespace thinclienttransactions {
-
-void initClient(const bool isthinClient) {
-  if (cacheHelper == nullptr) {
-    auto config = Properties::create();
-    if (g_isGridClient) {
-      config->insert("grid-client", "true");
-    }
-    config->insert("suspended-tx-timeout", std::chrono::minutes(1));
-    cacheHelper = new CacheHelper(isthinClient, config);
-  }
-  ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
-
-}
-
 void createRegion(const char* name, bool ackMode, const char* endpoints,
                   bool clientNotificationEnabled = false,
                   bool cachingEnable = true) {
@@ -202,8 +186,8 @@ class SuspendTransactionThread : public ACE_Task_Base {
 
     txManager->begin();
 
-    createEntry(regionNames[0], keys[4], vals[4]);
-    createEntry(regionNames[1], keys[5], vals[5]);
+    createEntry(regionNames[0], keys[4], vals[4], false);
+    createEntry(regionNames[1], keys[5], vals[5], false);
 
     m_suspendedTransaction = &txManager->getTransactionId();
 
@@ -300,7 +284,7 @@ class ResumeTransactionThread : public ACE_Task_Base {
         regPtr1->containsKeyOnServer(keyPtr5),
         "In ResumeTransactionThread - Key should have been found in region.");
 
-    createEntry(regionNames[1], keys[6], vals[6]);
+    createEntry(regionNames[1], keys[6], vals[6], false);
 
     if (m_commit) {
       txManager->commit();
@@ -395,8 +379,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, SuspendResumeCommit)
     auto keyPtr6 = CacheableKey::create(keys[6]);
 
     txManager->begin();
-    createEntry(regionNames[0], keys[4], vals[4]);
-    createEntry(regionNames[1], keys[5], vals[5]);
+    createEntry(regionNames[0], keys[4], vals[4], false);
+    createEntry(regionNames[1], keys[5], vals[5], false);
     auto& m_suspendedTransaction = txManager->suspend();
 
     ASSERT(
@@ -422,7 +406,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, SuspendResumeCommit)
     ASSERT(regPtr1->containsKeyOnServer(keyPtr5),
            "In SuspendResumeCommit - Key should have been found in region.");
 
-    createEntry(regionNames[1], keys[6], vals[6]);
+    createEntry(regionNames[1], keys[6], vals[6], false);
 
     txManager->commit();
     ASSERT(regPtr0->containsKeyOnServer(keyPtr4),
@@ -475,15 +459,15 @@ DUNIT_TASK_DEFINITION(CLIENT1, SuspendTimeOut)
     ASSERT(regPtr0 != nullptr, "In SuspendTimeOut - Region not found.");
 
     txManager->begin();
-    createEntry(regionNames[0], keys[4], vals[4]);
+    createEntry(regionNames[0], keys[4], vals[4], false);
     auto& tid1 = txManager->suspend();
 
     txManager->begin();
-    createEntry(regionNames[0], keys[5], vals[5]);
+    createEntry(regionNames[0], keys[5], vals[5], false);
     auto& tid2 = txManager->suspend();
 
     txManager->resume(tid1);
-    createEntry(regionNames[0], keys[6], vals[6]);
+    createEntry(regionNames[0], keys[6], vals[6], false);
     txManager->commit();
 
     ASSERT(txManager->isSuspended(tid2),
@@ -518,8 +502,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, SuspendResumeRollback)
     ASSERT(regPtr1 != nullptr, "In SuspendResumeRollback - Region not found.");
 
     txManager->begin();
-    createEntry(regionNames[0], keys[4], vals[4]);
-    createEntry(regionNames[1], keys[5], vals[5]);
+    createEntry(regionNames[0], keys[4], vals[4], false);
+    createEntry(regionNames[1], keys[5], vals[5], false);
     auto& m_suspendedTransaction = txManager->suspend();
 
     ASSERT(
@@ -542,7 +526,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, SuspendResumeRollback)
     ASSERT(regPtr1->containsKeyOnServer(keyPtr5),
            "In SuspendResumeRollback - Key should have been found in region.");
 
-    createEntry(regionNames[1], keys[6], vals[6]);
+    createEntry(regionNames[1], keys[6], vals[6], false);
 
     txManager->rollback();
     ASSERT(
@@ -679,10 +663,10 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, CreateNonexistentServerRegion_Pooled_Locator)
   {
-    thinclienttransactions::initClient(true);
+    initClient(true);
     createPooledRegion("non-region", USE_ACK, locatorsG, "__TESTPOOL1_");
     try {
-      createEntry("non-region", keys[0], vals[0]);
+      createEntry("non-region", keys[0], vals[0], false);
       FAIL(
           "Expected exception when doing operations on a non-existent region.");
     } catch (const CacheServerException& ex) {
@@ -697,10 +681,10 @@ END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT1,
                       CreateNonexistentServerRegion_Pooled_Locator_Sticky)
   {
-    thinclienttransactions::initClient(true);
+    initClient(true);
     createPooledRegionSticky("non-region", USE_ACK, locatorsG, "__TESTPOOL1_");
     try {
-      createEntry("non-region", keys[0], vals[0]);
+      createEntry("non-region", keys[0], vals[0], false);
       FAIL(
           "Expected exception when doing operations on a non-existent region.");
     } catch (const CacheServerException& ex) {
@@ -752,8 +736,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, CreateClient1Entries)
   {
     auto txManager = getHelper()->getCache()->getCacheTransactionManager();
     txManager->begin();
-    createEntry(regionNames[0], keys[0], vals[0]);
-    createEntry(regionNames[1], keys[2], vals[2]);
+    createEntry(regionNames[0], keys[0], vals[0], false);
+    createEntry(regionNames[1], keys[2], vals[2], false);
     txManager->commit();
     LOG("StepThree complete.");
   }
@@ -761,12 +745,12 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, CreateClient2Entries)
   {
-     doNetSearch(regionNames[0], keys[0], vals[0]);
-     doNetSearch(regionNames[1], keys[2], vals[2]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[1], keys[2], vals[2]);
     auto txManager = getHelper()->getCache()->getCacheTransactionManager();
     txManager->begin();
-    createEntry(regionNames[0], keys[1], vals[1]);
-    createEntry(regionNames[1], keys[3], vals[3]);
+    createEntry(regionNames[0], keys[1], vals[1], false);
+    createEntry(regionNames[1], keys[3], vals[3], false);
     txManager->commit();
     verifyEntry(regionNames[0], keys[1], vals[1]);
     verifyEntry(regionNames[1], keys[3], vals[3]);
@@ -798,8 +782,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, UpdateClient1Entries)
     ASSERT(key1 == keys[2] || key1 == keys[3],
            "Unexpected key in second region.");
 
-     doNetSearch(regionNames[0], keys[1], vals[1]);
-     doNetSearch(regionNames[1], keys[3], vals[3]);
+    doNetSearch(regionNames[0], keys[1], vals[1]);
+    doNetSearch(regionNames[1], keys[3], vals[3]);
     updateEntry(regionNames[0], keys[0], nvals[0]);
     updateEntry(regionNames[1], keys[2], nvals[2]);
     LOG("StepFive complete.");
@@ -807,8 +791,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, UpdateClient1Entries)
 END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT2, UpdateClient2Entries)
   {
-     doNetSearch(regionNames[0], keys[0], vals[0]);
-     doNetSearch(regionNames[1], keys[2], vals[2]);
+    doNetSearch(regionNames[0], keys[0], vals[0]);
+    doNetSearch(regionNames[1], keys[2], vals[2]);
     auto txManager = getHelper()->getCache()->getCacheTransactionManager();
     txManager->begin();
     updateEntry(regionNames[0], keys[1], nvals[1]);
@@ -864,8 +848,8 @@ DUNIT_TASK_DEFINITION(CLIENT1, CreateClient1KeyThriceWithSticky)
     reg1->localInvalidate(CacheableKey::create(keys[3]));
     auto pool = getHelper()->getCache()->getPoolManager().find("__TESTPOOL1_");
     ASSERT(pool != nullptr, "Pool Should have been found");
-     doNetSearch(regionNames[0], keys[1], nvals[1]);
-     doNetSearch(regionNames[1], keys[3], nvals[3]);
+    doNetSearch(regionNames[0], keys[1], nvals[1]);
+    doNetSearch(regionNames[1], keys[3], nvals[3]);
     pool->releaseThreadLocalConnection();
     updateEntry(regionNames[0], keys[0], nvals[0]);
     updateEntry(regionNames[1], keys[2], nvals[2]);
