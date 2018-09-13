@@ -22,7 +22,6 @@
 
 #define ROOT_NAME "testThinClientHAMixedRedundancy"
 
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 

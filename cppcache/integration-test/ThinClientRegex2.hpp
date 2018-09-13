@@ -28,7 +28,6 @@
 #define ROOT_NAME "ThinClientRegex2"
 #define ROOT_SCOPE DISTRIBUTED_ACK
 
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 

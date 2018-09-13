@@ -28,7 +28,6 @@
 #include <string>
 
 #define ROOT_NAME "ThinClientPutAllWithCallBack"
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 #include "CacheRegionHelper.hpp"

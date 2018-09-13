@@ -31,7 +31,6 @@
 #include "CacheImpl.hpp"
 
 #define ROOT_NAME "ThinClientPutAll"
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 
 #include "CacheHelper.hpp"

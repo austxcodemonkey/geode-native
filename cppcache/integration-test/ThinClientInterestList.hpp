@@ -22,7 +22,6 @@
 #define ROOT_NAME "ThinClientInterestList.hpp"
 
 #include "fw_dunit.hpp"
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 
 #include <ace/OS.h>

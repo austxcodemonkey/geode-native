@@ -36,7 +36,6 @@
 #define ROOT_NAME "ThinClientHelper"
 #endif
 
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 

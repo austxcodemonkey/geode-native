@@ -26,7 +26,6 @@
 
 #define ROOT_NAME "ThinClientRegex3"
 
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 

@@ -19,7 +19,6 @@
 #include "fw_dunit.hpp"
 #include <string>
 
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 

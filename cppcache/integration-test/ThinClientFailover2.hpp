@@ -29,7 +29,6 @@
 #define ThinClientFailover2 "DistOps"
 #define ROOT_SCOPE DISTRIBUTED_ACK
 
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 

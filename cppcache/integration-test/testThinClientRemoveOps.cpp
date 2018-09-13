@@ -25,7 +25,6 @@
 
 #define ROOT_NAME "testThinClientRemoveOps"
 
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 

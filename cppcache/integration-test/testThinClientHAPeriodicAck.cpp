@@ -28,7 +28,6 @@
 
 #define ROOT_NAME "testThinClientHAPeriodicAck"
 
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 

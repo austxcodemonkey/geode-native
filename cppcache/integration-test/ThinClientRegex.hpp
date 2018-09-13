@@ -28,7 +28,6 @@
 #define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
-#define CacheHelperOwner
 #include "VerifyMacros.hpp"
 
 
