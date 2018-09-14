@@ -67,8 +67,6 @@ using apache::geode::client::WritablePdxInstance;
 
 bool isLocalServer = false;
 
-CacheHelper* cacheHelper = nullptr;
-
 #define CLIENT1 s1p1
 #define CLIENT2 s1p2
 #define SERVER1 s2p1
@@ -118,17 +116,18 @@ bool generic2DCompare(T1** value1, T2** value2, int length,
   return true;
 }
 
-void initClient(const bool isthinClient, bool isPdxReadSerailized) {
-  LOGINFO("isPdxReadSerailized = %d ", isPdxReadSerailized);
+void initClientMaybeReadSerialized(const bool isthinClient, bool isPdxReadSerialized) {
+  LOGINFO("isPdxReadSerialized = %d ", isPdxReadSerialized);
   if (cacheHelper == nullptr) {
     auto config = Properties::create();
     config->insert("enable-time-statistics", "true");
     LOGINFO("enabled-time-statistics ");
-    cacheHelper = new CacheHelper(isthinClient, false, isPdxReadSerailized,
+    cacheHelper = new CacheHelper(isthinClient, false, isPdxReadSerialized,
                                   config, false);
   }
   ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
 }
+
 static int clientWithXml = 0;
 void initClient(const char* clientXmlFile) {
   if (cacheHelper == nullptr) {
@@ -139,29 +138,6 @@ void initClient(const char* clientXmlFile) {
     cacheHelper = new CacheHelper(nullptr, clientXmlFile, config);
   }
   ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
-void cleanProc() {
-  if (cacheHelper != nullptr) {
-    delete cacheHelper;
-    cacheHelper = nullptr;
-  }
-}
-CacheHelper* getHelper() {
-  ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
-  return cacheHelper;
-}
-void createPooledRegion(const char* name, bool ackMode, const char* locators,
-                        const char* poolname,
-                        bool clientNotificationEnabled = false,
-                        bool cachingEnable = true) {
-  LOG("createRegion_Pool() entered.");
-  fprintf(stdout, "Creating region --  %s  ackMode is %d\n", name, ackMode);
-  fflush(stdout);
-  auto regPtr =
-      getHelper()->createPooledRegion(name, ackMode, locators, poolname,
-                                      cachingEnable, clientNotificationEnabled);
-  ASSERT(regPtr != nullptr, "Failed to create region.");
-  LOG("Pooled Region created.");
 }
 DUNIT_TASK_DEFINITION(SERVER1, CreateLocator1)
   {
@@ -192,7 +168,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, StepOne_Pooled_Locator_PdxReadSerialized)
   {
-    initClient(true, true);
+    initClientMaybeReadSerialized(true, true);
     createPooledRegion(regionNames[0], USE_ACK, locatorsG, "__TEST_POOL1__",
                        false, false);
     LOG("StepOne_Pooled_Locator complete.");
@@ -201,7 +177,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, StepTwo_Pooled_Locator_PdxReadSerialized)
   {
-    initClient(true, true);
+    initClientMaybeReadSerialized(true, true);
     createPooledRegion(regionNames[0], USE_ACK, locatorsG, "__TEST_POOL1__",
                        false, false);
     LOG("StepOne_Pooled_Locator complete.");
@@ -211,7 +187,7 @@ END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT2,
                       StepTwo_Pooled_Locator_CachingEnabled_PdxReadSerialized)
   {
-    initClient(true, true);
+    initClientMaybeReadSerialized(true, true);
     createPooledRegion(regionNames[0], USE_ACK, locatorsG, "__TEST_POOL1__",
                        false, true);
     LOG("StepTwo_Pooled_Locator complete.");
@@ -220,7 +196,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, StepOne_Pooled_Locator)
   {
-    initClient(true, false);
+    initClientMaybeReadSerialized(true, false);
     createPooledRegion(regionNames[0], USE_ACK, locatorsG, "__TEST_POOL1__",
                        false, false);
     LOG("StepOne_Pooled_Locator complete.");
@@ -229,7 +205,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, StepTwo_Pooled_Locator)
   {
-    initClient(true, false);
+    initClientMaybeReadSerialized(true, false);
     createPooledRegion(regionNames[0], USE_ACK, locatorsG, "__TEST_POOL1__",
                        false, false);
     LOG("StepTwo_Pooled_Locator complete.");

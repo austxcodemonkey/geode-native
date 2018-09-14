@@ -43,7 +43,6 @@ using apache::geode::client::RegionEvent;
 #define CLIENT2 s1p2
 #define SERVER1 s2p1
 
-CacheHelper* cacheHelper = nullptr;
 bool isLocalServer = false;
 
 static bool isLocator = false;
@@ -99,38 +98,6 @@ class SimpleCacheListener : public CacheListener {
 };
 std::shared_ptr<SimpleCacheListener> eventListener1 = nullptr;
 std::shared_ptr<SimpleCacheListener> eventListener2 = nullptr;
-
-void initClient(const bool isthinClient) {
-  if (cacheHelper == nullptr) {
-    cacheHelper = new CacheHelper(isthinClient);
-  }
-  ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
-void cleanProc() {
-  if (cacheHelper != nullptr) {
-    delete cacheHelper;
-    cacheHelper = nullptr;
-  }
-}
-
-CacheHelper* getHelper() {
-  ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
-  return cacheHelper;
-}
-
-void createPooledRegion(const char* name, bool ackMode, const char* locators,
-                        const char* poolname,
-                        bool clientNotificationEnabled = false,
-                        bool cachingEnable = true) {
-  LOG("createRegion_Pool() entered.");
-  fprintf(stdout, "Creating region --  %s  ackMode is %d\n", name, ackMode);
-  fflush(stdout);
-  auto regPtr =
-      getHelper()->createPooledRegion(name, ackMode, locators, poolname,
-                                      cachingEnable, clientNotificationEnabled);
-  ASSERT(regPtr != nullptr, "Failed to create region.");
-  LOG("Pooled Region created.");
-}
 
 const char* testregex[] = {"Key-*1", "Key-*2", "Key-*3", "Key-*4"};
 const char* keys[] = {"Key-1", "Key-2", "Key-3", "Key-4"};

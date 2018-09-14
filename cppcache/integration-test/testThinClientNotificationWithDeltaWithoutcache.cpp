@@ -36,8 +36,6 @@ using apache::geode::client::CacheHelper;
 using apache::geode::client::CacheRegionHelper;
 using apache::geode::client::IllegalStateException;
 
-CacheHelper* cacheHelper = nullptr;
-
 #include "locator_globals.hpp"
 
 #define CLIENT1 s1p1
@@ -49,42 +47,10 @@ int DeltaEx::toDataCount = 0;
 int DeltaEx::fromDeltaCount = 0;
 int DeltaEx::fromDataCount = 0;
 int DeltaEx::cloneCount = 0;
-void initClient(const bool isthinClient) {
-  if (cacheHelper == nullptr) {
-    cacheHelper = new CacheHelper(isthinClient);
-  }
-  ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
 
 void initClientNoPools() {
   cacheHelper = new CacheHelper(0);
   ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
-
-void cleanProc() {
-  if (cacheHelper != nullptr) {
-    delete cacheHelper;
-    cacheHelper = nullptr;
-  }
-}
-
-CacheHelper* getHelper() {
-  ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
-  return cacheHelper;
-}
-
-void createPooledRegion(const char* name, bool ackMode, const char* locators,
-                        const char* poolname,
-                        bool clientNotificationEnabled = false,
-                        bool cachingEnable = true) {
-  LOG("createRegion_Pool() entered.");
-  fprintf(stdout, "Creating region --  %s  ackMode is %d\n", name, ackMode);
-  fflush(stdout);
-  auto regPtr =
-      getHelper()->createPooledRegion(name, ackMode, locators, poolname,
-                                      cachingEnable, clientNotificationEnabled);
-  ASSERT(regPtr != nullptr, "Failed to create region.");
-  LOG("Pooled Region created.");
 }
 
 void createRegionCachingDisabled(const char* name, bool ackMode,

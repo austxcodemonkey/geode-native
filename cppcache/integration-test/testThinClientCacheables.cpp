@@ -32,7 +32,6 @@
 #define CLIENT2 s1p2
 #define SERVER1 s2p1
 
-CacheHelper* cacheHelper = nullptr;
 bool isLocalServer = false;
 
 #if defined(WIN32)
@@ -47,24 +46,6 @@ bool isLocalServer = false;
 using apache::geode::client::EntryNotFoundException;
 using apache::geode::client::Region;
 using apache::geode::client::Utils;
-
-void initClient(const bool isthinClient) {
-  if (cacheHelper == nullptr) {
-    cacheHelper = new CacheHelper(isthinClient);
-  }
-  ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
-void cleanProc() {
-  if (cacheHelper != nullptr) {
-    delete cacheHelper;
-    cacheHelper = nullptr;
-  }
-}
-
-CacheHelper* getHelper() {
-  ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
-  return cacheHelper;
-}
 
 void createRegion(const char* name, bool ackMode,
                   bool clientNotificationEnabled = false) {

@@ -44,7 +44,6 @@
 using apache::geode::client::EntryNotFoundException;
 using apache::geode::client::HashMapOfCacheable;
 
-CacheHelper* cacheHelper = nullptr;
 static bool isLocalServer = false;
 static bool isLocator = false;
 static int numberOfLocators = 0;
@@ -54,24 +53,6 @@ const char* locatorsG =
 const char* poolName = "__TESTPOOL1_";
 
 #include "LocatorHelper.hpp"
-
-void initClient(const bool isthinClient) {
-  if (cacheHelper == nullptr) {
-    cacheHelper = new CacheHelper(isthinClient);
-  }
-  ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
-void cleanProc() {
-  if (cacheHelper != nullptr) {
-    delete cacheHelper;
-    cacheHelper = nullptr;
-  }
-}
-
-CacheHelper* getHelper() {
-  ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
-  return cacheHelper;
-}
 
 const char* keys[] = {"Key-1", "Key-2", "Key-3", "Key-4"};
 const char* vals[] = {"Value-1", "Value-2", "Value-3", "Value-4"};
@@ -104,34 +85,6 @@ void createRegionLocal(const char* name, bool ackMode, const char*,
       name, ackMode, isCacheEnabled, nullptr, clientNotificationEnabled, true);
   ASSERT(regPtr != nullptr, "Failed to create region.");
   LOG("Region created.");
-}
-
-void createPooledRegion(const char* name, bool ackMode, const char* locators,
-                        const char* poolname,
-                        bool clientNotificationEnabled = false,
-                        bool cachingEnable = true) {
-  LOG("createRegion_Pool() entered.");
-  fprintf(stdout, "Creating region --  %s  ackMode is %d\n", name, ackMode);
-  fflush(stdout);
-  auto regPtr =
-      getHelper()->createPooledRegion(name, ackMode, locators, poolname,
-                                      cachingEnable, clientNotificationEnabled);
-  ASSERT(regPtr != nullptr, "Failed to create region.");
-  LOG("Pooled Region created.");
-}
-
-void createPooledRegionConcurrencyCheckDisabled(
-    const char* name, bool ackMode, const char*, const char* locators,
-    const char* poolname, bool clientNotificationEnabled = false,
-    bool cachingEnable = true, bool concurrencyCheckEnabled = true) {
-  LOG("createRegion_Pool() entered.");
-  fprintf(stdout, "Creating region --  %s  ackMode is %d\n", name, ackMode);
-  fflush(stdout);
-  auto regPtr = getHelper()->createPooledRegionConcurrencyCheckDisabled(
-      name, ackMode, locators, poolname, cachingEnable,
-      clientNotificationEnabled, concurrencyCheckEnabled);
-  ASSERT(regPtr != nullptr, "Failed to create region.");
-  LOG("Pooled Region created.");
 }
 
 DUNIT_TASK_DEFINITION(SERVER1, CreateServer1)

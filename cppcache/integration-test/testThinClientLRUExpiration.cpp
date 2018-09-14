@@ -41,7 +41,6 @@ using apache::geode::client::ExpirationAction;
 using apache::geode::client::RegionAttributes;
 using apache::geode::client::RegionDestroyedException;
 
-CacheHelper* cacheHelper = nullptr;
 bool isLocalServer = false;
 
 static bool isLocator = false;
@@ -56,23 +55,7 @@ const bool NO_ACK = false;
 std::shared_ptr<TallyListener> regListener;
 std::shared_ptr<TallyWriter> regWriter;
 bool registerKey = true;
-void initClient(const bool isthinClient) {
-  if (cacheHelper == nullptr) {
-    cacheHelper = new CacheHelper(isthinClient);
-  }
-  ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
-void cleanProc() {
-  if (cacheHelper != nullptr) {
-    delete cacheHelper;
-    cacheHelper = nullptr;
-  }
-}
 
-CacheHelper* getHelper() {
-  ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
-  return cacheHelper;
-}
 void printAttribute(RegionAttributes attr) {
   using apache::geode::internal::chrono::duration::to_string;
 

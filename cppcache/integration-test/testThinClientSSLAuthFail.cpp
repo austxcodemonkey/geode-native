@@ -30,7 +30,6 @@ using apache::geode::client::CacheHelper;
 using apache::geode::client::NotConnectedException;
 using apache::geode::client::Properties;
 
-CacheHelper* cacheHelper = nullptr;
 bool isLocalServer = false;
 
 static bool isLocator = false;
@@ -40,43 +39,15 @@ const char* locatorsG =
 #define CLIENT1 s1p1
 #define SERVER1 s2p1
 
-void initClient(const bool isthinClient) {
-  if (cacheHelper == nullptr) {
-    auto props = Properties::create();
-    props->insert("ssl-enabled", "true");
-    std::string keystore = std::string(ACE_OS::getenv("TESTSRC")) + "/keystore";
-    std::string pubkey = keystore + "/client_truststore.pem";
-    std::string privkey = keystore + "/client_keystore.pem";
-    props->insert("ssl-keystore", privkey.c_str());
-    props->insert("ssl-truststore", pubkey.c_str());
-    cacheHelper = new CacheHelper(isthinClient, props);
-  }
-  ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
-void cleanProc() {
-  if (cacheHelper != nullptr) {
-    delete cacheHelper;
-    cacheHelper = nullptr;
-  }
-}
-
-CacheHelper* getHelper() {
-  ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
-  return cacheHelper;
-}
-
-void createPooledRegion(const char* name, bool ackMode, const char* locators,
-                        const char* poolname,
-                        bool clientNotificationEnabled = false,
-                        bool cachingEnable = true) {
-  LOG("createRegion_Pool() entered.");
-  fprintf(stdout, "Creating region --  %s  ackMode is %d\n", name, ackMode);
-  fflush(stdout);
-  auto regPtr =
-      getHelper()->createPooledRegion(name, ackMode, locators, poolname,
-                                      cachingEnable, clientNotificationEnabled);
-  ASSERT(regPtr != nullptr, "Failed to create region.");
-  LOG("Pooled Region created.");
+void initClientSSL(const bool isthinClient) {
+  auto props = Properties::create();
+  props->insert("ssl-enabled", "true");
+  std::string keystore = std::string(ACE_OS::getenv("TESTSRC")) + "/keystore";
+  std::string pubkey = keystore + "/client_truststore.pem";
+  std::string privkey = keystore + "/client_keystore.pem";
+  props->insert("ssl-keystore", privkey.c_str());
+  props->insert("ssl-truststore", pubkey.c_str());
+  initClient(isthinClient, props);
 }
 
 void createEntry(const char* name, const char* key, const char* value) {
@@ -132,7 +103,7 @@ DUNIT_TASK_DEFINITION(SERVER1, CreateServer1_With_Locator_And_SSL_untrustedCert)
 END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, CreateClient1)
-  { initClient(true); }
+  { initClientSSL(true); }
 END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, CreateRegions1_PoolLocators)

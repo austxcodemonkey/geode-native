@@ -50,7 +50,6 @@ using apache::geode::client::SelectResults;
 using testobject::Portfolio;
 using testobject::Position;
 
-CacheHelper* cacheHelper = nullptr;
 static bool isLocalServer = false;
 static bool isLocator = false;
 static int numberOfLocators = 1;
@@ -97,31 +96,6 @@ void initClient() {
   } catch (const IllegalStateException&) {
     // ignore reregistration exception
   }
-}
-
-/*
-void initClient( const bool isthinClient )
-{
-  serializationRegistry->addType( Portfolio::createDeserializable);
-  serializationRegistry->addType( Position::createDeserializable);
-
-  if ( cacheHelper == nullptr ) {
-    cacheHelper = new CacheHelper(isthinClient);
-  }
-  ASSERT( cacheHelper, "Failed to create a CacheHelper client instance." );
-}
-*/
-
-void cleanProc() {
-  if (cacheHelper != nullptr) {
-    delete cacheHelper;
-    cacheHelper = nullptr;
-  }
-}
-
-CacheHelper* getHelper() {
-  ASSERT(cacheHelper != nullptr, "No cacheHelper initialized.");
-  return cacheHelper;
 }
 
 void createRegion(const char* name, bool ackMode,
