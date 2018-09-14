@@ -29,7 +29,6 @@
 
 #define ROOT_NAME "ThinClientDistOps"
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 #define CLIENT1 s1p1

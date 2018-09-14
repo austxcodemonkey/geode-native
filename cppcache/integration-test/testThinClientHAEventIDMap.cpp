@@ -28,7 +28,6 @@
 
 #define ROOT_NAME "testThinClientHAEventIDMap"
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 using apache::geode::client::CacheableInt32;

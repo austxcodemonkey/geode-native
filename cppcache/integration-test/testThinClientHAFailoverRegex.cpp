@@ -22,7 +22,6 @@
 
 #define ROOT_NAME "testThinClientHAFailoverRegex"
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 bool isLocalServer = false;

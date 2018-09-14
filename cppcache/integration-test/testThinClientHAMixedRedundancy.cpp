@@ -22,7 +22,6 @@
 
 #define ROOT_NAME "testThinClientHAMixedRedundancy"
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 using apache::geode::client::CacheableKey;

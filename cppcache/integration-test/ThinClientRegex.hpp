@@ -28,7 +28,6 @@
 #define ROOT_SCOPE DISTRIBUTED_ACK
 
 #include "CacheHelper.hpp"
-#include "VerifyMacros.hpp"
 
 
 #define CLIENT1 s1p1

@@ -21,7 +21,6 @@
 
 #define ROOT_NAME "testThinClientIntResPolKeysInv"
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 

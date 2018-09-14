@@ -19,7 +19,6 @@
 #include "fw_dunit.hpp"
 #include <string>
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 #include <geode/CqAttributesFactory.hpp>

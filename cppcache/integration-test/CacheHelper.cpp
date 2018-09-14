@@ -37,6 +37,7 @@
 #include "CacheImpl.hpp"
 #include "config.h"
 
+#define CacheHelperOwner
 #include "CacheHelper.hpp"
 #define __DUNIT_NO_MAIN__
 #include "fw_dunit.hpp"

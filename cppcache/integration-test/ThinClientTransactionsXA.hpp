@@ -32,7 +32,6 @@
 #define ROOT_NAME "ThinClientTransactionsXA"
 #define ROOT_SCOPE DISTRIBUTED_ACK
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 using apache::geode::client::CacheableKey;

@@ -36,7 +36,6 @@
 #define ROOT_NAME "ThinClientHelper"
 #endif
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 using apache::geode::client::CacheableInt32;

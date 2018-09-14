@@ -22,7 +22,6 @@
 
 #define ROOT_NAME "testThinClientHAFailover"
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 using apache::geode::client::CacheableKey;

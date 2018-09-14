@@ -22,7 +22,6 @@
 
 #define ROOT_NAME "testThinClientHADistOps"
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 

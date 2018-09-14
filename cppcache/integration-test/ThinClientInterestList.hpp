@@ -22,7 +22,6 @@
 #define ROOT_NAME "ThinClientInterestList.hpp"
 
 #include "fw_dunit.hpp"
-#include "VerifyMacros.hpp"
 
 #include <ace/OS.h>
 #include <ace/High_Res_Timer.h>

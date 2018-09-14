@@ -22,7 +22,7 @@ add_library(${TEST_UTILS_LIB} STATIC
   BBNamingContext.cpp
   CacheHelper.cpp
   CacheableWrapper.cpp
-  VerifyMacros.cpp)
+        )
 target_link_libraries(${TEST_UTILS_LIB}
   PRIVATE
     ACE

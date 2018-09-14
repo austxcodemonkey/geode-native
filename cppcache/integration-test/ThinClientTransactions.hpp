@@ -31,7 +31,6 @@
 
 #define ROOT_NAME "ThinClientTransactions"
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 using apache::geode::client::CacheableKey;

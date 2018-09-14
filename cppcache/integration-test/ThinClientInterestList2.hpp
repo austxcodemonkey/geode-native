@@ -26,7 +26,6 @@
 
 #define ROOT_NAME "ThinClientInterestList2"
 
-#include "VerifyMacros.hpp"
 #include "CacheHelper.hpp"
 
 
