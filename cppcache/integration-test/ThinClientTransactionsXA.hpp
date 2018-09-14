@@ -67,20 +67,14 @@ DUNIT_TASK_DEFINITION(CLIENT2, Alter_Client_Grid_Property_2)
   { g_isGridClient = !g_isGridClient; }
 END_TASK_DEFINITION
 
-namespace thinclienttransactionsxa {
 
-void initClient(const bool isthinClient) {
-  if (cacheHelper == nullptr) {
-    auto config = Properties::create();
-    if (g_isGridClient) {
-      config->insert("grid-client", "true");
-    }
-    config->insert("suspended-tx-timeout", std::chrono::seconds(1));
-    cacheHelper = new CacheHelper(isthinClient, config);
+std::shared_ptr<Properties> initProps() {
+  auto config = Properties::create();
+  if (g_isGridClient) {
+    config->insert("grid-client", "true");
   }
-  ASSERT(cacheHelper, "Failed to create a CacheHelper client instance.");
-}
-
+  config->insert("suspended-tx-timeout", std::chrono::seconds(1));
+  return config;
 }
 
 
@@ -694,7 +688,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT1, CreateNonexistentServerRegion_Pooled_Locator)
   {
-    thinclienttransactionsxa::initClient(true);
+    initClient(true, initProps());
     createPooledRegion("non-region", USE_ACK, locatorsG, "__TESTPOOL1_");
     try {
       createEntry("non-region", keys[0], vals[0]);
@@ -712,7 +706,7 @@ END_TASK_DEFINITION
 DUNIT_TASK_DEFINITION(CLIENT1,
                       CreateNonexistentServerRegion_Pooled_Locator_Sticky)
   {
-    thinclienttransactionsxa::initClient(true);
+    initClient(true, initProps());
     createPooledRegionSticky("non-region", USE_ACK, locatorsG, "__TESTPOOL1_");
     try {
       createEntry("non-region", keys[0], vals[0]);
@@ -746,7 +740,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, StepTwo_Pooled_Locator)
   {
-    initClient(true);
+    initClient(true, initProps());
     createPooledRegion(regionNames[0], USE_ACK, locatorsG, "__TESTPOOL1_");
     createPooledRegion(regionNames[1], NO_ACK, locatorsG, "__TESTPOOL1_");
     LOG("StepTwo complete.");
@@ -755,7 +749,7 @@ END_TASK_DEFINITION
 
 DUNIT_TASK_DEFINITION(CLIENT2, StepTwo_Pooled_Locator_Sticky)
   {
-    initClient(true);
+    initClient(true, initProps());
     createPooledRegionSticky(regionNames[0], USE_ACK, locatorsG,
                              "__TESTPOOL1_");
     createPooledRegionSticky(regionNames[1], NO_ACK, locatorsG, "__TESTPOOL1_");
