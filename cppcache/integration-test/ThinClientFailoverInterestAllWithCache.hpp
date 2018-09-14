@@ -177,7 +177,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, VerifyClient1)
            "Expected region to not contain the value");
 
     createEntry(regionNames[0], keys[0], vals[0]);
-    updateEntry(regionNames[0], keys[1], vals[1]);
+    updateEntry(regionNames[0], keys[1], vals[1], false);
     createEntry(regionNames[1], keys[2], vals[2]);
 
     LOG("VerifyClient1 complete.");
@@ -261,7 +261,7 @@ DUNIT_TASK_DEFINITION(CLIENT1, UpdateAndVerifyClient1)
     updateEntry(regionNames[0], keys[0], vals[0]);
     verifyEntry(regionNames[0], keys[1], vals[1]);
     updateEntry(regionNames[1], keys[2], vals[2]);
-    verifyEntry(regionNames[1], keys[3], vals[3]);
+    verifyEntry(regionNames[1], keys[3], nullptr);
     LOG("UpdateAndVerifyClient1 complete.");
   }
 END_TASK_DEFINITION
