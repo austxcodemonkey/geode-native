@@ -26,6 +26,14 @@
 #include <string>
 #include <vector>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma clang diagnostic ignored "-Wcomma"
+#undef BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED
+#define BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED
+#include <boost/stacktrace.hpp>
+#pragma clang diagnostic pop
+
 #include <geode/CacheableBuiltins.hpp>
 #include <geode/CacheableKey.hpp>
 #include <geode/CacheableString.hpp>
@@ -46,6 +54,13 @@
 #include "TcrChunkedContext.hpp"
 #include "VersionTag.hpp"
 #include "VersionedCacheableObjectPartList.hpp"
+
+//
+// Define a special logging level for protocol messages, so we can dump just
+// message info when we need/want to.  For now just set it to error, to keep
+// the noise low, but later may want a unique level
+//
+#define LOGPROTOCOL LOGERROR
 
 namespace apache {
 namespace geode {
@@ -464,66 +479,7 @@ class APACHE_GEODE_EXPORT TcrMessage {
   bool isFEAnotherHop();
 
  protected:
-  TcrMessage()
-      : m_request(nullptr),
-        m_tcdm(nullptr),
-        m_chunkedResult(nullptr),
-        m_keyList(nullptr),
-        m_region(nullptr),
-        m_timeout(15 /*DEFAULT_TIMEOUT_SECONDS*/),
-        m_metadata(),
-        m_cqs(nullptr),
-        m_messageResponseTimeout(-1),
-        m_delta(nullptr),
-        m_deltaBytes(nullptr),
-        m_fpaSet(),
-        m_functionAttributes(),
-        m_connectionIDBytes(nullptr),
-        m_creds(),
-        m_key(),
-        m_value(nullptr),
-        m_failedNode(),
-        m_callbackArgument(nullptr),
-        m_versionTag(),
-        m_eventid(nullptr),
-        m_vectorPtr(),
-        m_bucketServerLocation(nullptr),
-        m_tombstoneVersions(),
-        m_tombstoneKeys(),
-        m_versionObjPartListptr(),
-        exceptionMessage(),
-        m_regionName("INVALID_REGION_NAME"),
-        m_regex(),
-        m_bucketServerLocations(),
-        m_colocatedWith(),
-        m_partitionResolverName(),
-        m_securityHeaderLength(0),
-        m_msgType(TcrMessage::INVALID),
-        m_msgLength(-1),
-        m_msgTypeRequest(0),
-        m_txId(-1),
-        m_bucketCount(0),
-        m_numCqPart(0),
-        m_msgTypeForCq(0),
-        m_deltaBytesLen(0),
-        m_entryNotFound(0),
-        m_feAnotherHop(false),
-        isSecurityOn(false),
-        m_isLastChunkAndisSecurityHeader(0),
-        m_isSecurityHeaderAdded(false),
-        m_isMetaRegion(false),
-        m_decodeAll(false),
-        m_interestPolicy(0),
-        m_isDurable(false),
-        m_receiveValues(false),
-        m_hasCqsPart(false),
-        m_isInterestListPassed(false),
-        m_shouldIgnore(false),
-        m_metaDataVersion(0),
-        m_serverGroupVersion(0),
-        m_boolValue(0),
-        m_isCallBackArguement(false),
-        m_hasResult(0) {}
+  TcrMessage();
 
   void handleSpecialFECase();
   void writeBytesOnly(const std::shared_ptr<Serializable>& se);
