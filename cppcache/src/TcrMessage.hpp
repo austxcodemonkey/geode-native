@@ -55,13 +55,6 @@
 #include "VersionTag.hpp"
 #include "VersionedCacheableObjectPartList.hpp"
 
-//
-// Define a special logging level for protocol messages, so we can dump just
-// message info when we need/want to.  For now just set it to error, to keep
-// the noise low, but later may want a unique level
-//
-#define LOGPROTOCOL LOGERROR
-
 namespace apache {
 namespace geode {
 namespace client {

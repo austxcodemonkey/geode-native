@@ -26,8 +26,9 @@ using namespace apache::geode::client;
 
 int main(int argc, char** argv) {
   auto cacheFactory = CacheFactory();
+  auto username = std::string(std::getenv("USER"));
   cacheFactory.set("log-level", "error")
-    .set("log-file", "/Users/bbender/putgetremove.log");
+    .set("log-file", "/Users/" + username + "/putgetremove.log");
   auto cache = cacheFactory.create();
   auto poolFactory = cache.getPoolManager().createFactory();
 

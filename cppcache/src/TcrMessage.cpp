@@ -43,6 +43,62 @@
 #include "util/JavaModifiedUtf8.hpp"
 
 #pragma error_messages(off, SEC_UNINITIALIZED_MEM_READ)
+/*
+std::string methodName(const std::string& prettyFunction) {
+  size_t colons = prettyFunction.find("::");
+  size_t begin = prettyFunction.substr(0, colons).rfind(" ") + 1;
+  size_t end = prettyFunction.rfind("(") - begin;
+
+  return prettyFunction.substr(begin, end) + "()";
+}
+
+#define __METHOD_NAME__ methodName(__PRETTY_FUNCTION__).c_str()
+*/
+std::string className(const std::string& prettyFunction) {
+  const auto paren = prettyFunction.rfind("(");
+  const auto colons = prettyFunction.substr(0, paren).rfind("::");
+
+  if (colons == std::string::npos) {
+    return "::";
+  }
+
+  auto class_name = prettyFunction.substr(0, colons).rfind("::");
+  class_name = (class_name == std::string::npos) ? 0 : class_name + 1;
+  const auto count = colons - class_name + 1;
+
+  // std::cout << prettyFunction << "\nparen: " << paren << " colons: " <<
+  // colons
+  //          << " class_name: " << class_name << " count: " << count << '\n';
+
+  return prettyFunction.substr(class_name + 1, count - 2);
+}
+
+#define __CLASS_NAME__ className(__PRETTY_FUNCTION__).c_str()
+
+std::string getStackBacktraceString() {
+  std::stringstream strm;
+  std::string previous = "";
+  int count = 0;
+  for (const auto frame : boost::stacktrace::stacktrace()) {
+    if (0 == count) {
+      ++count;
+      continue;
+    }
+    if (frame.name() != previous) {
+      strm << "    " << count++ << "# " << frame.name() << '\n';
+      previous = frame.name();
+    }
+  }
+
+  return strm.str();
+}
+
+#define LOGPROTOCOL                                              \
+  LOGERROR("%s::%s(%p)\n%s", __CLASS_NAME__, __FUNCTION__, this, \
+           getStackBacktraceString().c_str());
+//#define LOGPROTOCOLCTOR                                                      \
+//  LOGERROR("%s::%s(%p) m_request = %p\n%s", __CLASS_NAME__, __METHOD_NAME__, \
+//           this, m_request.get(), getStackBacktraceString().c_str());
 
 namespace apache {
 namespace geode {
@@ -55,12 +111,6 @@ uint32_t g_headerLen = 17;
 }  // namespace
 
 extern void setThreadLocalExceptionMessage(const char*);
-
-std::string getStackBacktraceString() {
-  std::stringstream strm;
-  strm << boost::stacktrace::stacktrace();
-  return strm.str();
-}
 
 TcrMessage::TcrMessage()
     : m_request(nullptr),
@@ -121,13 +171,10 @@ TcrMessage::TcrMessage()
       m_serverGroupVersion(0),
       m_boolValue(0),
       m_isCallBackArguement(false),
-      m_hasResult(0) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
-}
+      m_hasResult(0){LOGPROTOCOL}
 
-// AtomicInc TcrMessage::m_transactionId = 0;
-uint8_t* TcrMessage::m_keepalive = nullptr;
+      // AtomicInc TcrMessage::m_transactionId = 0;
+      uint8_t* TcrMessage::m_keepalive = nullptr;
 const int TcrMessage::m_flag_empty = 0x01;
 const int TcrMessage::m_flag_concurrency_checks = 0x02;
 
@@ -156,8 +203,7 @@ void TcrMessage::setKeepAlive(bool keepalive) {
 }
 
 void TcrMessage::writeInterestResultPolicyPart(InterestResultPolicy policy) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request->writeInt(static_cast<int32_t>(3));  // size
   m_request->write(static_cast<int8_t>(1));      // isObject
   m_request->write(static_cast<int8_t>(DSCode::FixedIDByte));
@@ -166,16 +212,14 @@ void TcrMessage::writeInterestResultPolicyPart(InterestResultPolicy policy) {
 }
 
 void TcrMessage::writeIntPart(int32_t intValue) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request->writeInt(static_cast<int32_t>(4));
   m_request->write(static_cast<int8_t>(0));
   m_request->writeInt(intValue);
 }
 
 void TcrMessage::writeBytePart(uint8_t byteValue) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request->writeInt(static_cast<int32_t>(1));
   m_request->write(static_cast<int8_t>(0));
   m_request->write(byteValue);
@@ -183,8 +227,7 @@ void TcrMessage::writeBytePart(uint8_t byteValue) {
 
 void TcrMessage::writeByteAndTimeOutPart(uint8_t byteValue,
                                          std::chrono::milliseconds timeout) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request->writeInt(static_cast<int32_t>(5));  // 1 (byte) + 4 (timeout)
   m_request->write(static_cast<int8_t>(0));
   m_request->write(byteValue);
@@ -192,14 +235,13 @@ void TcrMessage::writeByteAndTimeOutPart(uint8_t byteValue,
 }
 
 void TcrMessage::writeMillisecondsPart(std::chrono::milliseconds millis) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
+
   writeIntPart(static_cast<int32_t>(millis.count()));
 }
 
 void TcrMessage::readBooleanPartAsObject(DataInput& input, bool* boolVal) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   int32_t lenObj = input.readInt32();
   const auto isObj = input.readBoolean();
   if (lenObj > 0) {
@@ -211,8 +253,7 @@ void TcrMessage::readBooleanPartAsObject(DataInput& input, bool* boolVal) {
 }
 
 void TcrMessage::readOldValue(DataInput& input) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   // read and ignore length
   input.readInt32();
   input.read();  // ignore isObj
@@ -221,8 +262,7 @@ void TcrMessage::readOldValue(DataInput& input) {
 }
 
 void TcrMessage::readPrMetaData(DataInput& input) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   int32_t lenObj = input.readInt32();
   input.read();                      // ignore
   m_metaDataVersion = input.read();  // read refresh meta data byte
@@ -261,8 +301,7 @@ std::shared_ptr<VersionTag> TcrMessage::readVersionTagPart(
 void TcrMessage::readVersionTag(
     DataInput& input, uint16_t endpointMemId,
     MemberListForVersionStamp& memberListForVersionStamp) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   int32_t lenObj = input.readInt32();
   input.read();  // ignore byte
 
@@ -273,8 +312,7 @@ void TcrMessage::readVersionTag(
 }
 
 void TcrMessage::readIntPart(DataInput& input, uint32_t* intValue) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   uint32_t intLen = input.readInt32();
   if (intLen != 4) {
     throw Exception("int length should have been 4");
@@ -284,8 +322,7 @@ void TcrMessage::readIntPart(DataInput& input, uint32_t* intValue) {
 }
 
 void TcrMessage::readLongPart(DataInput& input, uint64_t* intValue) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   uint32_t longLen = input.readInt32();
   if (longLen != 8) throw Exception("long length should have been 8");
   if (input.read()) throw Exception("Long is not an object");
@@ -293,8 +330,7 @@ void TcrMessage::readLongPart(DataInput& input, uint64_t* intValue) {
 }
 
 const std::string TcrMessage::readStringPart(DataInput& input) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   char* stringBuffer;
   int32_t stringLength = input.readInt32();
   stringBuffer = new char[stringLength + 1];
@@ -309,8 +345,7 @@ const std::string TcrMessage::readStringPart(DataInput& input) {
 }
 
 void TcrMessage::readCqsPart(DataInput& input) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_cqs->clear();
   readIntPart(input, &m_numCqPart);
   for (uint32_t cqCnt = 0; cqCnt < m_numCqPart;) {
@@ -325,8 +360,7 @@ void TcrMessage::readCqsPart(DataInput& input) {
 
 inline void TcrMessage::readCallbackObjectPart(DataInput& input,
                                                bool defaultString) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   int32_t lenObj = input.readInt32();
   const auto isObj = input.readBoolean();
   if (lenObj > 0) {
@@ -343,8 +377,7 @@ inline void TcrMessage::readCallbackObjectPart(DataInput& input,
 }
 
 inline void TcrMessage::readObjectPart(DataInput& input, bool defaultString) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   int32_t lenObj = input.readInt32();
   auto isObj = input.read();
   if (lenObj > 0) {
@@ -367,8 +400,7 @@ inline void TcrMessage::readObjectPart(DataInput& input, bool defaultString) {
 void TcrMessage::readSecureObjectPart(DataInput& input, bool defaultString,
                                       bool isChunk,
                                       uint8_t isLastChunkWithSecurity) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   LOGDEBUG(
       "TcrMessage::readSecureObjectPart isChunk = %d isLastChunkWithSecurity = "
       "%d",
@@ -417,8 +449,7 @@ void TcrMessage::readSecureObjectPart(DataInput& input, bool defaultString,
 }
 
 void TcrMessage::readUniqueIDObjectPart(DataInput& input) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   LOGDEBUG("TcrMessage::readUniqueIDObjectPart");
 
   int32_t lenObj = input.readInt32();
@@ -433,8 +464,7 @@ void TcrMessage::readUniqueIDObjectPart(DataInput& input) {
 }
 
 int64_t TcrMessage::getConnectionId(TcrConnection* conn) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   if (m_connectionIDBytes != nullptr) {
     auto tmp = conn->decryptBytes(m_connectionIDBytes);
     auto di = m_tcdm->getConnectionManager().getCacheImpl()->createDataInput(
@@ -447,8 +477,7 @@ int64_t TcrMessage::getConnectionId(TcrConnection* conn) {
 }
 
 int64_t TcrMessage::getUniqueId(TcrConnection* conn) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   if (m_value != nullptr) {
     auto encryptBytes = std::dynamic_pointer_cast<CacheableBytes>(m_value);
 
@@ -462,8 +491,7 @@ int64_t TcrMessage::getUniqueId(TcrConnection* conn) {
 }
 
 inline void TcrMessage::readFailedNodePart(DataInput& input) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   // read and ignore length
   input.readInt32();
   // read and ignore isObj
@@ -476,8 +504,7 @@ inline void TcrMessage::readFailedNodePart(DataInput& input) {
 }
 
 inline void TcrMessage::readKeyPart(DataInput& input) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   int32_t lenObj = input.readInt32();
   const auto isObj = input.readBoolean();
   if (lenObj > 0) {
@@ -503,8 +530,7 @@ inline void TcrMessage::writeInt(uint8_t* buffer, uint32_t value) {
 }
 std::shared_ptr<Serializable> TcrMessage::readCacheableString(DataInput& input,
                                                               int lenObj) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   auto decoded = internal::JavaModifiedUtf8::decode(
       reinterpret_cast<const char*>(input.currentBufferPosition()), lenObj);
   input.advanceCursor(lenObj);
@@ -514,8 +540,7 @@ std::shared_ptr<Serializable> TcrMessage::readCacheableString(DataInput& input,
 
 std::shared_ptr<Serializable> TcrMessage::readCacheableBytes(DataInput& input,
                                                              int lenObj) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   if (lenObj <= 252) {  // 252 is java's ((byte)-4 && 0xFF)
     input.rewindCursor(1);
     uint8_t* buffer = const_cast<uint8_t*>(input.currentBufferPosition());
@@ -537,8 +562,7 @@ std::shared_ptr<Serializable> TcrMessage::readCacheableBytes(DataInput& input,
 
 bool TcrMessage::readExceptionPart(DataInput& input, uint8_t isLastChunk,
                                    bool skipFirstPart) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   // Reading exception message sent from java cache server.
   // Read the first part which is serialized java exception and ignore it.
   // Then read the second part which is string and use it to construct the
@@ -573,8 +597,7 @@ bool TcrMessage::readExceptionPart(DataInput& input, uint8_t isLastChunk,
 void TcrMessage::writeObjectPart(
     const std::shared_ptr<Serializable>& se, bool isDelta, bool callToData,
     const std::vector<std::shared_ptr<CacheableKey>>* getAllKeyList) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   //  no nullptr check since for some messages nullptr object may be valid
   uint32_t size = 0;
   // write a dummy size of 4 bytes.
@@ -688,8 +711,7 @@ void TcrMessage::writeBytesOnly(const std::shared_ptr<Serializable>& se) {
 }
 
 void TcrMessage::writeHeader(uint32_t msgType, uint32_t numOfParts) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   int8_t earlyAck = 0x0;
   LOGDEBUG("TcrMessage::writeHeader m_isMetaRegion = %d", m_isMetaRegion);
   if (m_tcdm != nullptr) {
@@ -728,16 +750,14 @@ void TcrMessage::writeHeader(uint32_t msgType, uint32_t numOfParts) {
 // case,
 // write header definition changes, this function should change accordingly.
 void TcrMessage::updateHeaderForRetry() {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   uint8_t earlyAck = m_request->getValueAtPos(16);
   // set the isRetryBit
   m_request->updateValueAtPos(16, earlyAck | 0x4);
 }
 
 void TcrMessage::writeRegionPart(const std::string& regionName) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   int32_t len = static_cast<int32_t>(regionName.length());
   m_request->writeInt(len);
   m_request->write(static_cast<int8_t>(0));  // isObject = 0
@@ -746,8 +766,7 @@ void TcrMessage::writeRegionPart(const std::string& regionName) {
 }
 
 void TcrMessage::writeStringPart(const std::string& str) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   if (!str.empty()) {
     auto jmutf8 = internal::JavaModifiedUtf8::fromString(str);
 
@@ -764,8 +783,7 @@ void TcrMessage::writeStringPart(const std::string& str) {
 
 void TcrMessage::writeEventIdPart(int reserveSize,
                                   bool fullValueAfterDeltaFail) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   EventId eid(true, reserveSize, fullValueAfterDeltaFail);  // set true so we
                                                             // auto-gen next
                                                             // per-thread
@@ -775,8 +793,7 @@ void TcrMessage::writeEventIdPart(int reserveSize,
 }
 
 void TcrMessage::writeMessageLength() {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   auto totalLen = m_request->getBufferLength();
   auto msgLen = totalLen - g_headerLen;
   m_request->rewindCursor(
@@ -789,8 +806,7 @@ void TcrMessage::writeMessageLength() {
 }
 
 void TcrMessage::startProcessChunk(ACE_Semaphore& finalizeSema) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   if (m_msgTypeRequest == TcrMessage::EXECUTECQ_MSG_TYPE ||
       m_msgTypeRequest == TcrMessage::STOPCQ_MSG_TYPE ||
       m_msgTypeRequest == TcrMessage::CLOSECQ_MSG_TYPE ||
@@ -836,13 +852,11 @@ void TcrMessage::startProcessChunk(ACE_Semaphore& finalizeSema) {
 }
 
 bool TcrMessage::isFEAnotherHop() {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_feAnotherHop;
 }
 void TcrMessage::handleSpecialFECase() {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   LOGDEBUG("handleSpecialFECase1 %d", this->m_isLastChunkAndisSecurityHeader);
   if ((this->m_isLastChunkAndisSecurityHeader & 0x01) == 0x01) {
     LOGDEBUG("handleSpecialFECase2 %d", this->m_isLastChunkAndisSecurityHeader);
@@ -857,8 +871,7 @@ void TcrMessage::handleSpecialFECase() {
 void TcrMessage::processChunk(const uint8_t* bytes, int32_t len,
                               uint16_t endpointmemId,
                               const uint8_t isLastChunkAndisSecurityHeader) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   // TODO: see if security header is there
   LOGDEBUG(
       "TcrMessage::processChunk isLastChunkAndisSecurityHeader = %d chunklen = "
@@ -1026,8 +1039,7 @@ void TcrMessage::processChunk(const uint8_t* bytes, int32_t len,
 }
 
 Pool* TcrMessage::getPool() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   if (m_region) {
     return m_region->getPool().get();
   }
@@ -1037,8 +1049,7 @@ Pool* TcrMessage::getPool() const {
 void TcrMessage::chunkSecurityHeader(int skipPart, const uint8_t* bytes,
                                      int32_t len,
                                      uint8_t isLastChunkAndSecurityHeader) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   LOGDEBUG("TcrMessage::chunkSecurityHeader:: skipParts = %d", skipPart);
   if ((isLastChunkAndSecurityHeader & 0x3) == 0x3) {
     auto di = m_tcdm->getConnectionManager().getCacheImpl()->createDataInput(
@@ -1052,8 +1063,7 @@ void TcrMessage::handleByteArrayResponse(
     const char* bytearray, int32_t len, uint16_t endpointMemId,
     const SerializationRegistry& serializationRegistry,
     MemberListForVersionStamp& memberListForVersionStamp) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   auto input = m_tcdm->getConnectionManager().getCacheImpl()->createDataInput(
       reinterpret_cast<uint8_t*>(const_cast<char*>(bytearray)), len, getPool());
   // TODO:: this need to make sure that pool is there
@@ -1525,8 +1535,7 @@ TcrMessageDestroyRegion::TcrMessageDestroyRegion(
     const std::shared_ptr<Serializable>& aCallbackArgument,
     std::chrono::milliseconds messageResponsetimeout,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageDestroyRegion::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::DESTROY_REGION;
   m_tcdm = connectionDM;
@@ -1564,8 +1573,7 @@ TcrMessageClearRegion::TcrMessageClearRegion(
     const std::shared_ptr<Serializable>& aCallbackArgument,
     std::chrono::milliseconds messageResponsetimeout,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageClearRegion::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::CLEAR_REGION;
   m_tcdm = connectionDM;
@@ -1605,8 +1613,7 @@ TcrMessageQuery::TcrMessageQuery(
     DataOutput* dataOutput, const std::string& regionName,
     std::chrono::milliseconds messageResponsetimeout,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageQuery::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::QUERY;
   m_tcdm = connectionDM;
@@ -1634,8 +1641,7 @@ TcrMessageStopCQ::TcrMessageStopCQ(
     DataOutput* dataOutput, const std::string& regionName,
     std::chrono::milliseconds messageResponsetimeout,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageStop::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::STOPCQ_MSG_TYPE;
   m_tcdm = connectionDM;
@@ -1667,8 +1673,7 @@ TcrMessageCloseCQ::TcrMessageCloseCQ(
     DataOutput* dataOutput, const std::string& regionName,
     std::chrono::milliseconds messageResponsetimeout,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageCloseCQ::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::CLOSECQ_MSG_TYPE;
   m_tcdm = connectionDM;
@@ -1698,8 +1703,7 @@ TcrMessageQueryWithParameters::TcrMessageQueryWithParameters(
     std::shared_ptr<CacheableVector> paramList,
     std::chrono::milliseconds messageResponsetimeout,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageQueryWithParameters::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::QUERY_WITH_PARAMETERS;
   m_tcdm = connectionDM;
@@ -1738,8 +1742,7 @@ TcrMessageContainsKey::TcrMessageContainsKey(
     const std::shared_ptr<CacheableKey>& key,
     const std::shared_ptr<Serializable>& aCallbackArgument, bool isContainsKey,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageContainsKey::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::CONTAINS_KEY;
   m_tcdm = connectionDM;
@@ -1773,8 +1776,7 @@ TcrMessageContainsKey::TcrMessageContainsKey(
 
 TcrMessageGetDurableCqs::TcrMessageGetDurableCqs(
     DataOutput* dataOutput, ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageGetDurableCqs::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::GETDURABLECQS_MSG_TYPE;
   m_tcdm = connectionDM;
@@ -1792,8 +1794,7 @@ TcrMessageRequest::TcrMessageRequest(
     const std::shared_ptr<CacheableKey>& key,
     const std::shared_ptr<Serializable>& aCallbackArgument,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageRequest::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::REQUEST;
   m_tcdm = connectionDM;
@@ -1832,8 +1833,7 @@ TcrMessageInvalidate::TcrMessageInvalidate(
     const std::shared_ptr<CacheableKey>& key,
     const std::shared_ptr<Serializable>& aCallbackArgument,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageInvalidate::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::INVALIDATE;
   m_tcdm = connectionDM;
@@ -1873,8 +1873,7 @@ TcrMessageDestroy::TcrMessageDestroy(
     const std::shared_ptr<Cacheable>& value,
     const std::shared_ptr<Serializable>& aCallbackArgument,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageDestroy::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::DESTROY;
   m_tcdm = connectionDM;
@@ -1931,8 +1930,7 @@ TcrMessagePut::TcrMessagePut(
     const std::shared_ptr<Serializable>& aCallbackArgument, bool isDelta,
     ThinClientBaseDM* connectionDM, bool isMetaRegion,
     bool fullValueAfterDeltaFail, const char* regionName) {
-  LOGPROTOCOL("TcrMessagePut::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   // m_securityHeaderLength = 0;
   m_isMetaRegion = isMetaRegion;
@@ -1974,8 +1972,7 @@ TcrMessagePut::TcrMessagePut(
 
 TcrMessageReply::TcrMessageReply(bool decodeAll,
                                  ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageReply::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgType = TcrMessage::INVALID;
   m_decodeAll = decodeAll;
   m_tcdm = connectionDM;
@@ -1984,8 +1981,7 @@ TcrMessageReply::TcrMessageReply(bool decodeAll,
 }
 
 TcrMessagePing::TcrMessagePing(DataOutput* dataOutput, bool decodeAll) {
-  LOGPROTOCOL("TcrMessagePing::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgType = TcrMessage::PING;
   m_decodeAll = decodeAll;
   m_request.reset(dataOutput);
@@ -2005,8 +2001,7 @@ TcrMessagePing::TcrMessagePing(DataOutput* dataOutput, bool decodeAll) {
 
 TcrMessageCloseConnection::TcrMessageCloseConnection(DataOutput* dataOutput,
                                                      bool decodeAll) {
-  LOGPROTOCOL("TcrMessageCloseConnection::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgType = TcrMessage::CLOSE_CONNECTION;
   m_decodeAll = decodeAll;
   m_request.reset(dataOutput);
@@ -2026,8 +2021,7 @@ TcrMessageCloseConnection::TcrMessageCloseConnection(DataOutput* dataOutput,
 
 TcrMessageClientMarker::TcrMessageClientMarker(DataOutput* dataOutput,
                                                bool decodeAll) {
-  LOGPROTOCOL("TcrMessageClientMarker::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::CLIENT_MARKER;
   m_decodeAll = decodeAll;
@@ -2038,8 +2032,7 @@ TcrMessageRegisterInterestList::TcrMessageRegisterInterestList(
     const std::vector<std::shared_ptr<CacheableKey>>& keys, bool isDurable,
     bool isCachingEnabled, bool receiveValues,
     InterestResultPolicy interestPolicy, ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageRegisterInterestList::%s(0x%p)\n%s", __FUNCTION__,
-              this, getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::REGISTER_INTEREST_LIST;
   m_tcdm = connectionDM;
@@ -2095,8 +2088,7 @@ TcrMessageUnregisterInterestList::TcrMessageUnregisterInterestList(
     const std::vector<std::shared_ptr<CacheableKey>>& keys, bool isDurable,
     bool receiveValues, InterestResultPolicy interestPolicy,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageUnregisterInterestList::%s(0x%p)\n%s", __FUNCTION__,
-              this, getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::UNREGISTER_INTEREST_LIST;
   m_tcdm = connectionDM;
@@ -2135,8 +2127,7 @@ TcrMessageUnregisterInterestList::TcrMessageUnregisterInterestList(
 TcrMessageCreateRegion::TcrMessageCreateRegion(
     DataOutput* dataOutput, const std::string& str1, const std::string& str2,
     bool isDurable, bool receiveValues, ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageCreateRegion::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::CREATE_REGION;
   m_tcdm = connectionDM;
@@ -2155,8 +2146,7 @@ TcrMessageRegisterInterest::TcrMessageRegisterInterest(
     DataOutput* dataOutput, const std::string& str1, const std::string& str2,
     InterestResultPolicy interestPolicy, bool isDurable, bool isCachingEnabled,
     bool receiveValues, ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageRegisterInterest::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::REGISTER_INTEREST;
   m_tcdm = connectionDM;
@@ -2193,8 +2183,7 @@ TcrMessageUnregisterInterest::TcrMessageUnregisterInterest(
     DataOutput* dataOutput, const std::string& str1, const std::string& str2,
     InterestResultPolicy interestPolicy, bool isDurable, bool receiveValues,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageUnregisterInterest::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::UNREGISTER_INTEREST;
   m_tcdm = connectionDM;
@@ -2218,8 +2207,7 @@ TcrMessageUnregisterInterest::TcrMessageUnregisterInterest(
 TcrMessageTxSynchronization::TcrMessageTxSynchronization(DataOutput* dataOutput,
                                                          int ordinal, int txid,
                                                          int status) {
-  LOGPROTOCOL("TcrMessageTxSynchronization::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::TX_SYNCHRONIZATION;
 
@@ -2234,8 +2222,7 @@ TcrMessageTxSynchronization::TcrMessageTxSynchronization(DataOutput* dataOutput,
 }
 
 TcrMessageClientReady::TcrMessageClientReady(DataOutput* dataOutput) {
-  LOGPROTOCOL("TcrMessageClientReady::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::CLIENT_READY;
 
@@ -2246,8 +2233,7 @@ TcrMessageClientReady::TcrMessageClientReady(DataOutput* dataOutput) {
 }
 
 TcrMessageCommit::TcrMessageCommit(DataOutput* dataOutput) {
-  LOGPROTOCOL("TcrMessageCommit::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgType = TcrMessage::COMMIT;
   m_request.reset(dataOutput);
 
@@ -2258,8 +2244,7 @@ TcrMessageCommit::TcrMessageCommit(DataOutput* dataOutput) {
 }
 
 TcrMessageRollback::TcrMessageRollback(DataOutput* dataOutput) {
-  LOGPROTOCOL("TcrMessageRollback::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgType = TcrMessage::ROLLBACK;
   m_request.reset(dataOutput);
 
@@ -2270,8 +2255,7 @@ TcrMessageRollback::TcrMessageRollback(DataOutput* dataOutput) {
 }
 
 TcrMessageTxFailover::TcrMessageTxFailover(DataOutput* dataOutput) {
-  LOGPROTOCOL("TcrMessageTxFailover::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgType = TcrMessage::TX_FAILOVER;
   m_request.reset(dataOutput);
 
@@ -2284,8 +2268,7 @@ TcrMessageTxFailover::TcrMessageTxFailover(DataOutput* dataOutput) {
 // constructor for MAKE_PRIMARY message.
 TcrMessageMakePrimary::TcrMessageMakePrimary(DataOutput* dataOutput,
                                              bool processedMarker) {
-  LOGPROTOCOL("TcrMessageMakePrimary::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgType = TcrMessage::MAKE_PRIMARY;
   m_request.reset(dataOutput);
 
@@ -2297,8 +2280,7 @@ TcrMessageMakePrimary::TcrMessageMakePrimary(DataOutput* dataOutput,
 // constructor for PERIODIC_ACK of notified eventids
 TcrMessagePeriodicAck::TcrMessagePeriodicAck(
     DataOutput* dataOutput, const EventIdMapEntryList& entries) {
-  LOGPROTOCOL("TcrMessagePeriodicAck::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgType = TcrMessage::PERIODIC_ACK;
   m_request.reset(dataOutput);
 
@@ -2321,8 +2303,7 @@ TcrMessagePutAll::TcrMessagePutAll(
     std::chrono::milliseconds messageResponsetimeout,
     ThinClientBaseDM* connectionDM,
     const std::shared_ptr<Serializable>& aCallbackArgument) {
-  LOGPROTOCOL("TcrMessagePutAll::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_tcdm = connectionDM;
   m_regionName = region->getFullPath();
   m_region = region;
@@ -2393,8 +2374,7 @@ TcrMessageRemoveAll::TcrMessageRemoveAll(
     const std::vector<std::shared_ptr<CacheableKey>>& keys,
     const std::shared_ptr<Serializable>& aCallbackArgument,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageRemoveAll::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgType = TcrMessage::REMOVE_ALL;
   m_tcdm = connectionDM;
   m_regionName = region->getFullPath();
@@ -2438,8 +2418,7 @@ TcrMessageRemoveAll::TcrMessageRemoveAll(
 
 TcrMessageUpdateClientNotification::TcrMessageUpdateClientNotification(
     DataOutput* dataOutput, int32_t port) {
-  LOGPROTOCOL("TcrMessageUpdateClientNotification::%s(0x%p)\n%s", __FUNCTION__,
-              this);
+  LOGPROTOCOL
   m_msgType = TcrMessage::UPDATE_CLIENT_NOTIFICATION;
   m_request.reset(dataOutput);
 
@@ -2453,8 +2432,7 @@ TcrMessageGetAll::TcrMessageGetAll(
     const std::vector<std::shared_ptr<CacheableKey>>* keys,
     ThinClientBaseDM* connectionDM,
     const std::shared_ptr<Serializable>& aCallbackArgument) {
-  LOGPROTOCOL("TcrMessageGetAll::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgType = TcrMessage::GET_ALL_70;
   m_tcdm = connectionDM;
   m_keyList = keys;
@@ -2486,8 +2464,7 @@ TcrMessageGetAll::TcrMessageGetAll(
 
 void TcrMessage::InitializeGetallMsg(
     const std::shared_ptr<Serializable>& aCallbackArgument) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   /*CacheableObjectArrayPtr keyArr = nullptr;
   if (m_keyList != nullptr) {
     keyArr = CacheableObjectArray::create();
@@ -2512,8 +2489,7 @@ TcrMessageExecuteCq::TcrMessageExecuteCq(DataOutput* dataOutput,
                                          const std::string& str2, CqState state,
                                          bool isDurable,
                                          ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageExecuteCq::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
 
   m_msgType = TcrMessage::EXECUTECQ_MSG_TYPE;
@@ -2540,8 +2516,7 @@ TcrMessageExecuteCq::TcrMessageExecuteCq(DataOutput* dataOutput,
 TcrMessageExecuteCqWithIr::TcrMessageExecuteCqWithIr(
     DataOutput* dataOutput, const std::string& str1, const std::string& str2,
     CqState state, bool isDurable, ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageExecuteCqWithIr::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
 
   m_msgType = TcrMessage::EXECUTECQ_WITH_IR_MSG_TYPE;
@@ -2569,8 +2544,7 @@ TcrMessageExecuteFunction::TcrMessageExecuteFunction(
     DataOutput* dataOutput, const std::string& funcName,
     const std::shared_ptr<Cacheable>& args, uint8_t getResult,
     ThinClientBaseDM* connectionDM, std::chrono::milliseconds timeout) {
-  LOGPROTOCOL("TcrMessageExecuteFunction::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
 
   m_msgType = TcrMessage::EXECUTE_FUNCTION;
@@ -2592,8 +2566,7 @@ TcrMessageExecuteRegionFunction::TcrMessageExecuteRegionFunction(
     std::shared_ptr<CacheableHashSet> failedNodes,
     std::chrono::milliseconds timeout, ThinClientBaseDM* connectionDM,
     int8_t reExecute) {
-  LOGPROTOCOL("TcrMessageExecuteRegionFunction::%s(0x%p)\n%s", __FUNCTION__,
-              this, getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
 
   m_msgType = TcrMessage::EXECUTE_REGION_FUNCTION;
@@ -2647,8 +2620,7 @@ TcrMessageExecuteRegionFunctionSingleHop::
         std::shared_ptr<CacheableHashSet> routingObj, uint8_t getResult,
         std::shared_ptr<CacheableHashSet> failedNodes, bool allBuckets,
         std::chrono::milliseconds timeout, ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageExecuteRegionFunctionSingleHop::%s(0x%p)\n%s",
-              __FUNCTION__, this, getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
 
   m_msgType = TcrMessage::EXECUTE_REGION_FUNCTION_SINGLE_HOP;
@@ -2702,8 +2674,7 @@ TcrMessageExecuteRegionFunctionSingleHop::
 
 TcrMessageGetClientPartitionAttributes::TcrMessageGetClientPartitionAttributes(
     DataOutput* dataOutput, const char* regionName) {
-  LOGPROTOCOL("TcrMessageGetClientPartitionAttributes::%s(0x%p)\n%s",
-              __FUNCTION__, this);
+  LOGPROTOCOL
   m_request.reset(dataOutput);
 
   m_msgType = TcrMessage::GET_CLIENT_PARTITION_ATTRIBUTES;
@@ -2714,8 +2685,7 @@ TcrMessageGetClientPartitionAttributes::TcrMessageGetClientPartitionAttributes(
 
 TcrMessageGetClientPrMetadata::TcrMessageGetClientPrMetadata(
     DataOutput* dataOutput, const char* regionName) {
-  LOGPROTOCOL("TcrMessageGetClientPrMetadata::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
 
   m_msgType = TcrMessage::GET_CLIENT_PR_METADATA;
@@ -2725,8 +2695,7 @@ TcrMessageGetClientPrMetadata::TcrMessageGetClientPrMetadata(
 }
 
 TcrMessageSize::TcrMessageSize(DataOutput* dataOutput, const char* regionName) {
-  LOGPROTOCOL("TcrMessageSize::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
 
   m_msgType = TcrMessage::SIZE;
@@ -2738,8 +2707,7 @@ TcrMessageSize::TcrMessageSize(DataOutput* dataOutput, const char* regionName) {
 TcrMessageUserCredential::TcrMessageUserCredential(
     DataOutput* dataOutput, std::shared_ptr<Properties> creds,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageUser::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
 
   m_msgType = TcrMessage::USER_CREDENTIAL_MESSAGE;
@@ -2762,8 +2730,7 @@ TcrMessageUserCredential::TcrMessageUserCredential(
 
 TcrMessageRemoveUserAuth::TcrMessageRemoveUserAuth(
     DataOutput* dataOutput, bool keepAlive, ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageRemoveUserAuth::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
 
   m_msgType = TcrMessage::REMOVE_USER_AUTH;
@@ -2783,8 +2750,7 @@ TcrMessageRemoveUserAuth::TcrMessageRemoveUserAuth(
 }
 
 void TcrMessage::createUserCredentialMessage(TcrConnection* conn) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request->reset();
   m_isSecurityHeaderAdded = false;
   writeHeader(m_msgType, 1);
@@ -2808,8 +2774,7 @@ void TcrMessage::createUserCredentialMessage(TcrConnection* conn) {
 
 void TcrMessage::addSecurityPart(int64_t connectionId, int64_t unique_id,
                                  TcrConnection* conn) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   LOGDEBUG("TcrMessage::addSecurityPart m_isSecurityHeaderAdded = %d ",
            m_isSecurityHeaderAdded);
   if (m_isSecurityHeaderAdded) {
@@ -2842,8 +2807,7 @@ void TcrMessage::addSecurityPart(int64_t connectionId, int64_t unique_id,
 }
 
 void TcrMessage::addSecurityPart(int64_t connectionId, TcrConnection* conn) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   LOGDEBUG("TcrMessage::addSecurityPart m_isSecurityHeaderAdded = %d ",
            m_isSecurityHeaderAdded);
   if (m_isSecurityHeaderAdded) {
@@ -2876,8 +2840,7 @@ void TcrMessage::addSecurityPart(int64_t connectionId, TcrConnection* conn) {
 
 TcrMessageRequestEventValue::TcrMessageRequestEventValue(
     DataOutput* dataOutput, std::shared_ptr<EventId> eventId) {
-  LOGPROTOCOL("TcrMessageRequestEventValue::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::REQUEST_EVENT_VALUE;
 
@@ -2890,8 +2853,7 @@ TcrMessageRequestEventValue::TcrMessageRequestEventValue(
 TcrMessageGetPdxIdForType::TcrMessageGetPdxIdForType(
     DataOutput* dataOutput, const std::shared_ptr<Cacheable>& pdxType,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageGetPdxIdForType::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::GET_PDX_ID_FOR_TYPE;
   m_tcdm = connectionDM;
@@ -2909,8 +2871,7 @@ TcrMessageGetPdxIdForType::TcrMessageGetPdxIdForType(
 TcrMessageAddPdxType::TcrMessageAddPdxType(
     DataOutput* dataOutput, const std::shared_ptr<Cacheable>& pdxType,
     ThinClientBaseDM* connectionDM, int32_t pdxTypeId) {
-  LOGPROTOCOL("TcrMessageAddPdxType::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::ADD_PDX_TYPE;
   m_tcdm = connectionDM;
@@ -2929,8 +2890,7 @@ TcrMessageAddPdxType::TcrMessageAddPdxType(
 TcrMessageGetPdxIdForEnum::TcrMessageGetPdxIdForEnum(
     DataOutput* dataOutput, const std::shared_ptr<Cacheable>& pdxType,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageGetPdxIdForEnum::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::GET_PDX_ID_FOR_ENUM;
   m_tcdm = connectionDM;
@@ -2948,8 +2908,7 @@ TcrMessageGetPdxIdForEnum::TcrMessageGetPdxIdForEnum(
 TcrMessageAddPdxEnum::TcrMessageAddPdxEnum(
     DataOutput* dataOutput, const std::shared_ptr<Cacheable>& pdxType,
     ThinClientBaseDM* connectionDM, int32_t pdxTypeId) {
-  LOGPROTOCOL("TcrMessageAddPdxEnum::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::ADD_PDX_ENUM;
   m_tcdm = connectionDM;
@@ -2967,8 +2926,7 @@ TcrMessageAddPdxEnum::TcrMessageAddPdxEnum(
 
 TcrMessageGetPdxTypeById::TcrMessageGetPdxTypeById(
     DataOutput* dataOutput, int32_t typeId, ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageGetPdxTypeById::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::GET_PDX_TYPE_BY_ID;
   m_tcdm = connectionDM;
@@ -2987,8 +2945,7 @@ TcrMessageGetPdxTypeById::TcrMessageGetPdxTypeById(
 
 TcrMessageGetPdxEnumById::TcrMessageGetPdxEnumById(
     DataOutput* dataOutput, int32_t typeId, ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageGetPdxEnumById::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::GET_PDX_ENUM_BY_ID;
   m_tcdm = connectionDM;
@@ -3008,8 +2965,7 @@ TcrMessageGetPdxEnumById::TcrMessageGetPdxEnumById(
 TcrMessageGetFunctionAttributes::TcrMessageGetFunctionAttributes(
     DataOutput* dataOutput, const std::string& funcName,
     ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageGetFunctionAttributes::%s(0x%p)\n%s", __FUNCTION__,
-              this, getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::GET_FUNCTION_ATTRIBUTES;
   m_tcdm = connectionDM;
@@ -3023,8 +2979,7 @@ TcrMessageGetFunctionAttributes::TcrMessageGetFunctionAttributes(
 TcrMessageKeySet::TcrMessageKeySet(DataOutput* dataOutput,
                                    const std::string& funcName,
                                    ThinClientBaseDM* connectionDM) {
-  LOGPROTOCOL("TcrMessageKeySet::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::KEY_SET;
   m_tcdm = connectionDM;
@@ -3038,8 +2993,7 @@ TcrMessageKeySet::TcrMessageKeySet(DataOutput* dataOutput,
 void TcrMessage::setData(const char* bytearray, int32_t len, uint16_t memId,
                          const SerializationRegistry& serializationRegistry,
                          MemberListForVersionStamp& memberListForVersionStamp) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   if (m_request == nullptr) {
     m_request = std::unique_ptr<DataOutput>(new DataOutput(
         m_tcdm->getConnectionManager().getCacheImpl()->createDataOutput(
@@ -3053,8 +3007,7 @@ void TcrMessage::setData(const char* bytearray, int32_t len, uint16_t memId,
 }
 
 TcrMessage::~TcrMessage() {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   _GEODE_SAFE_DELETE(m_cqs);
   /* adongre
    * CID 29167: Non-array delete for scalars (DELETE_ARRAY)
@@ -3065,142 +3018,118 @@ TcrMessage::~TcrMessage() {
 }
 
 const std::string& TcrMessage::getRegionName() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_regionName;
 }
 
 Region* TcrMessage::getRegion() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return const_cast<Region*>(m_region);
 }
 
 int32_t TcrMessage::getMessageType() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_msgType;
 }
 
 void TcrMessage::setMessageType(int32_t msgType) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgType = msgType;
 }
 
 void TcrMessage::setMessageTypeRequest(int32_t msgType) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_msgTypeRequest = msgType;
 }
 int32_t TcrMessage::getMessageTypeRequest() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_msgTypeRequest;
 }
 
 const std::map<std::string, int>* TcrMessage::getCqs() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_cqs;
 }
 std::shared_ptr<CacheableKey> TcrMessage::getKey() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_key;
 }
 
 const std::shared_ptr<CacheableKey>& TcrMessage::getKeyRef() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_key;
 }
 std::shared_ptr<Cacheable> TcrMessage::getValue() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_value;
 }
 
 const std::shared_ptr<Cacheable>& TcrMessage::getValueRef() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_value;
 }
 std::shared_ptr<Cacheable> TcrMessage::getCallbackArgument() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_callbackArgument;
 }
 
 const std::shared_ptr<Cacheable>& TcrMessage::getCallbackArgumentRef() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_callbackArgument;
 }
 
 const char* TcrMessage::getMsgData() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return reinterpret_cast<const char*>(m_request->getBuffer());
 }
 
 const char* TcrMessage::getMsgHeader() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return reinterpret_cast<const char*>(m_request->getBuffer());
 }
 
 const char* TcrMessage::getMsgBody() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return reinterpret_cast<const char*>(m_request->getBuffer() + g_headerLen);
 }
 
 size_t TcrMessage::getMsgLength() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_request->getBufferLength();
 }
 
 size_t TcrMessage::getMsgBodyLength() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_request->getBufferLength() - g_headerLen;
 }
 
 std::shared_ptr<EventId> TcrMessage::getEventId() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_eventid;
 }
 
 int32_t TcrMessage::getTransId() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_txId;
 }
 
 void TcrMessage::setTransId(int32_t txId) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_txId = txId;
 }
 
 std::chrono::milliseconds TcrMessage::getTimeout() const {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   return m_timeout;
 }
 
 void TcrMessage::setTimeout(std::chrono::milliseconds timeout) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   m_timeout = timeout;
 }
 
 void TcrMessage::skipParts(DataInput& input, int32_t numParts) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   while (numParts > 0) {
     numParts--;
     int32_t partLen = input.readInt32();
@@ -3210,8 +3139,7 @@ void TcrMessage::skipParts(DataInput& input, int32_t numParts) {
 }
 
 void TcrMessage::readEventIdPart(DataInput& input, bool skip, int32_t parts) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   // skip requested number of parts
   if (skip) {
     skipParts(input, parts);
@@ -3228,8 +3156,7 @@ void TcrMessage::readEventIdPart(DataInput& input, bool skip, int32_t parts) {
 
 std::shared_ptr<DSMemberForVersionStamp> TcrMessage::readDSMember(
     apache::geode::client::DataInput& input) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   uint8_t typeidLen = input.read();
   if (typeidLen == 1) {
     auto typeidofMember = static_cast<DSCode>(input.read());
@@ -3262,8 +3189,7 @@ std::shared_ptr<DSMemberForVersionStamp> TcrMessage::readDSMember(
 void TcrMessage::readHashMapForGCVersions(
     apache::geode::client::DataInput& input,
     std::shared_ptr<CacheableHashMap>& value) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   uint8_t hashmaptypeid = input.read();
   if (hashmaptypeid != static_cast<int8_t>(DSCode::CacheableHashMap)) {
     throw Exception(
@@ -3297,8 +3223,7 @@ void TcrMessage::readHashMapForGCVersions(
 void TcrMessage::readHashSetForGCVersions(
     apache::geode::client::DataInput& input,
     std::shared_ptr<CacheableHashSet>& value) {
-  LOGPROTOCOL("TcrMessage::%s(0x%p)\n%s", __FUNCTION__, this,
-              getStackBacktraceString().c_str());
+  LOGPROTOCOL
   auto hashsettypeid = input.read();
   if (hashsettypeid != static_cast<int8_t>(DSCode::CacheableHashSet)) {
     throw Exception(
