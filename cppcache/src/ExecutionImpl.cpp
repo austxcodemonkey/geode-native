@@ -215,10 +215,10 @@ std::shared_ptr<ResultCollector> ExecutionImpl::execute(
               "ExecutionImpl::execute: withoutFilter and locationMap is not "
               "empty");
           bool reExecute = std::dynamic_pointer_cast<ThinClientRegion>(m_region)
-                               ->executeFunctionSH(
-                                   func, m_args, isHAHasResultOptimizeForWrite,
-                                   m_rc, serverToKeysMap, failedNodes, timeout,
-                                   /*allBuckets*/ true);
+              ->executeFunctionSingleHop(
+                  func, m_args, isHAHasResultOptimizeForWrite,
+                  m_rc, serverToKeysMap, failedNodes, timeout,
+                  /*allBuckets*/ true);
           if (reExecute) {  // Fallback to old FE onREgion
             if (isHAHasResultOptimizeForWrite & 1) {  // isHA = true
               m_rc->clearResults();
@@ -270,10 +270,10 @@ std::shared_ptr<ResultCollector> ExecutionImpl::execute(
                 "empty");
             bool reExecute =
                 dynamic_cast<ThinClientRegion*>(m_region.get())
-                    ->executeFunctionSH(func, m_args,
-                                        isHAHasResultOptimizeForWrite, m_rc,
-                                        serverToKeysMap, failedNodes, timeout,
-                                        /*allBuckets*/ false);
+                    ->executeFunctionSingleHop(func, m_args,
+                                               isHAHasResultOptimizeForWrite, m_rc,
+                                               serverToKeysMap, failedNodes, timeout,
+                        /*allBuckets*/ false);
             if (reExecute) {  // Fallback to old FE onREgion
               if (isHAHasResultOptimizeForWrite & 1) {  // isHA = true
                 m_rc->clearResults();

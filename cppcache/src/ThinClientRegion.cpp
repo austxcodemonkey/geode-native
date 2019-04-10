@@ -3136,7 +3136,7 @@ std::shared_ptr<CacheableVector> ThinClientRegion::reExecuteFunction(
   return nullptr;
 }
 
-bool ThinClientRegion::executeFunctionSH(
+bool ThinClientRegion::executeFunctionSingleHop(
     const std::string& func, const std::shared_ptr<Cacheable>& args,
     uint8_t getResult, std::shared_ptr<ResultCollector> rc,
     const std::shared_ptr<ClientMetadataService::ServerToKeysMap>& locationMap,
@@ -3193,7 +3193,7 @@ bool ThinClientRegion::executeFunctionSH(
             currentReply->getFailedNode());
         if (failedNodeIds) {
           LOGDEBUG(
-              "ThinClientRegion::executeFunctionSH with GF_FUNCTION_EXCEPTION "
+              "ThinClientRegion::executeFunctionSingleHop with GF_FUNCTION_EXCEPTION "
               "failedNodeIds size = %d ",
               failedNodeIds->size());
           failedNodes->insert(failedNodeIds->begin(), failedNodeIds->end());
@@ -3202,7 +3202,7 @@ bool ThinClientRegion::executeFunctionSH(
                  (err == GF_CLIENT_WAIT_TIMEOUT_REFRESH_PRMETADATA)) {
         reExecute = true;
         LOGINFO(
-            "ThinClientRegion::executeFunctionSH with GF_NOTCON or "
+            "ThinClientRegion::executeFunctionSingleHop with GF_NOTCON or "
             "GF_CLIENT_WAIT_TIMEOUT ");
         if (auto poolDM = dynamic_cast<ThinClientPoolDM*>(m_tcrdm)) {
           if (poolDM->getClientMetaDataService()) {
@@ -3218,9 +3218,9 @@ bool ThinClientRegion::executeFunctionSH(
         }
       } else {
         if (ThinClientBaseDM::isFatalClientError(err)) {
-          LOGERROR("ThinClientRegion::executeFunctionSH: Fatal Exception");
+          LOGERROR("ThinClientRegion::executeFunctionSingleHop: Fatal Exception");
         } else {
-          LOGWARN("ThinClientRegion::executeFunctionSH: Unexpected Exception");
+          LOGWARN("ThinClientRegion::executeFunctionSingleHop: Unexpected Exception");
         }
 
         if (abortError == GF_NOERR) {

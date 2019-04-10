@@ -158,11 +158,11 @@ class APACHE_GEODE_EXPORT ThinClientRegion : public LocalRegion {
       std::shared_ptr<CacheableHashSet>& failedNodes,
       std::chrono::milliseconds timeout = DEFAULT_QUERY_RESPONSE_TIMEOUT);
 
-  bool executeFunctionSH(
+  bool executeFunctionSingleHop(
       const std::string& func, const std::shared_ptr<Cacheable>& args,
       uint8_t getResult, std::shared_ptr<ResultCollector> rc,
       const std::shared_ptr<ClientMetadataService::ServerToKeysMap>&
-          locationMap,
+      locationMap,
       std::shared_ptr<CacheableHashSet>& failedNodes,
       std::chrono::milliseconds timeout = DEFAULT_QUERY_RESPONSE_TIMEOUT,
       bool allBuckets = false);
