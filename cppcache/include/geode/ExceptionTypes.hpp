@@ -812,6 +812,18 @@ class APACHE_GEODE_EXPORT PutAllPartialResultException : public Exception {
   }
 };
 
+/**
+ * @brief Thrown if a value from the server can't be deserialized
+ **/
+class APACHE_GEODE_EXPORT DeserializationException : public Exception {
+ public:
+  using Exception::Exception;
+  ~DeserializationException() noexcept override {}
+  std::string getName() const override {
+    return "apache::geode::client::DeserializationException";
+  }
+};
+
 }  // namespace client
 }  // namespace geode
 }  // namespace apache

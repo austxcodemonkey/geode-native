@@ -133,8 +133,10 @@ class ThinClientPoolDM
   void decRegionCount();
 
   virtual void setStickyNull(bool isBGThread) {
-    if (!isBGThread) m_manager->setStickyConnection(nullptr, false);
-  };
+    if (!isBGThread) {
+      m_manager->setStickyConnection(nullptr, false);
+    }
+  }
 
   virtual bool canItBeDeletedNoImpl(TcrConnection* conn);
 

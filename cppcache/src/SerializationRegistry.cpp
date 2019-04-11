@@ -185,6 +185,14 @@ std::shared_ptr<Serializable> SerializationRegistry::deserialize(
     case DSCode::FixedIDInt: {
       return deserializeDataSerializableFixedId(input, dsCode);
     }
+    case DSCode::DataSerializable: {
+      std::string msg;
+      if (tryParseObjectMessageWithoutTypeId(input, msg)) {
+        throw DeserializationException(msg);
+      } else {
+        throw IllegalStateException("Unregistered type in deserialization");
+      }
+    }
     case DSCode::NullObj: {
       return nullptr;
     }
@@ -205,6 +213,43 @@ std::shared_ptr<Serializable> SerializationRegistry::deserialize(
   deserialize(input, obj);
 
   return obj;
+}
+
+bool SerializationRegistry::tryParseObjectMessageWithoutTypeId(
+    DataInput& input, std::string& msg) const {
+  bool result = false;
+
+  // Object is of a type the server can't deserialize, so it doesn't know
+  // what the ID is.  As a sort of 'Hail Mary', it sets the DSCode to
+  // DataSerializable, followed by a byte for the DSCode 'Class', then
+  // a string which is the name of the class, and last the data
+  // resulting from deserialization.  We don't have reflection in the
+  // native client, so we can't deserialize the object, but we *can* get
+  // hold of the class name and throw an exception with a meaningful
+  // error message.
+  if (input.getBytesRemaining()) {
+    auto serializableType = static_cast<DSCode>(input.read());
+    if (serializableType == DSCode::Class) {
+      // Definitely in this obscure server case, attempt to extract the
+      // class name
+      if (input.getBytesRemaining()) {
+        auto className = input.readString();
+        LOGERROR("Found non-deserializable class %s, can't continue",
+                 className.c_str());
+        msg = "Server returned a value of type " + className +
+              " without a type ID.";
+        msg +=
+            "  This means the server cannot properly instantiate an object "
+            "of this type.";
+        msg +=
+            "  Please examine the Java code for your class, and verify it "
+            "is correct.";
+        result = true;
+      }
+    }
+  }
+
+  return result;
 }
 
 std::shared_ptr<Serializable>

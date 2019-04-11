@@ -1038,9 +1038,11 @@ void TcrConnection::readMessageChunked(
     } while (!(isLastChunk & 0x1));
   } catch (const Exception&) {
     auto ex = reply.getChunkedResultHandler()->getException();
-    LOGDEBUG("Found existing exception ", ex->what());
+    LOGDEBUG("Found existing exception %s", ex->what());
+    auto msg = std::string("Callstack: ") + ex->getStackTrace().c_str();
+    LOGDEBUG(msg.c_str());
     reply.getChunkedResultHandler()->clearException();
-    throw;
+    throw ex;
   }
 
   LOGFINER(

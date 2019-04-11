@@ -234,6 +234,9 @@ class APACHE_GEODE_EXPORT SerializationRegistry {
   std::shared_ptr<Serializable> deserialize(DataInput& input,
                                             int8_t typeId = -1) const;
 
+  bool tryParseObjectMessageWithoutTypeId(DataInput& input,
+                                          std::string& msg) const;
+
   void addDataSerializableType(TypeFactoryMethod func, int32_t id);
 
   void addPdxSerializableType(TypeFactoryMethodPdx func);
