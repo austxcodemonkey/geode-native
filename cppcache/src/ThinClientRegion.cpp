@@ -3029,12 +3029,12 @@ void ThinClientRegion::executeFunction(
         reExecuteForServ = true;
         rc->clearResults();
         failedNodes->clear();
-      } else if (err == GF_TIMOUT) {
+      } else if (err == GF_TIMEOUT) {
         LOGINFO(
             "function timeout. Name: %s, timeout: %d, params: %d, "
             "retryAttempts: %d ",
             func.c_str(), timeout.count(), getResult, retryAttempts);
-        GfErrTypeToException("ExecuteOnRegion", GF_TIMOUT);
+        GfErrTypeToException("ExecuteOnRegion", GF_TIMEOUT);
       } else if (err == GF_CLIENT_WAIT_TIMEOUT ||
                  err == GF_CLIENT_WAIT_TIMEOUT_REFRESH_PRMETADATA) {
         LOGINFO(
@@ -3124,7 +3124,7 @@ std::shared_ptr<CacheableVector> ThinClientRegion::reExecuteFunction(
         reExecute = true;
         rc->clearResults();
         failedNodes->clear();
-      } else if (err == GF_TIMOUT) {
+      } else if (err == GF_TIMEOUT) {
         LOGINFO("function timeout");
         GfErrTypeToException("ExecuteOnRegion", GF_CACHE_TIMEOUT_EXCEPTION);
       } else {
@@ -3193,7 +3193,8 @@ bool ThinClientRegion::executeFunctionSingleHop(
             currentReply->getFailedNode());
         if (failedNodeIds) {
           LOGDEBUG(
-              "ThinClientRegion::executeFunctionSingleHop with GF_FUNCTION_EXCEPTION "
+              "ThinClientRegion::executeFunctionSingleHop with "
+              "GF_FUNCTION_EXCEPTION "
               "failedNodeIds size = %d ",
               failedNodeIds->size());
           failedNodes->insert(failedNodeIds->begin(), failedNodeIds->end());
