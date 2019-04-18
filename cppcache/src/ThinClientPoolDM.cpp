@@ -1261,6 +1261,7 @@ GfErrType ThinClientPoolDM::sendSyncRequest(TcrMessage& request,
     if (!locationMap) {
       request.InitializeGetallMsg(
           request.getCallbackArgument());  // now initialize getall msg
+      LOGDEBUG("Return point 1");
       return sendSyncRequest(request, reply, attemptFailover, isBGThread,
                              nullptr);
     }
@@ -1295,6 +1296,7 @@ GfErrType ThinClientPoolDM::sendSyncRequest(TcrMessage& request,
         reply.setMessageType(currentReply->getMessageType());
       }
     }
+    LOGDEBUG("Return point 2");
     return error;
   } else {
     if (type == TcrMessage::GET_ALL_70 ||
@@ -1302,6 +1304,7 @@ GfErrType ThinClientPoolDM::sendSyncRequest(TcrMessage& request,
       request.InitializeGetallMsg(
           request.getCallbackArgument());  // now initialize getall msg
     }
+    LOGDEBUG("Return point 3");
     return sendSyncRequest(request, reply, attemptFailover, isBGThread,
                            nullptr);
   }

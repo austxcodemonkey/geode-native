@@ -75,10 +75,12 @@ GfErrType ThinClientBaseDM::sendSyncRequestRegisterInterest(
   GfErrType err = GF_NOERR;
 
   if (endpoint == nullptr) {
+    LOGDEBUG("Sending sync request.");
     err = sendSyncRequest(request, reply, attemptFailover);
   } else {
     reply.setDM(this);
     if (endpoint->connected()) {
+      LOGDEBUG("Sending request to endpoint.");
       err = sendRequestToEP(request, reply, endpoint);
     } else {
       err = GF_NOTCON;
@@ -94,6 +96,7 @@ GfErrType ThinClientBaseDM::sendSyncRequestRegisterInterest(
         break;
 
       case TcrMessage::EXCEPTION:
+        LOGDEBUG("Received server side exception.");
         err = ThinClientRegion::handleServerException("registerInterest",
                                                       reply.getException());
         break;

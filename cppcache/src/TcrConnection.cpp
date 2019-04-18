@@ -937,16 +937,12 @@ void TcrConnection::readMessageChunked(
                                                                     HDR_LEN_12);
   int32_t msgType = input.readInt32();
   reply.setMessageType(msgType);
-  int32_t txId;
   int32_t numOfParts = input.readInt32();
   LOGDEBUG("TcrConnection::readMessageChunked numberof parts = %d ",
            numOfParts);
   // input->advanceCursor(4);
-  txId = input.readInt32();
+  auto txId = input.readInt32();
   reply.setTransId(txId);
-
-  // bool isLastChunk = false;
-  uint8_t isLastChunk = 0x0;
 
   int chunkNum = 0;
 
@@ -971,9 +967,11 @@ void TcrConnection::readMessageChunked(
 
   try {
     bool first = true;
+    int8_t isLastChunk = 0x0;
     do {
       // uint8_t chunk_header[HDR_LEN];
       if (!first) {
+        LOGDEBUG("TcrConnection::readMessageChunked: !first");
         error = receiveData(reinterpret_cast<char*>(msg_header + HDR_LEN_12),
                             HDR_LEN, headerTimeout, true, false);
         if (error != CONN_NOERR) {
@@ -1000,19 +998,31 @@ void TcrConnection::readMessageChunked(
 
               .c_str());
 
-      auto input = m_connectionManager->getCacheImpl()->createDataInput(
+      input = m_connectionManager->getCacheImpl()->createDataInput(
           msg_header + HDR_LEN_12, HDR_LEN);
-      int32_t chunkLen;
-      chunkLen = input.readInt32();
+      auto chunkLen = input.readInt32();
       //  check that chunk length is valid.
       GF_DEV_ASSERT(chunkLen > 0);
-      isLastChunk = input.read();
 
+      isLastChunk = input.read();
+      LOGDEBUG("TcrConnection::readMessageChunked - chunk length=%" PRId32
+               ", isLastChunk=%" PRId8,
+               chunkLen, (isLastChunk & 0x01));
+
+      LOGDEBUG("TcrConnection::readMessageChunked - allocating %" PRId32
+               " bytes",
+               chunkLen);
       uint8_t* chunk_body;
       _GEODE_NEW(chunk_body, uint8_t[chunkLen]);
+      LOGDEBUG("TcrConnection::readMessageChunked - asking to receive %" PRId32
+               " bytes",
+               chunkLen);
       error = receiveData(reinterpret_cast<char*>(chunk_body), chunkLen,
                           receiveTimeoutSec, true, false);
       if (error != CONN_NOERR) {
+        LOGDEBUG(
+            "TcrConnection::readMessageChunked: connection error. chunk body "
+            "will be deleted");
         delete[] chunk_body;
         if (error & CONN_TIMEOUT) {
           throwException(TimeoutException(
@@ -1035,14 +1045,24 @@ void TcrConnection::readMessageChunked(
 
       reply.processChunk(chunk_body, chunkLen,
                          m_endpointObj->getDistributedMemberID(), isLastChunk);
+      LOGDEBUG("TcrConnection::readMessageChunked: isLastChunk=%" PRId8
+               ", (isLastChunk & 0x01)=%" PRId8,
+               isLastChunk, (isLastChunk & 0x01));
     } while (!(isLastChunk & 0x1));
-  } catch (const Exception&) {
-    auto ex = reply.getChunkedResultHandler()->getException();
-    LOGDEBUG("Found existing exception %s", ex->what());
-    auto msg = std::string("Callstack: ") + ex->getStackTrace().c_str();
-    LOGDEBUG(msg.c_str());
-    reply.getChunkedResultHandler()->clearException();
-    throw ex;
+  } catch (const Exception& exCurrent) {
+    LOGDEBUG("TcrConnection::readMessageChunked: caught exception %s",
+             exCurrent.what());
+    LOGDEBUG("TcrConnection::readMessageChunked: current callstack %s",
+             exCurrent.getStackTrace().c_str());
+    if (reply.getChunkedResultHandler()->exceptionOccurred()) {
+      auto ex = reply.getChunkedResultHandler()->getException();
+      LOGDEBUG("TcrConnection::readMessageChunked: Found existing exception %s",
+               ex->what());
+      auto msg = std::string("Callstack: ") + ex->getStackTrace().c_str();
+      LOGDEBUG(msg.c_str());
+      reply.getChunkedResultHandler()->clearException();
+      throw *ex;
+    }
   }
 
   LOGFINER(

@@ -1009,6 +1009,7 @@ GfErrType TcrEndpoint::sendRequestWithRetry(
         failReason = "timed out waiting for endpoint";
         createNewConn = true;
       } catch (const GeodeIOException& ex) {
+        LOGDEBUG("TcrEndpoint::sendRequestWithRetry: caught GeodeIOException");
         error = GF_IOERR;
         epFailure = true;
         failReason = "IO error for endpoint";
@@ -1018,11 +1019,13 @@ GfErrType TcrEndpoint::sendRequestWithRetry(
         }
         createNewConn = true;
       } catch (const Exception& ex) {
+        LOGDEBUG("TcrEndpoint::sendRequestWithRetry: caught Exception");
         failReason = ex.getName();
         failReason.append(": ");
         failReason.append(ex.what());
         LOGWARN("Error during send for endpoint %s due to %s", m_name.c_str(),
                 failReason.c_str());
+
         if (compareTransactionIds(reqTransId, reply.getTransId(), failReason,
                                   conn)) {
           if (Log::warningEnabled()) {
@@ -1044,6 +1047,7 @@ GfErrType TcrEndpoint::sendRequestWithRetry(
           createNewConn = true;
         }
       } catch (...) {
+        LOGDEBUG("TcrEndpoint::sendRequestWithRetry: caught something");
         failReason = "unexpected exception";
         LOGERROR(
             "Unexpected exception while sending request to "
@@ -1056,7 +1060,7 @@ GfErrType TcrEndpoint::sendRequestWithRetry(
             m_opConnections.put(conn, false);
           } else {
             // we are here its better to close the connection as
-            // "compareTransactionIds"
+            //"compareTransactionIds"
             // will not close the connection
             closeConnection(conn);
           }

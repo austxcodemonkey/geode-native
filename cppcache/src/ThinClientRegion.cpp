@@ -1008,12 +1008,12 @@ GfErrType ThinClientRegion::putNoThrow_remote(
         .incDeltaPut();  // Does not chcek whether success of failure..
     if (reply->getMessageType() ==
         TcrMessage::PUT_DELTA_ERROR) {  // Try without delta
-      TcrMessagePut request(new DataOutput(m_cacheImpl->createDataOutput()),
-                            this, keyPtr, valuePtr, aCallbackArgument, false,
-                            m_tcrdm, false, true);
+      TcrMessagePut delta_error_request(
+          new DataOutput(m_cacheImpl->createDataOutput()), this, keyPtr,
+          valuePtr, aCallbackArgument, false, m_tcrdm, false, true);
       delete reply;
       reply = new TcrMessageReply(true, m_tcrdm);
-      err = m_tcrdm->sendSyncRequest(request, *reply);
+      err = m_tcrdm->sendSyncRequest(delta_error_request, *reply);
     }
   }
   if (err != GF_NOERR) return err;
@@ -2990,66 +2990,104 @@ void ThinClientRegion::executeFunction(
         new ChunkedFunctionExecutionResponse(reply, (getResult & 2) == 2, rc));
     reply.setChunkedResultHandler(resultCollector);
     reply.setTimeout(timeout);
-    GfErrType err = GF_NOERR;
-    err = m_tcrdm->sendSyncRequest(*msg, reply, !(getResult & 1));
+    auto err = m_tcrdm->sendSyncRequest(*msg, reply, !(getResult & 1));
     resultCollector->reset();
     delete msg;
     delete resultCollector;
     if (err == GF_NOERR &&
         (reply.getMessageType() == TcrMessage::EXCEPTION ||
          reply.getMessageType() == TcrMessage::EXECUTE_REGION_FUNCTION_ERROR)) {
+      LOGDEBUG(
+          "The send didn't fail but the reply is a server side exception or "
+          "function error.");
       err = ThinClientRegion::handleServerException("Execute",
                                                     reply.getException());
     }
 
     if (ThinClientBaseDM::isFatalClientError(err)) {
       GfErrTypeToException("ExecuteOnRegion:", err);
-    } else if (err != GF_NOERR) {
-      if (err == GF_FUNCTION_EXCEPTION) {
-        reExecute = true;
-        rc->clearResults();
-        std::shared_ptr<CacheableHashSet> failedNodesIds(reply.getFailedNode());
-        failedNodes->clear();
-        if (failedNodesIds) {
-          LOGDEBUG(
-              "ThinClientRegion::executeFunction with GF_FUNCTION_EXCEPTION "
-              "failedNodesIds size = %d ",
-              failedNodesIds->size());
-          failedNodes->insert(failedNodesIds->begin(), failedNodesIds->end());
-        }
-      } else if (err == GF_NOTCON) {
-        attempt++;
-        LOGDEBUG(
-            "ThinClientRegion::executeFunction with GF_NOTCON retry attempt = "
-            "%d ",
-            attempt);
-        if (attempt > retryAttempts) {
-          GfErrTypeToException("ExecuteOnRegion:", err);
-        }
-        reExecuteForServ = true;
-        rc->clearResults();
-        failedNodes->clear();
-      } else if (err == GF_TIMEOUT) {
-        LOGINFO(
-            "function timeout. Name: %s, timeout: %d, params: %d, "
-            "retryAttempts: %d ",
-            func.c_str(), timeout.count(), getResult, retryAttempts);
-        GfErrTypeToException("ExecuteOnRegion", GF_TIMEOUT);
-      } else if (err == GF_CLIENT_WAIT_TIMEOUT ||
-                 err == GF_CLIENT_WAIT_TIMEOUT_REFRESH_PRMETADATA) {
-        LOGINFO(
-            "function timeout, possibly bucket is not available or bucket "
-            "blacklisted. Name: %s, timeout: %d, params: %d, retryAttempts: "
-            "%d ",
-            func.c_str(), timeout.count(), getResult, retryAttempts);
-        GfErrTypeToException("ExecuteOnRegion", GF_CLIENT_WAIT_TIMEOUT);
-      } else {
-        LOGDEBUG("executeFunction err = %d ", err);
-        GfErrTypeToException("ExecuteOnRegion:", err);
-      }
     } else {
-      reExecute = false;
-      reExecuteForServ = false;
+      switch (err) {
+        default: {
+          LOGDEBUG("executeFunction err = %d ", err);
+          GfErrTypeToException("ExecuteOnRegion:", err);
+          break;
+        }
+        case GF_NOERR: {
+          reExecute = false;
+          reExecuteForServ = false;
+          break;
+        }
+        case GF_FUNCTION_EXCEPTION: {
+          reExecute = true;
+          rc->clearResults();
+          std::shared_ptr<CacheableHashSet> failedNodesIds(
+              reply.getFailedNode());
+          failedNodes->clear();
+          if (failedNodesIds) {
+            LOGDEBUG(
+                "ThinClientRegion::executeFunction with GF_FUNCTION_EXCEPTION "
+                "failedNodesIds size = %d ",
+                failedNodesIds->size());
+            failedNodes->insert(failedNodesIds->begin(), failedNodesIds->end());
+          }
+          break;
+        }
+        case GF_NOTCON: {
+          attempt++;
+          LOGDEBUG(
+              "ThinClientRegion::executeFunction with GF_NOTCON retry attempt "
+              "= "
+              "%d ",
+              attempt);
+          if (attempt > retryAttempts) {
+            GfErrTypeToException("ExecuteOnRegion:", err);
+          }
+          reExecuteForServ = true;
+          rc->clearResults();
+          failedNodes->clear();
+          break;
+        }
+        case GF_TIMEOUT: {
+          LOGINFO(
+              "function timeout. Name: %s, timeout: %d, params: %d, "
+              "retryAttempts: %d ",
+              func.c_str(), timeout.count(), getResult, retryAttempts);
+          GfErrTypeToException("ExecuteOnRegion", GF_TIMEOUT);
+          break;
+        }
+        case GF_CLIENT_WAIT_TIMEOUT:
+        case GF_CLIENT_WAIT_TIMEOUT_REFRESH_PRMETADATA: {
+          LOGINFO(
+              "function timeout, possibly bucket is not available or bucket "
+              "blacklisted. Name: %s, timeout: %d, params: %d, retryAttempts: "
+              "%d ",
+              func.c_str(), timeout.count(), getResult, retryAttempts);
+          GfErrTypeToException("ExecuteOnRegion", GF_CLIENT_WAIT_TIMEOUT);
+          break;
+        }
+        case GF_MSG: {
+          LOGDEBUG(
+              "Message error - will check for a couple of cases we recognize "
+              "and attempt to return something more meaningful...");
+          if (reply.getValue()) {
+            LOGDEBUG("We have a valid reply value");
+          }
+          if (reply.getChunkedResultHandler()) {
+            LOGDEBUG("We have a chunked result handler.");
+
+            if (reply.getChunkedResultHandler()->getException()) {
+              LOGDEBUG("Chunked reply exception: \"%s\"",
+                       reply.getChunkedResultHandler()->getException()->what());
+            } else {
+              LOGDEBUG("Our exception got eaten by a Gru.");
+            }
+          }
+
+          GfErrTypeToException("ExecuteOnRegion:", err);
+          break;
+        }
+      }
     }
   } while (reExecuteForServ);
 
@@ -3105,7 +3143,8 @@ std::shared_ptr<CacheableVector> ThinClientRegion::reExecuteFunction(
         failedNodes->clear();
         if (failedNodesIds) {
           LOGDEBUG(
-              "ThinClientRegion::reExecuteFunction with GF_FUNCTION_EXCEPTION "
+              "ThinClientRegion::reExecuteFunction with "
+              "GF_FUNCTION_EXCEPTION "
               "failedNodesIds size = %d ",
               failedNodesIds->size());
           failedNodes->insert(failedNodesIds->begin(), failedNodesIds->end());
@@ -3219,9 +3258,12 @@ bool ThinClientRegion::executeFunctionSingleHop(
         }
       } else {
         if (ThinClientBaseDM::isFatalClientError(err)) {
-          LOGERROR("ThinClientRegion::executeFunctionSingleHop: Fatal Exception");
+          LOGERROR(
+              "ThinClientRegion::executeFunctionSingleHop: Fatal Exception");
         } else {
-          LOGWARN("ThinClientRegion::executeFunctionSingleHop: Unexpected Exception");
+          LOGWARN(
+              "ThinClientRegion::executeFunctionSingleHop: Unexpected "
+              "Exception");
         }
 
         if (abortError == GF_NOERR) {
@@ -3417,12 +3459,14 @@ void ChunkedQueryResponse::readObjectPartList(DataInput& input,
           if (arrayType != DSFid::CacheableObjectPartList) {
             LOGERROR(
                 "Query response got unhandled message format %d while "
-                "expecting struct set object part list; possible serialization "
+                "expecting struct set object part list; possible "
+                "serialization "
                 "mismatch",
                 arrayType);
             throw MessageException(
                 "Query response got unhandled message format while expecting "
-                "struct set object part list; possible serialization mismatch");
+                "struct set object part list; possible serialization "
+                "mismatch");
           }
           readObjectPartList(input, true);
         } else {
@@ -3543,7 +3587,8 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
           "object part list; possible serialization mismatch",
           arrayType);
       throw MessageException(
-          "Query response got unhandled message format while expecting object "
+          "Query response got unhandled message format while expecting "
+          "object "
           "part list; possible serialization mismatch");
     }
     readObjectPartList(input, isResultSet);
@@ -3609,8 +3654,8 @@ void ChunkedFunctionExecutionResponse::handleChunk(
   }
 
   auto startLen =
-      input.getBytesRead() -
-      1;  // from here need to look value part + memberid AND -1 for array type
+      input.getBytesRead() - 1;  // from here need to look value part +
+                                 // memberid AND -1 for array type
   // iread adn gnore array length
   input.readArrayLength();
 
@@ -3623,7 +3668,8 @@ void ChunkedFunctionExecutionResponse::handleChunk(
   const int SECURE_PART_LEN = 5 + 8;
   bool readPart = true;
   LOGDEBUG(
-      "ChunkedFunctionExecutionResponse::handleChunk chunkLen = %d & partLen = "
+      "ChunkedFunctionExecutionResponse::handleChunk chunkLen = %d & partLen "
+      "= "
       "%d ",
       chunkLen, partLen);
   if (partType == DSCode::JavaSerializable) {
@@ -3644,7 +3690,8 @@ void ChunkedFunctionExecutionResponse::handleChunk(
       // skip first part i.e JavaSerializable.
       TcrMessageHelper::skipParts(m_msg, input, 1);
 
-      // read the second part which is string in usual manner, first its length.
+      // read the second part which is string in usual manner, first its
+      // length.
       partLen = input.readInt32();
 
       // then isObject byte
@@ -3653,8 +3700,8 @@ void ChunkedFunctionExecutionResponse::handleChunk(
       startLen = input.getBytesRead();  // reset from here need to look value
       // part + memberid AND -1 for array type
 
-      // Since it is contained as a part of other results, read arrayType which
-      // is arrayList = 65.
+      // Since it is contained as a part of other results, read arrayType
+      // which is arrayList = 65.
       input.read();
 
       // read and ignore its len which is 2
