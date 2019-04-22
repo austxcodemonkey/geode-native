@@ -142,7 +142,7 @@ bool TcrPoolEndPoint::handleIOException(const std::string& message,
   if (!isBgThread) {
     m_dm->setStickyNull(false);
   }
-  return TcrEndpoint::handleIOException(message, conn);
+  return TcrEndpoint::handleIOException(message, conn, isBgThread);
 }
 
 void TcrPoolEndPoint::handleNotificationStats(int64_t byteLength) {

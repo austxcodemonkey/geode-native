@@ -49,7 +49,6 @@ class TcrPoolEndPoint : public TcrEndpoint {
   void unregisterDM(bool clientNotification,
                     ThinClientBaseDM* distMgr = nullptr,
                     bool checkQueueHosted = false) override;
-  using TcrEndpoint::handleIOException;
   bool handleIOException(const std::string& message, TcrConnection*& conn,
                          bool isBgThread = false) override;
   void handleNotificationStats(int64_t byteLength) override;

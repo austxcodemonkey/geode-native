@@ -735,10 +735,7 @@ void TcrEndpoint::receiveNotification(std::atomic<bool>& isRunning) {
   LOGFINE("Ended subscription channel for endpoint %s", m_name.c_str());
 }
 
-inline bool TcrEndpoint::compareTransactionIds(int32_t reqTransId,
-                                               int32_t replyTransId,
-                                               std::string& failReason,
-                                               TcrConnection* conn) {
+inline bool TcrEndpoint::compareTransactionIds(int32_t reqTransId, int32_t replyTransId, TcrConnection* conn) {
   LOGDEBUG("TcrEndpoint::compareTransactionIds requested id = %d ,replied = %d",
            reqTransId, replyTransId);
   if (replyTransId != reqTransId) {
@@ -747,14 +744,12 @@ inline bool TcrEndpoint::compareTransactionIds(int32_t reqTransId,
         "send operation: %d, %d. Possible serialization mismatch",
         m_name.c_str(), reqTransId, replyTransId);
     closeConnection(conn);
-    failReason = "mismatch of transaction IDs in operation";
     return false;
   }
   return true;
 }
 
-inline bool TcrEndpoint::handleIOException(const std::string& message,
-                                           TcrConnection*& conn, bool) {
+inline bool TcrEndpoint::handleIOException(const std::string& message, TcrConnection*& conn, bool) {
   int32_t lastError = ACE_OS::last_error();
   if (lastError == ECONNRESET || lastError == EPIPE) {
     _GEODE_SAFE_DELETE(conn);
@@ -779,10 +774,7 @@ inline bool TcrEndpoint::handleIOException(const std::string& message,
   return true;
 }
 
-GfErrType TcrEndpoint::sendRequestConn(const TcrMessage& request,
-                                       TcrMessageReply& reply,
-                                       TcrConnection* conn,
-                                       std::string& failReason) {
+GfErrType TcrEndpoint::sendRequestConn(const TcrMessage& request, TcrMessageReply& reply, TcrConnection* conn) {
   int32_t type = request.getMessageType();
   GfErrType error = GF_NOERR;
 
@@ -874,8 +866,7 @@ GfErrType TcrEndpoint::sendRequestConn(const TcrMessage& request,
   }
   // do we need to consider case where compareTransactionIds return true?
   // I think we will not have issue here
-  else if (!compareTransactionIds(request.getTransId(), reply.getTransId(),
-                                  failReason, conn)) {
+  else if (!compareTransactionIds(request.getTransId(), reply.getTransId(), conn)) {
     error = GF_NOTCON;
   }
   if (error == GF_NOERR) {
@@ -892,11 +883,14 @@ bool TcrEndpoint::isMultiUserMode() {
   return m_isMultiUserMode;
 }
 
-GfErrType TcrEndpoint::sendRequestWithRetry(
-    const TcrMessage& request, TcrMessageReply& reply, TcrConnection*& conn,
-    bool& epFailure, std::string& failReason, int maxSendRetries,
-    bool useEPPool, std::chrono::microseconds requestedTimeout,
-    bool isBgThread) {
+GfErrType TcrEndpoint::sendRequestWithRetry(const TcrMessage& request,
+                                            TcrMessageReply& reply,
+                                            TcrConnection*& conn,
+                                            bool& epFailure,
+                                            int maxSendRetries,
+                                            bool useEPPool,
+                                            std::chrono::microseconds requestedTimeout,
+                                            bool isBgThread) {
   GfErrType error = GF_NOTCON;
   bool createNewConn = false;
   // int32_t type = request.getMessageType();
@@ -968,10 +962,10 @@ GfErrType TcrEndpoint::sendRequestWithRetry(
 
       try {
         LOGDEBUG("Calling sendRequestConn");
-        error = sendRequestConn(request, reply, conn, failReason);
+        error = sendRequestConn(request, reply, conn);
         if (error == GF_IOERR) {
           epFailure = true;
-          failReason = "received INVALID reply from server";
+          auto failReason = "received INVALID reply from server";
           if (!handleIOException(failReason, conn, isBgThread)) {
             break;
           }
@@ -992,11 +986,6 @@ GfErrType TcrEndpoint::sendRequestWithRetry(
             "Message txid = %d",
             m_name.c_str(), reqTransId);
         closeFailedConnection(conn);
-        /*
-        if ( !(m_poolHADM && m_poolHADM->getThreadLocalConnections()) ){ //close
-        connection only when not a sticky connection.
-          closeConnection( conn );
-        }*/
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         int32_t type = request.getMessageType();
         epFailure = (type != TcrMessage::QUERY && type != TcrMessage::PUTALL &&
@@ -1006,22 +995,20 @@ GfErrType TcrEndpoint::sendRequestWithRetry(
                      type != TcrMessage::EXECUTE_REGION_FUNCTION_SINGLE_HOP &&
                      type != TcrMessage::EXECUTECQ_WITH_IR_MSG_TYPE);
 
-        // epFailure = true;
-        failReason = "timed out waiting for endpoint";
+        auto failReason = "timed out waiting for endpoint";
         createNewConn = true;
       } catch (const GeodeIOException& ex) {
         LOGDEBUG("TcrEndpoint::sendRequestWithRetry: caught GeodeIOException");
         error = GF_IOERR;
         epFailure = true;
-        failReason = "IO error for endpoint";
-        if (!handleIOException(ex.what(), conn,
-                               isBgThread)) {  // change here
+        auto failReason = "IO error for endpoint";
+        if (!handleIOException(ex.what(), conn, isBgThread)) {  // change here
           break;
         }
         createNewConn = true;
       } catch (const Exception& ex) {
         LOGDEBUG("TcrEndpoint::sendRequestWithRetry: caught Exception");
-        failReason = ex.getName();
+        std::string failReason = ex.getName();
         failReason.append(": ");
         failReason.append(ex.what());
         LOGWARN("Error during send for endpoint %s due to %s", m_name.c_str(),
@@ -1038,7 +1025,7 @@ GfErrType TcrEndpoint::sendRequestWithRetry(
 
         reply.readObjectPart(in, true);
 
-        if (compareTransactionIds(reqTransId, reply.getTransId(), failReason,
+        if (compareTransactionIds(reqTransId, reply.getTransId(),
                                   conn)) {
           if (Log::warningEnabled()) {
             LOGWARN("Stack trace: %s", ex.getStackTrace().c_str());
@@ -1060,12 +1047,12 @@ GfErrType TcrEndpoint::sendRequestWithRetry(
         }
       } catch (...) {
         LOGDEBUG("TcrEndpoint::sendRequestWithRetry: caught something");
-        failReason = "unexpected exception";
+        auto failReason = "unexpected exception";
         LOGERROR(
             "Unexpected exception while sending request to "
             "endpoint %s",
             m_name.c_str());
-        if (compareTransactionIds(reqTransId, reply.getTransId(), failReason,
+        if (compareTransactionIds(reqTransId, reply.getTransId(),
                                   conn)) {
           error = GF_MSG;
           if (useEPPool) {
@@ -1086,7 +1073,7 @@ GfErrType TcrEndpoint::sendRequestWithRetry(
     } else {
       if (useEPPool) {
         epFailure = true;
-        failReason = "server connection could not be obtained";
+        auto failReason = "server connection could not be obtained";
         if (timeout <= std::chrono::microseconds::zero()) {
           error = GF_TIMEOUT;
           LOGWARN(
@@ -1132,8 +1119,8 @@ GfErrType TcrEndpoint::send(const TcrMessage& request, TcrMessageReply& reply) {
   bool epFailure;
   std::string failReason;
   //  TODO: remove sendRetryCount as parameter.
-  error = sendRequestWithRetry(request, reply, conn, epFailure, failReason,
-                               maxSendRetries, true, reply.getTimeout());
+  error = sendRequestWithRetry(request, reply, conn, epFailure,
+                               maxSendRetries, true, reply.getTimeout(), false);
 
   if (error == GF_NOERR) {
     m_msgSent = true;
@@ -1186,7 +1173,7 @@ GfErrType TcrEndpoint::sendRequestConnWithRetry(const TcrMessage& request,
   std::string failReason;
   LOGFINE("sendRequestConnWithRetry:: maxSendRetries = %d ", maxSendRetries);
 
-  error = sendRequestWithRetry(request, reply, conn, epFailure, failReason,
+  error = sendRequestWithRetry(request, reply, conn, epFailure,
                                maxSendRetries, false, reply.getTimeout(),
                                isBgThread);
   if (error == GF_NOERR) {

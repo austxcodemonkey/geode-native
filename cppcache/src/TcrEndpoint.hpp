@@ -78,12 +78,13 @@ class TcrEndpoint {
   void pingServer(ThinClientPoolDM* poolDM = nullptr);
   void receiveNotification(std::atomic<bool>& isRunning);
   GfErrType send(const TcrMessage& request, TcrMessageReply& reply);
-  GfErrType sendRequestConn(const TcrMessage& request, TcrMessageReply& reply,
-                            TcrConnection* conn, std::string& failReason);
+  GfErrType sendRequestConn(const TcrMessage& request, TcrMessageReply& reply, TcrConnection* conn);
   GfErrType sendRequestWithRetry(const TcrMessage& request,
-                                 TcrMessageReply& reply, TcrConnection*& conn,
-                                 bool& epFailure, std::string& failReason,
-                                 int maxSendRetries, bool useEPPool,
+                                 TcrMessageReply& reply,
+                                 TcrConnection*& conn,
+                                 bool& epFailure,
+                                 int maxSendRetries,
+                                 bool useEPPool,
                                  std::chrono::microseconds requestedTimeout,
                                  bool isBgThread = false);
   GfErrType sendRequestConnWithRetry(const TcrMessage& request,
@@ -218,8 +219,7 @@ class TcrEndpoint {
   virtual void handleNotificationStats(int64_t byteLength);
   virtual void closeNotification();
 
-  virtual bool handleIOException(const std::string& message,
-                                 TcrConnection*& conn, bool isBgThread = false);
+  virtual bool handleIOException(const std::string& message, TcrConnection*& conn, bool isBgThread);
 
  private:
   int64_t m_uniqueId;
@@ -251,8 +251,7 @@ class TcrEndpoint {
   uint16_t m_distributedMemId;
   bool m_isServerQueueStatusSet;
 
-  bool compareTransactionIds(int32_t reqTransId, int32_t replyTransId,
-                             std::string& failReason, TcrConnection* conn);
+  bool compareTransactionIds(int32_t reqTransId, int32_t replyTransId, TcrConnection* conn);
   void closeConnections();
   void setRetry(const TcrMessage& request, int& maxSendRetries);
   // number of connections to this endpoint
