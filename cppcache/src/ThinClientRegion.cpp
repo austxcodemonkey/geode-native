@@ -3070,6 +3070,8 @@ void ThinClientRegion::executeFunction(
           LOGDEBUG(
               "Message error - will check for a couple of cases we recognize "
               "and attempt to return something more meaningful...");
+          LOGDEBUG("This is the thing we want: \"%s\"", reply.getException());
+
           if (reply.getValue()) {
             LOGDEBUG("We have a valid reply value");
           }
@@ -3084,7 +3086,8 @@ void ThinClientRegion::executeFunction(
             }
           }
 
-          GfErrTypeToException("ExecuteOnRegion:", err);
+          setThreadLocalExceptionMessage(reply.getException());
+          GfErrTypeToException("", err);
           break;
         }
       }

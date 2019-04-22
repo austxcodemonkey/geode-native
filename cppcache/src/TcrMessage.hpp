@@ -462,6 +462,7 @@ class APACHE_GEODE_EXPORT TcrMessage {
   }
 
   bool isFEAnotherHop();
+  void readObjectPart(DataInput& input, bool defaultString = false);
 
  protected:
   TcrMessage()
@@ -540,7 +541,6 @@ class APACHE_GEODE_EXPORT TcrMessage {
       const char* bytearray, int32_t len, uint16_t endpointMemId,
       const SerializationRegistry& serializationRegistry,
       MemberListForVersionStamp& memberListForVersionStamp);
-  void readObjectPart(DataInput& input, bool defaultString = false);
   void readFailedNodePart(DataInput& input);
   void readCallbackObjectPart(DataInput& input, bool defaultString = false);
   void readKeyPart(DataInput& input);

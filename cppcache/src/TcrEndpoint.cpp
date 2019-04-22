@@ -32,6 +32,7 @@
 #include "ThinClientPoolHADM.hpp"
 #include "ThinClientRegion.hpp"
 #include "Utils.hpp"
+#include "util/JavaModifiedUtf8.hpp"
 #include "util/exception.hpp"
 
 namespace apache {
@@ -1026,6 +1027,17 @@ GfErrType TcrEndpoint::sendRequestWithRetry(
         LOGWARN("Error during send for endpoint %s due to %s", m_name.c_str(),
                 failReason.c_str());
 
+        auto encodedString = internal::JavaModifiedUtf8::decode(
+            failReason.c_str(), failReason.length());
+        auto cachedString = CacheableString::create(encodedString);
+        auto out =
+            conn->getConnectionManager().getCacheImpl()->createDataOutput();
+        cachedString->toData(out);
+        auto in = conn->getConnectionManager().getCacheImpl()->createDataInput(
+            out.getBuffer(), out.getBufferLength());
+
+        reply.readObjectPart(in, true);
+
         if (compareTransactionIds(reqTransId, reply.getTransId(), failReason,
                                   conn)) {
           if (Log::warningEnabled()) {
@@ -1125,6 +1137,15 @@ GfErrType TcrEndpoint::send(const TcrMessage& request, TcrMessageReply& reply) {
 
   if (error == GF_NOERR) {
     m_msgSent = true;
+  } else {
+    auto decoded = internal::JavaModifiedUtf8::decode(failReason.c_str(),
+                                                      failReason.length() + 1);
+    auto cachedFailure = CacheableString::create(decoded);
+    auto out = conn->getConnectionManager().getCacheImpl()->createDataOutput();
+    cachedFailure->toData(out);
+    auto in = conn->getConnectionManager().getCacheImpl()->createDataInput(
+        out.getBuffer(), out.getBufferLength());
+    reply.readObjectPart(in, true);
   }
 
   if (error != GF_NOERR && epFailure) {
@@ -1164,6 +1185,7 @@ GfErrType TcrEndpoint::sendRequestConnWithRetry(const TcrMessage& request,
   bool epFailure;
   std::string failReason;
   LOGFINE("sendRequestConnWithRetry:: maxSendRetries = %d ", maxSendRetries);
+
   error = sendRequestWithRetry(request, reply, conn, epFailure, failReason,
                                maxSendRetries, false, reply.getTimeout(),
                                isBgThread);
