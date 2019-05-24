@@ -54,7 +54,11 @@ bool TcrConnection::InitTcrConnection(
     synchronized_set<std::unordered_set<uint16_t>>& ports,
     bool isClientNotification, bool isSecondary,
     std::chrono::microseconds connectTimeout) {
-  m_conn = nullptr;
+  m_conn =            nullptr;
+
+
+
+
   m_endpointObj = endpointObj;
   m_poolDM = dynamic_cast<ThinClientPoolDM*>(m_endpointObj->getPoolHADM());
   // add to the connection reference counter of the endpoint
