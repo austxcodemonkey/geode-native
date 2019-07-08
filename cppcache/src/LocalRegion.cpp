@@ -717,16 +717,13 @@ void LocalRegion::registerEntryExpiryTask(
       new EntryExpiryHandler(rptr, entry, getEntryExpirationAction(), duration);
   auto id = rptr->getCacheImpl()->getExpiryTaskManager().scheduleExpiryTask(
       handler, duration, std::chrono::seconds::zero());
-  if (Log::finestEnabled()) {
-    std::shared_ptr<CacheableKey> key;
-    entry->getKeyI(key);
-    LOGFINEST(
-        "entry expiry in region [%s], key [%s], task id = %d, "
-        "duration = %s, action = %d",
-        m_fullPath.c_str(), Utils::nullSafeToString(key).c_str(),
-        static_cast<int32_t>(id), to_string(duration).c_str(),
-        getEntryExpirationAction());
-  }
+  std::shared_ptr<CacheableKey> key;
+  entry->getKeyI(key);
+  LOGFINEST(
+      "entry expiry in region [%s], key [%s], task id = %d, "
+      "duration = %d, action = %d",
+      m_fullPath.c_str(), Utils::nullSafeToString(key).c_str(), id,
+      duration.count(), getEntryExpirationAction());
   expProps.setExpiryTaskId(id);
 }
 
@@ -2812,12 +2809,10 @@ void LocalRegion::updateAccessAndModifiedTimeForEntry(
     ExpEntryProperties& expProps = ptr->getExpProperties();
     auto currTime = std::chrono::system_clock::now();
     std::string keyStr;
-    if (Log::debugEnabled()) {
-      std::shared_ptr<CacheableKey> key;
-      ptr->getKeyI(key);
-      keyStr = Utils::nullSafeToString(key);
-    }
-    LOGDEBUG("Setting last accessed time for key [%s] in region %s to %s",
+    std::shared_ptr<CacheableKey> key;
+    ptr->getKeyI(key);
+    keyStr = Utils::nullSafeToString(key);
+    LOGDEBUG("Setting last accessed time for key [%s] in region %s to %d",
              keyStr.c_str(), getFullPath().c_str(),
              to_string(currTime.time_since_epoch()).c_str());
     expProps.updateLastAccessTime(currTime);

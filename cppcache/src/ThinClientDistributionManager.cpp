@@ -79,18 +79,16 @@ void ThinClientDistributionManager::destroy(bool keepAlive) {
   destroyAction();
   // stop the chunk processing thread
   stopChunkProcessor();
-  if (Log::finestEnabled()) {
-    std::string endpointStr;
-    for (size_t index = 0; index < m_endpoints.size(); ++index) {
-      if (index != 0) {
-        endpointStr.append(",");
-      }
-      endpointStr.append(m_endpoints[index]->name());
+  std::string endpointStr;
+  for (size_t index = 0; index < m_endpoints.size(); ++index) {
+    if (index != 0) {
+      endpointStr.append(",");
     }
-    LOGFINEST(
-        "ThinClientDistributionManager: disconnecting endpoints %s from TCCM",
-        endpointStr.c_str());
+    endpointStr.append(m_endpoints[index]->name());
   }
+  LOGFINEST(
+      "ThinClientDistributionManager: disconnecting endpoints %s from TCCM",
+      endpointStr.c_str());
   m_connManager.disconnect(this, m_endpoints, keepAlive);
   LOGFINEST("ThinClientDistributionManager: completed destroy for region %s",
             (m_region != nullptr ? m_region->getFullPath().c_str() : "(null)"));

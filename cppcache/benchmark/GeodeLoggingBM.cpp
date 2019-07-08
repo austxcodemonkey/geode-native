@@ -27,7 +27,6 @@
 #include "util/Log.hpp"
 #include "util/string.hpp"
 
-using apache::geode::client::Log;
 using apache::geode::client::LogLevel;
 using apache::geode::client::to_utf16;
 using apache::geode::client::to_utf8;
@@ -59,14 +58,14 @@ void GeodeLogStrings(benchmark::State& state) {
   int index = g_iteration++ % STRING_ARRAY_LENGTH;
 
   for (auto _ : state) {
-    Log::debug(logStrings[index]);
+    LOGDEBUG(logStrings[index]);
   }
 }
 
 void GeodeLogInts(benchmark::State& state) {
   std::string intString(std::to_string(g_iteration++));
   for (auto _ : state) {
-    Log::debug(intString.c_str());
+    LOGDEBUG(intString.c_str());
   }
 }
 
@@ -75,17 +74,17 @@ void GeodeLogCombo(benchmark::State& state) {
   std::string comboString = std::string(logStrings[g_iteration % 3]) + " " +
                             std::to_string(g_iteration);
   for (auto _ : state) {
-    Log::debug(comboString.c_str());
+    LOGDEBUG(comboString.c_str());
   }
 }
 
 template <void T(benchmark::State&)>
 void GeodeLogToConsole(benchmark::State& state) {
-  Log::setLogLevel(LogLevel::All);
+  LogSetLevel(LogLevel::All);
 
   T(state);
 
-  Log::close();
+  LogClose();
 }
 
 template <void T(benchmark::State&)>
@@ -95,11 +94,11 @@ void GeodeLogToFile(benchmark::State& state) {
                   std::to_string(__LINE__) + ".log";
   boost::filesystem::path logPath(filename);
 
-  Log::init(LogLevel::All, filename.c_str());
+  LogInit(LogLevel::All, filename.c_str());
 
   T(state);
 
-  Log::close();
+  LogClose();
 
   if (boost::filesystem::exists(logPath)) {
     boost::filesystem::remove(logPath);

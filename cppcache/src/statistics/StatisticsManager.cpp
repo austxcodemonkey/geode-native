@@ -34,7 +34,6 @@ namespace geode {
 namespace statistics {
 
 using client::Exception;
-using client::Log;
 
 StatisticsManager::StatisticsManager(
     const char* filePath, const std::chrono::milliseconds sampleInterval,
@@ -95,15 +94,16 @@ StatisticsManager::~StatisticsManager() {
       m_statsList.erase(m_statsList.begin(), m_statsList.end());
     }
   } catch (const Exception& ex) {
-    Log::warningCatch("~StatisticsManager swallowing Geode exception", ex);
-
+    std::string message = "Geode exception " + ex.getName() +
+                          " caught: " + ex.getMessage() +
+                          "\n~StatisticsManager swallowing Geode exception";
+    LOGWARN(message);
   } catch (const std::exception& ex) {
     std::string what = "~StatisticsManager swallowing std::exception: ";
     what += ex.what();
-    Log::warning(what.c_str());
-
+    LOGWARN(what.c_str());
   } catch (...) {
-    Log::error("~StatisticsManager swallowing unknown exception");
+    LOGERROR("~StatisticsManager swallowing unknown exception");
   }
 }
 

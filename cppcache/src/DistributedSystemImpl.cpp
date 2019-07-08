@@ -105,7 +105,7 @@ void DistributedSystemImpl::disconnect() {
   LOGCONFIG("Stopped the Geode Native Client");
 
   // TODO global - log stays global so lets move this
-  Log::close();
+  LogClose();
 
   m_connected = false;
 }
