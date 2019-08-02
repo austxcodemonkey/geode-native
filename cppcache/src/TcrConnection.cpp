@@ -71,6 +71,7 @@ bool TcrConnection::initTcrConnection(
     synchronized_set<std::unordered_set<uint16_t>>& ports,
     bool isClientNotification, bool isSecondary,
     std::chrono::microseconds connectTimeout) {
+  LOG_SCOPE("TcrConnection");
   m_conn = nullptr;
   m_endpointObj = endpointObj;
   m_poolDM = dynamic_cast<ThinClientPoolDM*>(m_endpointObj->getPoolHADM());
@@ -592,19 +593,28 @@ inline ConnErrType TcrConnection::receiveData(
     bool checkConnected, bool isNotificationMessage) {
   std::chrono::microseconds defaultWaitSecs =
       isNotificationMessage ? std::chrono::seconds(1) : std::chrono::seconds(2);
+
   if (defaultWaitSecs > receiveTimeoutSec) defaultWaitSecs = receiveTimeoutSec;
 
   auto startLen = length;
 
+  LOGDEBUG("TcrConnection::%s(%p): length = %d defaultWaitSecs = %d",
+           __FUNCTION__, this, length, defaultWaitSecs.count());
+
   while (length > 0 && receiveTimeoutSec > std::chrono::microseconds::zero()) {
+    LOGDEBUG("TcrConnection::%s(%p): in while loop", __FUNCTION__, this);
     if (checkConnected && !m_connected) {
       return CONN_IOERR;
     }
     if (receiveTimeoutSec < defaultWaitSecs) {
       defaultWaitSecs = receiveTimeoutSec;
     }
+    LOGDEBUG("TcrConnection::%s(%p): calling receive on m_conn(%p)",
+             __FUNCTION__, this, m_conn);
     auto readBytes = m_conn->receive(buffer, length, defaultWaitSecs);
     int32_t lastError = ACE_OS::last_error();
+    LOGDEBUG("TcrConnection::%s(%p): received %d bytes, lastError=%d",
+             __FUNCTION__, this, readBytes, lastError);
     length -= readBytes;
     if (length > 0 && lastError != ETIME && lastError != ETIMEDOUT) {
       return CONN_IOERR;
@@ -620,6 +630,8 @@ inline ConnErrType TcrConnection::receiveData(
              length, defaultWaitSecs.count());
     if (m_poolDM != nullptr) {
       LOGDEBUG("TcrConnection::receiveData readBytes = %d", readBytes);
+      LOGDEBUG("TcrConnection::%s(%p): incrementing rec'd bytes, m_poolDM=%p",
+               __FUNCTION__, this, m_poolDM);
       m_poolDM->getStats().incReceivedBytes(static_cast<int64_t>(readBytes));
     }
     receiveTimeoutSec -= defaultWaitSecs;
@@ -815,12 +827,12 @@ char* TcrConnection::readMessage(size_t* recvLen,
     headerTimeout = DEFAULT_READ_TIMEOUT_SECS * DEFAULT_TIMEOUT_RETRIES;
   }
 
-  LOGDEBUG("TcrConnection::readMessage: receiving reply from endpoint %s",
-           m_endpoint);
+  LOGDEBUG("TcrConnection::%s(%p): receiving reply from endpoint %s",
+           __FUNCTION__, this, m_endpoint);
 
   error = receiveData(msg_header, HEADER_LENGTH, headerTimeout, true,
                       isNotificationMessage);
-  LOGDEBUG("TcrConnection::readMessage after recieve data");
+  LOGDEBUG("TcrConnection::%s(%p): after receiveData", __FUNCTION__, this);
   if (error != CONN_NOERR) {
     //  the !isNotificationMessage ensures that notification channel
     // gets the TimeoutException when no data was received and is ignored by
@@ -849,9 +861,9 @@ char* TcrConnection::readMessage(size_t* recvLen,
   }
 
   LOGDEBUG(
-      "TcrConnection::readMessage: received header from endpoint %s; "
+      "TcrConnection::%s(%p): received header from endpoint %s; "
       "bytes: %s",
-      m_endpoint,
+      __FUNCTION__, this, m_endpoint,
       Utils::convertBytesToString(msg_header, HEADER_LENGTH).c_str());
 
   auto input = m_connectionManager->getCacheImpl()->createDataInput(
@@ -1401,8 +1413,9 @@ void TcrConnection::updateCreationTime() {
 }
 
 TcrConnection::~TcrConnection() {
-  LOGDEBUG("Tcrconnection destructor %p . conn ref to endopint %d", this,
-           m_endpointObj->getConnRefCounter());
+  LOG_SCOPE("TcrConnection");
+  LOGDEBUG("Tcrconnection::%s(%p) . conn ref to endpoint %d", __FUNCTION__,
+           this, m_endpointObj->getConnRefCounter());
   m_endpointObj->addConnRefCounter(-1);
   if (m_conn != nullptr) {
     LOGDEBUG("closing the connection");

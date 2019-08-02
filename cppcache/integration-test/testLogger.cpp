@@ -26,8 +26,8 @@
 
 using apache::geode::client::IllegalStateException;
 using apache::geode::client::Log;
-using apache::geode::client::LogFn;
 using apache::geode::client::LogLevel;
+using apache::geode::client::ScopeTrace;
 
 int numOfLinesInFile(const char *fname) {
   char line[2048];
@@ -47,46 +47,6 @@ int numOfLinesInFile(const char *fname) {
   }
   fclose(fp);
   return ln_cnt;
-}
-
-void testLogFnError() {
-  LogFn logFn("TestLogger::testLogFnError", LogLevel::Error);
-  Log::error("...");
-}
-
-void testLogFnWarning() {
-  LogFn logFn("TestLogger::testLogFnWarning", LogLevel::Warning);
-  Log::warning("...");
-}
-
-void testLogFnInfo() {
-  LogFn logFn("TestLogger::testLogFnInfo", LogLevel::Info);
-  Log::info("...");
-}
-
-void testLogFnConfig() {
-  LogFn logFn("TestLogger::testLogFnConfig", LogLevel::Config);
-  Log::config("...");
-}
-
-void testLogFnFine() {
-  LogFn logFn("TestLogger::testLogFnFine", LogLevel::Fine);
-  Log::fine("...");
-}
-
-void testLogFnFiner() {
-  LogFn logFn("TestLogger::testLogFnFiner", LogLevel::Finer);
-  Log::finer("...");
-}
-
-void testLogFnFinest() {
-  LogFn logFn("TestLogger::testLogFnFinest");
-  Log::finest("...");
-}
-
-void testLogFnDebug() {
-  LogFn logFn("TestLogger::testLogFnDebug", LogLevel::Debug);
-  Log::debug("...");
 }
 
 int expected(LogLevel level) {
@@ -332,40 +292,3 @@ BEGIN_TEST(NO_LOG)
     unlink("logfile.log");
   }
 END_TEST(NO_LOG)
-
-BEGIN_TEST(LOGFN)
-  {
-    for (LogLevel level : {
-             LogLevel::Error,
-             LogLevel::Warning,
-             LogLevel::Info,
-             LogLevel::Default,
-             LogLevel::Config,
-             LogLevel::Fine,
-             LogLevel::Finer,
-             LogLevel::Finest,
-             LogLevel::Debug,
-         }) {
-      Log::init(level, "logfile");
-
-      testLogFnError();
-      testLogFnWarning();
-      testLogFnInfo();
-      testLogFnConfig();
-      testLogFnFine();
-      testLogFnFiner();
-      testLogFnFinest();
-      testLogFnDebug();
-
-      int lines = numOfLinesInFile("logfile.log");
-
-      printf("lines = %d, level = %s\n", lines, Log::levelToChars(level));
-
-      ASSERT(lines == 3 * expected(level) - 2 * LENGTH_OF_BANNER,
-             "Wrong number of lines");
-      Log::close();
-
-      unlink("logfile.log");
-    }
-  }
-END_TEST(LOGFN)

@@ -15,26 +15,38 @@
  * limitations under the License.
  */
 
-#include <geode/Region.hpp>
+#include <framework/Cluster.h>
+#include <framework/Framework.h>
+#include <framework/Gfsh.h>
 
-#include "CacheImpl.hpp"
-#include "util/Log.hpp"
+#include <future>
+#include <iostream>
+#include <random>
+#include <thread>
+#include <util/Log.hpp>
 
-namespace apache {
-namespace geode {
-namespace client {
+#include <gtest/gtest.h>
 
-Region::Region(CacheImpl* cacheImpl) : m_cacheImpl(cacheImpl) {
-  LOGDEBUG("Region::%s(%p): setting m_cacheImpl=%p", __FUNCTION__, this,
-           m_cacheImpl);
+#include <geode/Cache.hpp>
+#include <geode/PoolManager.hpp>
+#include <geode/RegionFactory.hpp>
+#include <geode/RegionShortcut.hpp>
+
+namespace {
+
+using apache::geode::client::Cache;
+using apache::geode::client::CacheableString;
+using apache::geode::client::Log;
+using apache::geode::client::Region;
+using apache::geode::client::RegionShortcut;
+using apache::geode::client::ScopeTrace;
+using std::chrono::minutes;
+
+/**
+ */
+TEST(LoggingTest, LoggingScopeTest) {
+  Log::init(apache::geode::client::LogLevel::All, "loggingTest.log");
+  LOG_SCOPE("LoggingScopeTest");
 }
 
-Region::~Region() noexcept {
-  LOGDEBUG("Region::%s(%p): going away", __FUNCTION__, this);
-};
-
-Cache& Region::getCache() { return *m_cacheImpl->getCache(); }
-
-}  // namespace client
-}  // namespace geode
-}  // namespace apache
+}  // namespace

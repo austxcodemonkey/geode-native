@@ -162,6 +162,7 @@ ThinClientPoolDM::ThinClientPoolDM(const char* name,
       m_PoolStatsSampler(nullptr),
       m_clientMetadataService(nullptr),
       m_primaryServerQueueSize(PRIMARY_QUEUE_NOT_AVAILABLE) {
+  LOG_SCOPE("ThinClientPoolDM");
   static bool firstGuard = false;
   if (firstGuard) {
     ClientProxyMembershipID::increaseSynchCounter();
@@ -240,6 +241,7 @@ void ThinClientPoolDM::init() {
 }
 
 ThinClientPoolDM::~ThinClientPoolDM() {
+  LOG_SCOPE("ThinClientPoolDM");
   destroy();
   _GEODE_SAFE_DELETE(m_locHelper);
   _GEODE_SAFE_DELETE(m_stats);

@@ -146,7 +146,9 @@ class APACHE_GEODE_EXPORT TcrConnection {
         m_chunksProcessSema(0),
         m_isBeingUsed(false),
         m_isUsed(0),
-        m_poolDM(nullptr) {}
+        m_poolDM(nullptr) {
+    LOG_SCOPE("TcrConnection");
+  }
 
   /* destroy the connection */
   ~TcrConnection();

@@ -548,24 +548,18 @@ class APACHE_GEODE_EXPORT Log {
 /******************************************************************************/
 /******************************************************************************/
 
-class LogFn {
-  const char* m_functionName;
-  LogLevel m_level;
+class APACHE_GEODE_EXPORT ScopeTrace {
+  std::string logMsg_;
+  LogLevel level_;
 
  public:
-  explicit LogFn(const char* functionName, LogLevel level = LogLevel::Finest)
-      : m_functionName(functionName), m_level(level) {
-    if (Log::enabled(m_level)) Log::enterFn(m_level, m_functionName);
-  }
-
-  ~LogFn() {
-    if (Log::enabled(m_level)) Log::exitFn(m_level, m_functionName);
-  }
-
- private:
-  LogFn(const LogFn& rhs);           // never defined
-  void operator=(const LogFn& rhs);  // never defined
+  ScopeTrace(const std::string& className, const std::string& functionName,
+             void* objPtr, LogLevel level = LogLevel::Debug);
+  ~ScopeTrace();
 };
+
+#define LOG_SCOPE(class) \
+  apache::geode::client::ScopeTrace logEntryAndExit((class), __FUNCTION__, this)
 
 /******************************************************************************/
 /******************************************************************************/

@@ -23,6 +23,7 @@
 #include <cinttypes>
 #include <ctime>
 #include <mutex>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <utility>
@@ -176,6 +177,26 @@ using apache::geode::log::globals::g_spaceUsed;
 using apache::geode::log::globals::g_uname;
 
 /*****************************************************************************/
+
+ScopeTrace::ScopeTrace(const std::string& className,
+                       const std::string& functionName, void* objPtr,
+                       LogLevel level)
+    : level_(level) {
+  std::stringstream ss;
+  ss << className << "::" << functionName << "(" << objPtr << "): ";
+  logMsg_ = ss.str();
+  std::string logMsg = logMsg_ + "entry";
+  if (Log::enabled(level_)) {
+    Log::log(level_, logMsg.c_str());
+  }
+}
+
+ScopeTrace::~ScopeTrace() {
+  std::string logMsg = logMsg_ + "exit";
+  if (Log::enabled(level_)) {
+    Log::log(level_, logMsg.c_str());
+  }
+}
 
 void Log::init(LogLevel level, const char* logFileName, int32_t logFileLimit,
                int64_t logDiskSpaceLimit) {

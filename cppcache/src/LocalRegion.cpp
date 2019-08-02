@@ -727,6 +727,7 @@ void LocalRegion::registerEntryExpiryTask(
 }
 
 LocalRegion::~LocalRegion() noexcept {
+  LOGFINE("LocalRegion::%s(%p): entry", __FUNCTION__, this, m_fullPath.c_str());
   TryWriteGuard guard(m_rwLock, m_destroyPending);
   if (!m_destroyPending) {
     release(false);
@@ -2006,8 +2007,11 @@ GfErrType LocalRegion::putAllNoThrow(
         }
 
         if (versionedObjPartListPtr) {
-          LOGDEBUG("versionedObjPartListPtr->getVersionedTagptr().size() = %d ",
-                   versionedObjPartListPtr->getVersionedTagptr().size());
+          LOGDEBUG(
+              "LocalRegion::%s(%p): "
+              "versionedObjPartListPtr->getVersionedTagptr().size() = %d ",
+              __FUNCTION__, this,
+              versionedObjPartListPtr->getVersionedTagptr().size());
           if (versionedObjPartListPtr->getVersionedTagptr().size() > 0) {
             versionTag =
                 versionedObjPartListPtr->getVersionedTagptr()[keyIndex];
@@ -2044,8 +2048,11 @@ GfErrType LocalRegion::putAllNoThrow(
         auto& p = oldValueMap[key];
 
         if (versionedObjPartListPtr) {
-          LOGDEBUG("versionedObjPartListPtr->getVersionedTagptr().size() = %d ",
-                   versionedObjPartListPtr->getVersionedTagptr().size());
+          LOGDEBUG(
+              "LocalRegion::%s(%p): "
+              "versionedObjPartListPtr->getVersionedTagptr().size() = %d ",
+              __FUNCTION__, this,
+              versionedObjPartListPtr->getVersionedTagptr().size());
           if (versionedObjPartListPtr->getVersionedTagptr().size() > 0) {
             versionTag = versionedObjPartListPtr->getVersionedTagptr()[index++];
           }

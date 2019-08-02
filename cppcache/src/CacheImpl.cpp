@@ -77,6 +77,7 @@ CacheImpl::CacheImpl(Cache* c, const std::shared_ptr<Properties>& dsProps,
       m_pdxTypeRegistry(nullptr),
       m_threadPool(m_distributedSystem.getSystemProperties().threadPoolSize()),
       m_authInitialize(authInitialize) {
+  LOG_SCOPE("CacheImpl");
   using apache::geode::statistics::StatisticsManager;
 
   m_cacheTXManager = std::shared_ptr<CacheTransactionManager>(
@@ -203,6 +204,7 @@ std::shared_ptr<QueryService> CacheImpl::getQueryService(const char* poolName) {
 }
 
 CacheImpl::~CacheImpl() {
+  LOG_SCOPE("CacheImpl");
   if (!m_closed) {
     close();
   }
@@ -235,6 +237,7 @@ void CacheImpl::sendNotificationCloseMsgs() {
 }
 
 void CacheImpl::close(bool keepalive) {
+  LOG_SCOPE("CacheImpl");
   this->throwIfClosed();
 
   TcrMessage::setKeepAlive(keepalive);
