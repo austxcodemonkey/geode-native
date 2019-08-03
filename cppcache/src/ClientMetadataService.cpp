@@ -501,7 +501,7 @@ ClientMetadataService::getServerToFilterMapFESHOP(
   LOGDEBUG(
       "ClientMetadataService::getServerToFilterMapFESHOP: bucketSet size = "
       "%zu ",
-      bucketSet.size());
+      ucketSet.size());
 
   const auto serverToBuckets =
       groupByServerToBuckets(cptr, bucketSet, isPrimary);

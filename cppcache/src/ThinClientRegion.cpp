@@ -1387,7 +1387,7 @@ GfErrType ThinClientRegion::singleHopPutAllNoThrow_remote(
     LOGDEBUG("worker->getPutAllMap()->size() = %zu ",
              worker->getPutAllMap()->size());
     LOGDEBUG(
-        "worker->getResultCollector()->getList()->getVersionedTagsize() = %d ",
+        "worker->getResultCollector()->getList()->getVersionedTagsize() = %zu ",
         worker->getResultCollector()->getList()->getVersionedTagsize());
 
     // TODO::CHECK, why do we need following code... ??
@@ -3016,17 +3016,28 @@ void ThinClientRegion::executeFunction(
         rc->clearResults();
         failedNodes->clear();
       } else if (err == GF_TIMEOUT) {
+<<<<<<< HEAD
         LOGINFO("function timeout. Name: %s, timeout: %z, params: %" PRIu8
                 ", "
                 "retryAttempts: %d ",
                 func.c_str(), timeout.count(), getResult, retryAttempts);
+=======
+        LOGINFO(
+            "function timeout. Name: %s, timeout: %zu, params: %" PRIu8 ", "
+            "retryAttempts: %d ",
+            func.c_str(), timeout.count(), getResult, retryAttempts);
+>>>>>>> Fix LGTM errors in a couple more files.
         throwExceptionIfError("ExecuteOnRegion", GF_TIMEOUT);
       } else if (err == GF_CLIENT_WAIT_TIMEOUT ||
                  err == GF_CLIENT_WAIT_TIMEOUT_REFRESH_PRMETADATA) {
         LOGINFO(
             "function timeout, possibly bucket is not available or bucket "
+<<<<<<< HEAD
             "blacklisted. Name: %s, timeout: %z, params: %" PRIu8
             ", retryAttempts: "
+=======
+            "blacklisted. Name: %s, timeout: %zu, params: %" PRIu8 ", retryAttempts: "
+>>>>>>> Fix LGTM errors in a couple more files.
             "%d ",
             func.c_str(), timeout.count(), getResult, retryAttempts);
         throwExceptionIfError("ExecuteOnRegion", GF_CLIENT_WAIT_TIMEOUT);
