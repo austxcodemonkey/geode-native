@@ -1387,7 +1387,7 @@ GfErrType ThinClientRegion::singleHopPutAllNoThrow_remote(
     LOGDEBUG("worker->getPutAllMap()->size() = %zu ",
              worker->getPutAllMap()->size());
     LOGDEBUG(
-        "worker->getResultCollector()->getList()->getVersionedTagsize() = %zu ",
+        "worker->getResultCollector()->getList()->getVersionedTagsize() = %d ",
         worker->getResultCollector()->getList()->getVersionedTagsize());
 
     // TODO::CHECK, why do we need following code... ??
@@ -3025,7 +3025,8 @@ void ThinClientRegion::executeFunction(
                  err == GF_CLIENT_WAIT_TIMEOUT_REFRESH_PRMETADATA) {
         LOGINFO(
             "function timeout, possibly bucket is not available or bucket "
-            "blacklisted. Name: %s, timeout: %z, params: %" PRIu8 ", retryAttempts: "
+            "blacklisted. Name: %s, timeout: %z, params: %" PRIu8
+            ", retryAttempts: "
             "%d ",
             func.c_str(), timeout.count(), getResult, retryAttempts);
         throwExceptionIfError("ExecuteOnRegion", GF_CLIENT_WAIT_TIMEOUT);

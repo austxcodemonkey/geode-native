@@ -212,6 +212,7 @@ void ClientMetadataService::getBucketServerLocation(
     LOGDEBUG(
         "ClientMetadataService::getBucketServerLocation m_regionMetaDataMap "
         "size is %zu",
+
         m_regionMetaDataMap.size());
     std::string path(region->getFullPath());
     std::shared_ptr<ClientMetadata> cptr = nullptr;
@@ -501,7 +502,7 @@ ClientMetadataService::getServerToFilterMapFESHOP(
   LOGDEBUG(
       "ClientMetadataService::getServerToFilterMapFESHOP: bucketSet size = "
       "%zu ",
-      ucketSet.size());
+      bucketSet.size());
 
   const auto serverToBuckets =
       groupByServerToBuckets(cptr, bucketSet, isPrimary);
