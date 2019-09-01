@@ -2,13 +2,24 @@
 
 #include <iostream>
 
+#include "geode/CacheWrapper.hpp"
+
 using apache::geode::client::CacheFactory;
 
 void* CreateCacheFactory() {
-  CacheFactory* cf = new CacheFactory();
-  std::cout << __FUNCTION__ << ": created factory " << cf << std::endl;
-  return cf;
+  CacheFactory* cacheFactory = new CacheFactory();
+  std::cout << __FUNCTION__ << ": created factory " << cacheFactory
+            << std::endl;
+  return cacheFactory;
 };
+
+void* CacheFactory_CreateCache(void* factory) {
+  auto cacheFactory = static_cast<CacheFactory*>(factory);
+  CacheWrapper* cacheWrapper = new CacheWrapper(cacheFactory->create());
+  std::cout << __FUNCTION__ << ": created cache wrapper " << cacheWrapper
+            << std::endl;
+  return cacheWrapper;
+}
 
 const char* CacheFactory_GetVersion(void* factory) {
   auto cacheFactory = static_cast<CacheFactory*>(factory);
@@ -23,20 +34,21 @@ const char* CacheFactory_GetProductDescription(void* factory) {
 void CacheFactory_SetPdxIgnoreUnreadFields(void* factory,
                                            bool pdxIgnoreUnreadFields) {
   auto cacheFactory = static_cast<CacheFactory*>(factory);
-  std::cout << __FUNCTION__ << ": " << pdxIgnoreUnreadFields << std::endl;
+  auto ignoreUnreadFields = pdxIgnoreUnreadFields ? "true" : "false";
+  std::cout << __FUNCTION__ << ": " << ignoreUnreadFields << std::endl;
   cacheFactory->setPdxIgnoreUnreadFields(pdxIgnoreUnreadFields);
 }
 
 void CacheFactory_SetAuthInitialize(void* factory, void* authInitialize) {
-  //  cacheFactory->setAuthInitialize(authInitialize);
   CacheFactory* cacheFactory = static_cast<CacheFactory*>(factory);
   std::cout << __FUNCTION__ << ": (factory, authinit) = (" << cacheFactory
             << ", " << authInitialize << ")" << std::endl;
 }
 
 void CacheFactory_SetPdxReadSerialized(void* factory, bool pdxReadSerialized) {
-  std::cout << __FUNCTION__ << ": " << pdxReadSerialized << std::endl;
   auto cacheFactory = static_cast<CacheFactory*>(factory);
+  auto readSerialized = pdxReadSerialized ? "true" : "false";
+  std::cout << __FUNCTION__ << ": " << readSerialized << std::endl;
   cacheFactory->setPdxReadSerialized(pdxReadSerialized);
 }
 

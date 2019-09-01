@@ -11,6 +11,8 @@
 extern "C" {
 void* APACHE_GEODE_EXPORT CreateCacheFactory();
 
+void* APACHE_GEODE_EXPORT CacheFactory_CreateCache(void* factory);
+
 const char* APACHE_GEODE_EXPORT CacheFactory_GetVersion(void* factory);
 
 const char* APACHE_GEODE_EXPORT
