@@ -17,6 +17,11 @@ void APACHE_GEODE_EXPORT Region_PutString(void* region, const char* key,
                                           const char* value);
 
 const char* APACHE_GEODE_EXPORT Region_GetString(void* region, const char* key);
+
+void APACHE_GEODE_EXPORT Region_Remove(void* region, const char* key);
+
+bool APACHE_GEODE_EXPORT Region_ContainsValueForKey(void* region,
+                                                    const char* key);
 };
 
 class RegionWrapper {
@@ -26,6 +31,10 @@ class RegionWrapper {
   void PutString(const std::string& key, const std::string& value);
 
   const char* GetString(const std::string& key);
+
+  void Remove(const std::string& key);
+
+  bool ContainsValueForKey(const std::string& key);
 
  private:
   std::shared_ptr<apache::geode::client::Region> region_;

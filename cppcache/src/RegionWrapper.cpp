@@ -22,6 +22,12 @@ const char* RegionWrapper::GetString(const std::string& key) {
   return lastValue_.c_str();
 }
 
+void RegionWrapper::Remove(const std::string& key) { region_->remove(key); }
+
+bool RegionWrapper::ContainsValueForKey(const std::string& key) {
+  return region_->containsValueForKey(key);
+}
+
 void DestroyRegion(void* region) {
   RegionWrapper* regionWrapper = static_cast<RegionWrapper*>(region);
   std::cout << __FUNCTION__ << ": Destroying region wrapper " << regionWrapper
@@ -39,4 +45,16 @@ const char* Region_GetString(void* region, const char* key) {
   RegionWrapper* regionWrapper = static_cast<RegionWrapper*>(region);
   std::cout << __FUNCTION__ << std::endl;
   return regionWrapper->GetString(key);
+}
+
+void Region_Remove(void* region, const char* key) {
+  RegionWrapper* regionWrapper = static_cast<RegionWrapper*>(region);
+  std::cout << __FUNCTION__ << std::endl;
+  return regionWrapper->Remove(key);
+}
+
+bool Region_ContainsValueForKey(void* region, const char* key) {
+  RegionWrapper* regionWrapper = static_cast<RegionWrapper*>(region);
+  std::cout << __FUNCTION__ << std::endl;
+  return regionWrapper->ContainsValueForKey(key);
 }
