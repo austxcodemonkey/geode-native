@@ -6,6 +6,7 @@
 #define NATIVECLIENT_CACHEFACTORYWRAPPER_H
 #pragma once
 
+#include "geode/AuthInitializeWrapper.hpp"
 #include "geode/CacheFactory.hpp"
 #include "geode/CacheWrapper.hpp"
 
@@ -23,7 +24,7 @@ void APACHE_GEODE_EXPORT CacheFactory_SetPdxIgnoreUnreadFields(
     void* factory, bool pdxIgnoreUnreadFields);
 
 void APACHE_GEODE_EXPORT CacheFactory_SetAuthInitialize(
-    void* factory, void (*getCredentials)(), void (*close)());
+    void* factory, void (*getCredentials)(void*), void (*close)());
 
 void APACHE_GEODE_EXPORT
 CacheFactory_SetPdxReadSerialized(void* factory, bool pdxReadSerialized);
@@ -45,7 +46,7 @@ class CacheFactoryWrapper {
 
   void setPdxIgnoreUnreadFields(bool pdxIgnoreUnreadFields);
 
-  void setAuthInitialize(void (*getCredentials)(), void (*close)());
+  void setAuthInitialize(void (*getCredentials)(void*), void (*close)());
 
   void setPdxReadSerialized(bool pdxReadSerializedjj);
 
@@ -55,5 +56,6 @@ class CacheFactoryWrapper {
 
  private:
   apache::geode::client::CacheFactory cacheFactory_;
+  std::shared_ptr<AuthInitializeWrapper> authInit_;
 };
 #endif  // NATIVECLIENT_CACHEFACTORYWRAPPER_H

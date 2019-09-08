@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "geode/AuthInitializeWrapper.hpp"
 #include "geode/CacheWrapper.hpp"
 
 using apache::geode::client::CacheFactory;
@@ -38,14 +39,14 @@ void CacheFactory_SetPdxIgnoreUnreadFields(void* factory,
   cacheFactory->setPdxIgnoreUnreadFields(pdxIgnoreUnreadFields);
 }
 
-void CacheFactory_SetAuthInitialize(void* factory, void (*getCredentials)(),
+void CacheFactory_SetAuthInitialize(void* factory,
+                                    void (*getCredentials)(void*),
                                     void (*close)()) {
   auto cacheFactory = static_cast<CacheFactoryWrapper*>(factory);
   std::cout << __FUNCTION__ << ": (factory, getCredentials, close) = ("
             << cacheFactory << ", " << reinterpret_cast<void*>(getCredentials)
             << ", " << reinterpret_cast<void*>(close) << ")" << std::endl;
-  getCredentials();
-  close();
+  cacheFactory->setAuthInitialize(getCredentials, close);
 }
 
 void CacheFactory_SetPdxReadSerialized(void* factory, bool pdxReadSerialized) {
@@ -82,7 +83,11 @@ void CacheFactoryWrapper::setPdxIgnoreUnreadFields(bool pdxIgnoreUnreadFields) {
   cacheFactory_.setPdxIgnoreUnreadFields(pdxIgnoreUnreadFields);
 }
 
-void CacheFactoryWrapper::setAuthInitialize(void (*)(), void (*)()) {}
+void CacheFactoryWrapper::setAuthInitialize(void (*getCredentials)(void*),
+                                            void (*close)()) {
+  authInit_ = std::make_shared<AuthInitializeWrapper>(getCredentials, close);
+  cacheFactory_.setAuthInitialize(authInit_);
+}
 
 void CacheFactoryWrapper::setPdxReadSerialized(bool pdxReadSerialized) {
   cacheFactory_.setPdxReadSerialized(pdxReadSerialized);
