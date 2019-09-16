@@ -35,8 +35,9 @@ else
 
 if ($GFSH_PATH -ne "")
 {
-   Invoke-Expression "$GFSH_PATH -e 'connect' -e 'destroy region --name=region' -e 'stop server --name=server' -e 'stop locator --name=locator'"
+   Invoke-Expression "$GFSH_PATH -e 'connect --locator=localhost[10334] --user=server --password=server' -e 'destroy region --name=region' -e 'shutdown --include-locators=true'"
 }
 
 Remove-Item -Path locator -Recurse -Force
 Remove-Item -Path server -Recurse -Force
+
