@@ -7,7 +7,7 @@
 
 using apache::geode::client::CacheFactory;
 
-const void* CreateCacheFactory() {
+void* CreateCacheFactory() {
   CacheFactoryWrapper* cacheFactory = new CacheFactoryWrapper();
   std::cout << __FUNCTION__ << ": created factory " << cacheFactory
             << std::endl;
