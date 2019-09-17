@@ -29,7 +29,7 @@ extern "C" {
 void APACHE_GEODE_EXPORT AuthInitialize_AddProperty(void* properties,
                                                     const char* key,
                                                     const char* value);
-};
+}
 
 class AuthInitializeWrapper : public apache::geode::client::AuthInitialize {
  public:

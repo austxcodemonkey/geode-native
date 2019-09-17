@@ -12,15 +12,15 @@
 #include "geode/PoolWrapper.hpp"
 
 extern "C" {
-void* APACHE_GEODE_EXPORT PoolFactory_CreatePool(void* poolFactory,
+APACHE_GEODE_EXPORT void* PoolFactory_CreatePool(void* poolFactory,
                                                  const char* name);
 
-void APACHE_GEODE_EXPORT PoolFactory_AddLocator(void* poolFactory,
+APACHE_GEODE_EXPORT void PoolFactory_AddLocator(void* poolFactory,
                                                 const char* hostname,
                                                 const uint16_t port);
 
-void APACHE_GEODE_EXPORT DestroyPoolFactory(void* poolFactory);
-};
+APACHE_GEODE_EXPORT void DestroyPoolFactory(void* poolFactory);
+}
 
 class PoolFactoryWrapper {
  public:

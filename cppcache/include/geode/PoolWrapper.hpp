@@ -9,10 +9,10 @@
 #include "geode/Pool.hpp"
 
 extern "C" {
-void* APACHE_GEODE_EXPORT Pool_CreateFactory(void* pool);
+APACHE_GEODE_EXPORT void* Pool_CreateFactory(void* pool);
 
-void APACHE_GEODE_EXPORT DestroyPool(void* pool);
-};
+APACHE_GEODE_EXPORT void DestroyPool(void* pool);
+}
 
 class PoolWrapper {
  public:

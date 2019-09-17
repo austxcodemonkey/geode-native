@@ -7,12 +7,12 @@
 
 using apache::geode::client::CacheFactory;
 
-void* CreateCacheFactory() {
+const void* CreateCacheFactory() {
   CacheFactoryWrapper* cacheFactory = new CacheFactoryWrapper();
   std::cout << __FUNCTION__ << ": created factory " << cacheFactory
             << std::endl;
   return cacheFactory;
-};
+}
 
 void* CacheFactory_CreateCache(void* factory) {
   auto cacheFactory = static_cast<CacheFactoryWrapper*>(factory);

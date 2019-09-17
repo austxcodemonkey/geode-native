@@ -11,18 +11,18 @@
 #include "geode/RegionFactory.hpp"
 
 extern "C" {
-void APACHE_GEODE_EXPORT DestroyRegion(void* region);
+APACHE_GEODE_EXPORT void DestroyRegion(void* region);
 
-void APACHE_GEODE_EXPORT Region_PutString(void* region, const char* key,
+APACHE_GEODE_EXPORT void Region_PutString(void* region, const char* key,
                                           const char* value);
 
-const char* APACHE_GEODE_EXPORT Region_GetString(void* region, const char* key);
+APACHE_GEODE_EXPORT const char* Region_GetString(void* region, const char* key);
 
-void APACHE_GEODE_EXPORT Region_Remove(void* region, const char* key);
+APACHE_GEODE_EXPORT void Region_Remove(void* region, const char* key);
 
-bool APACHE_GEODE_EXPORT Region_ContainsValueForKey(void* region,
+APACHE_GEODE_EXPORT bool Region_ContainsValueForKey(void* region,
                                                     const char* key);
-};
+}
 
 class RegionWrapper {
  public:

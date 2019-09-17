@@ -12,14 +12,14 @@
 #include "geode/RegionWrapper.hpp"
 
 extern "C" {
-void APACHE_GEODE_EXPORT DestroyRegionFactory(void* cache);
+APACHE_GEODE_EXPORT void DestroyRegionFactory(void* cache);
 
-void APACHE_GEODE_EXPORT RegionFactory_SetPoolName(void* regionFactory,
+APACHE_GEODE_EXPORT void RegionFactory_SetPoolName(void* regionFactory,
                                                    const char* poolName);
 
-void* APACHE_GEODE_EXPORT RegionFactory_CreateRegion(void* regionFactory,
+APACHE_GEODE_EXPORT void* RegionFactory_CreateRegion(void* regionFactory,
                                                      const char* regionName);
-};
+}
 
 class RegionFactoryWrapper {
  public:

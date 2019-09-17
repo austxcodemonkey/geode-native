@@ -12,17 +12,17 @@
 #include "geode/RegionFactoryWrapper.hpp"
 
 extern "C" {
-void APACHE_GEODE_EXPORT DestroyCache(void* cache);
+APACHE_GEODE_EXPORT void DestroyCache(void* cache);
 
-bool APACHE_GEODE_EXPORT Cache_GetPdxIgnoreUnreadFields(void* cache);
+APACHE_GEODE_EXPORT bool Cache_GetPdxIgnoreUnreadFields(void* cache);
 
-bool APACHE_GEODE_EXPORT Cache_GetPdxReadSerialized(void* cache);
+APACHE_GEODE_EXPORT bool Cache_GetPdxReadSerialized(void* cache);
 
-void* APACHE_GEODE_EXPORT Cache_GetPoolManager(void* cache);
+APACHE_GEODE_EXPORT void* Cache_GetPoolManager(void* cache);
 
-void* APACHE_GEODE_EXPORT Cache_CreateRegionFactory(void* cache,
+APACHE_GEODE_EXPORT void* Cache_CreateRegionFactory(void* cache,
                                                     int32_t regionType);
-};
+}
 
 class CacheWrapper {
  public:

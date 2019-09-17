@@ -11,30 +11,29 @@
 #include "geode/CacheWrapper.hpp"
 
 extern "C" {
-void* APACHE_GEODE_EXPORT CreateCacheFactory();
 
-void* APACHE_GEODE_EXPORT CacheFactory_CreateCache(void* factory);
+APACHE_GEODE_EXPORT void* CacheFactory_CreateCache(void* factory);
 
-const char* APACHE_GEODE_EXPORT CacheFactory_GetVersion(void* factory);
+APACHE_GEODE_EXPORT const char*  CacheFactory_GetVersion(void* factory);
 
-const char* APACHE_GEODE_EXPORT
+APACHE_GEODE_EXPORT const char*
 CacheFactory_GetProductDescription(void* factory);
 
-void APACHE_GEODE_EXPORT CacheFactory_SetPdxIgnoreUnreadFields(
+APACHE_GEODE_EXPORT void  CacheFactory_SetPdxIgnoreUnreadFields(
     void* factory, bool pdxIgnoreUnreadFields);
 
-void APACHE_GEODE_EXPORT CacheFactory_SetAuthInitialize(
+APACHE_GEODE_EXPORT void  CacheFactory_SetAuthInitialize(
     void* factory, void (*getCredentials)(void*), void (*close)());
 
-void APACHE_GEODE_EXPORT
+APACHE_GEODE_EXPORT void
 CacheFactory_SetPdxReadSerialized(void* factory, bool pdxReadSerialized);
 
-void APACHE_GEODE_EXPORT CacheFactory_SetProperty(void* factory,
+APACHE_GEODE_EXPORT void  CacheFactory_SetProperty(void* factory,
                                                   const char* key,
                                                   const char* value);
 
-void APACHE_GEODE_EXPORT DestroyCacheFactory(void* factory);
-};
+APACHE_GEODE_EXPORT void  DestroyCacheFactory(void* factory);
+}
 
 class CacheFactoryWrapper {
  public:
@@ -47,7 +46,6 @@ class CacheFactoryWrapper {
   void setPdxIgnoreUnreadFields(bool pdxIgnoreUnreadFields);
 
   void setAuthInitialize(void (*getCredentials)(void*), void (*close)());
-
   void setPdxReadSerialized(bool pdxReadSerializedjj);
 
   void setProperty(const std::string& key, const std::string& value);

@@ -12,10 +12,10 @@
 #include "geode/PoolManager.hpp"
 
 extern "C" {
-void* APACHE_GEODE_EXPORT PoolManager_CreateFactory(void* poolManager);
+APACHE_GEODE_EXPORT void* PoolManager_CreateFactory(void* poolManager);
 
-void APACHE_GEODE_EXPORT DestroyPoolManager(void* poolManager);
-};
+APACHE_GEODE_EXPORT void DestroyPoolManager(void* poolManager);
+}
 
 class PoolManagerWrapper {
  public:
