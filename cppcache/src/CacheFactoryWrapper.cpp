@@ -2,6 +2,7 @@
 
 #include "geode/AuthInitializeWrapper.hpp"
 #include "geode/CacheWrapper.hpp"
+#include "geode/ClientWrapper.hpp"
 #include "util/Log.hpp"
 
 using apache::geode::client::CacheFactory;
@@ -9,6 +10,7 @@ using apache::geode::client::CacheFactory;
 void* CreateCacheFactory() {
   CacheFactoryWrapper* cacheFactory = new CacheFactoryWrapper();
   LOGDEBUG("%s: cachefactory=%p", __FUNCTION__, cacheFactory);
+  RegisterClientObject(cacheFactory, "CacheFactoryWrapper");
   return cacheFactory;
 }
 
@@ -67,6 +69,7 @@ void CacheFactory_SetProperty(void* factory, const char* key,
 
 void DestroyCacheFactory(void* factory) {
   LOGDEBUG("%s: factory=%p", __FUNCTION__, factory);
+  UnregisterClientObject(factory);
   auto cacheFactory = static_cast<CacheFactoryWrapper*>(factory);
   delete cacheFactory;
 }
