@@ -222,7 +222,7 @@ void ResourceInst::writeSample() {
         wroteInstId = true;
         writeResourceInst(dataOut, id);
       }
-      dataOut->writeByte(i);
+      dataOut->writeByte(static_cast<int8_t>(i));
       writeStatValue(stats[i], delta);
     }
   }
