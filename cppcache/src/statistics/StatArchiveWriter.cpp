@@ -162,7 +162,7 @@ ResourceType::ResourceType(int32_t idArg, const StatisticsType *typeArg)
 
 int32_t ResourceType::getId() const { return this->id; }
 
-int32_t ResourceType::getNumOfDescriptors() const {
+size_t ResourceType::getNumOfDescriptors() const {
   return this->type->getDescriptorsCount();
 }
 
@@ -180,7 +180,7 @@ ResourceInst::ResourceInst(int32_t idArg, Statistics *resourceArg,
   id = idArg;
   resource = resourceArg;
   dataOut = dataOutArg;
-  int32_t cnt = type->getNumOfDescriptors();
+  auto cnt = type->getNumOfDescriptors();
   archivedStatValues = new int64_t[cnt];
   // initialize to zero
   for (int32_t i = 0; i < cnt; i++) {
