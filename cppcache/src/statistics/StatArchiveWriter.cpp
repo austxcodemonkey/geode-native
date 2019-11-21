@@ -183,7 +183,7 @@ ResourceInst::ResourceInst(int32_t idArg, Statistics *resourceArg,
   auto cnt = type->getNumOfDescriptors();
   archivedStatValues = new int64_t[cnt];
   // initialize to zero
-  for (int32_t i = 0; i < cnt; i++) {
+  for (decltype(cnt) i = 0; i < cnt; i++) {
     archivedStatValues[i] = 0;
   }
   firstTime = true;
@@ -213,7 +213,7 @@ void ResourceInst::writeSample() {
     checkForChange = false;
   }
   auto count = type->getNumOfDescriptors();
-  for (int32_t i = 0; i < count; i++) {
+  for (decltype(count) i = 0; i < count; i++) {
     int64_t value = getStatValue(stats[i]);
     if (!checkForChange || value != archivedStatValues[i]) {
       int64_t delta = value - archivedStatValues[i];
@@ -585,7 +585,7 @@ const ResourceType *StatArchiveWriter::getResourceType(const Statistics *s) {
     auto stats = rt->getStats();
     auto descCnt = rt->getNumOfDescriptors();
     this->dataBuffer->writeShort(static_cast<int16_t>(descCnt));
-    for (int32_t i = 0; i < descCnt; i++) {
+    for (decltype(descCnt) i = 0; i < descCnt; i++) {
       std::string statsName = stats[i]->getName();
       this->dataBuffer->writeUTF(statsName);
       auto sdImpl = std::static_pointer_cast<StatisticDescriptorImpl>(stats[i]);
