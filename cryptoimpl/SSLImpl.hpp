@@ -49,6 +49,7 @@ namespace client {
 class SSLImpl : public apache::geode::client::Ssl {
  private:
   ACE_SSL_SOCK_Stream* m_io;
+  ACE_HANDLE m_sock;
   static ACE_Recursive_Thread_Mutex s_mutex;
   volatile static bool s_initialized;
 

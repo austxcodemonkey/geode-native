@@ -49,7 +49,8 @@ static int pem_passwd_cb(char *buf, int size, int /*rwflag*/, void *passwd) {
 }
 
 SSLImpl::SSLImpl(ACE_HANDLE sock, const char *pubkeyfile,
-                 const char *privkeyfile, const char *password) {
+                 const char *privkeyfile, const char *password)
+    : m_io(nullptr) {
   ACE_Guard<ACE_Recursive_Thread_Mutex> guard(SSLImpl::s_mutex);
 
   if (SSLImpl::s_initialized == false) {
@@ -82,8 +83,7 @@ SSLImpl::SSLImpl(ACE_HANDLE sock, const char *pubkeyfile,
     }
     SSLImpl::s_initialized = true;
   }
-  m_io = new ACE_SSL_SOCK_Stream();
-  m_io->set_handle(sock);
+  m_sock = sock;
 }
 
 SSLImpl::~SSLImpl() {
@@ -99,6 +99,8 @@ void SSLImpl::close() {
 
   if (m_io) {
     m_io->close();
+    delete m_io;
+    m_io = nullptr;
   }
 }
 
@@ -119,6 +121,8 @@ int SSLImpl::listen(ACE_INET_Addr addr, std::chrono::microseconds waitSeconds) {
 int SSLImpl::connect(ACE_INET_Addr ipaddr,
                      std::chrono::microseconds waitSeconds) {
   ACE_SSL_SOCK_Connector conn;
+  m_io = new ACE_SSL_SOCK_Stream();
+  m_io->set_handle(m_sock);
   if (waitSeconds > std::chrono::microseconds::zero()) {
     ACE_Time_Value wtime(waitSeconds);
     return conn.connect(*m_io, ipaddr, &wtime);

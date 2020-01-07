@@ -120,12 +120,12 @@ END_TASK(validate)
 #include <ace/ACE.h>
 #include <signal.h>
 
-#define ASSERT(x, y)                                   \
-  do {                                                 \
-  if (!(x)) {                                          \
-    throw dunit::TestException(y, __LINE__, __FILE__); \
-  }                                                    \
-  } while(false)
+#define ASSERT(x, y)                                     \
+  do {                                                   \
+    if (!(x)) {                                          \
+      throw dunit::TestException(y, __LINE__, __FILE__); \
+    }                                                    \
+  } while (false)
 #define XASSERT(x)                                      \
   if (!(x)) {                                           \
     throw dunit::TestException(#x, __LINE__, __FILE__); \
@@ -198,7 +198,7 @@ END_TASK(validate)
 #define DUNIT_TASK_DEFINITION(x, y)                            \
   class DCLASSDEF(y) : virtual public dunit::Task {            \
    public:                                                     \
-    DCLASSDEF(y)() { init(x, true); }                                \
+    DCLASSDEF(y)() { init(x, true); }                          \
                                                                \
    public:                                                     \
     virtual void doTask() {                                    \
@@ -222,7 +222,9 @@ END_TASK(validate)
   }                                               \
   }                                               \
   ;
-#define CALL_TASK(y); DCLASSDEF(y) * DVARNAME(y) = new DCLASSDEF(y)()
+#define CALL_TASK(y) \
+  ;                  \
+  DCLASSDEF(y) * DVARNAME(y) = new DCLASSDEF(y)()
 
 #define DUNIT_MAIN         \
   class DCLASSNAME(Main) { \
@@ -275,7 +277,7 @@ class Task {
   bool m_isHeapAllocated;
 
   Task() {}
-  virtual ~Task() { }
+  virtual ~Task() {}
 
   /** register task with slave. */
   void init(int sId);
