@@ -32,9 +32,12 @@ namespace {
 
 using apache::geode::client::Cache;
 using apache::geode::client::CacheableInt16;
+using apache::geode::client::CacheableInt32;
 using apache::geode::client::CacheableKey;
 using apache::geode::client::CacheableString;
 using apache::geode::client::CacheFactory;
+using apache::geode::client::CacheListener;
+using apache::geode::client::EntryEvent;
 using apache::geode::client::IllegalStateException;
 using apache::geode::client::Region;
 using apache::geode::client::RegionShortcut;
@@ -61,6 +64,36 @@ std::shared_ptr<Region> setupProxyRegion(Cache& cache) {
 
   return region;
 }
+
+class SimpleCacheListioner : public CacheListener {
+  int32_t createCount_;
+  int32_t updateCount_;
+  int32_t invalidateCount_;
+  int32_t destroyCount_;
+
+ public:
+  explicit SimpleCacheListioner()
+      : createCount_(0),
+        updateCount_(0),
+        invalidateCount_(0),
+        destroyCount_(0) {}
+
+  void afterCreate(const EntryEvent&) override { createCount_++; }
+
+  void afterUpdate(const EntryEvent&) override { updateCount_++; }
+
+  void afterInvalidate(const EntryEvent&) override { invalidateCount_++; }
+
+  void afterDestroy(const EntryEvent&) override { destroyCount_++; }
+
+  int32_t getCreateCount() { return createCount_; }
+
+  int32_t getUpdateCount() { return updateCount_; }
+
+  int32_t getInvalidateCount() { return invalidateCount_; }
+
+  int32_t getDestroyCount() { return destroyCount_; }
+};
 
 TEST(RegisterKeysTest, RegisterAllWithCachingRegion) {
   Cluster cluster{LocatorCount{1}, ServerCount{1}};
@@ -204,6 +237,49 @@ TEST(RegisterKeysTest, RegisterAnyWithProxyRegion) {
   keys.push_back(std::make_shared<CacheableInt16>(2));
 
   EXPECT_THROW(region->registerKeys(keys, false, true), IllegalStateException);
+  cache.close();
+}
+
+TEST(RegisterKeysTest, RegisterUnregisterAndTest) {
+  Cluster cluster{LocatorCount{1}, ServerCount{1}};
+
+  cluster.start();
+
+  cluster.getGfsh()
+      .create()
+      .region()
+      .withName("region")
+      .withType("PARTITION")
+      .execute();
+  auto cache = createTestCache();
+  auto poolFactory =
+      cache.getPoolManager().createFactory().setSubscriptionEnabled(true);
+  cluster.applyLocators(poolFactory);
+  poolFactory.create("default");
+  auto region = setupCachingProxyRegion(cache);
+  std::vector<std::shared_ptr<CacheableKey> > keys;
+  keys.push_back(std::make_shared<CacheableInt32>(123456));
+
+  region->registerKeys(keys, false, true);
+
+  auto attrMutator = region->getAttributesMutator();
+  auto listener = std::make_shared<SimpleCacheListioner>();
+  attrMutator->setCacheListener(listener);
+
+  region->put(123456, "foo");
+  region->put(123456, "bar");
+  region->put(123456, "baz");
+  region->put(123456, "qux");
+
+  region->unregisterKeys(keys);
+  auto stillInterested = region->getInterestList();
+  EXPECT_EQ(stillInterested.size(), 0);
+
+  EXPECT_EQ(listener->getCreateCount(), 1);
+  EXPECT_EQ(listener->getUpdateCount(), 3);
+  EXPECT_EQ(listener->getInvalidateCount(), 0);
+  EXPECT_EQ(listener->getDestroyCount(), 0);
+
   cache.close();
 }
 
