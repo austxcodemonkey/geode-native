@@ -32,11 +32,15 @@ int ClientUninitialize(void* client) {
 }
 
 void RegisterClientObject(void* value, const std::string& className) {
-  clientWrapperSingleton->AddRecord(value, className);
+  if (clientWrapperSingleton) {
+    clientWrapperSingleton->AddRecord(value, className);
+  }
 }
 
 void UnregisterClientObject(void* value) {
-  clientWrapperSingleton->RemoveRecord(value);
+  if (clientWrapperSingleton) {
+    clientWrapperSingleton->RemoveRecord(value);
+  }
 }
 
 ClientWrapper::ClientWrapper() {}
