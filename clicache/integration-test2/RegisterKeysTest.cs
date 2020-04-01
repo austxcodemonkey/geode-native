@@ -84,10 +84,10 @@ namespace Apache.Geode.Client.IntegrationTests
         {
         }
 
-        IRegion<int, string> SetupCachingProxyRegion(Cache cache) {
+        IRegion<int, string> SetupCachingProxyRegion(Cache cache, string poolName = "default") {
           var region = cache.CreateRegionFactory(RegionShortcut.CACHING_PROXY)
-                            .SetPoolName("default")
-                            .Create<int, string>("region");
+                            .SetPoolName(poolName)
+                            .Create<int, string>("registerKeysTest");
 
           return region;
         }
@@ -110,9 +110,10 @@ namespace Apache.Geode.Client.IntegrationTests
                     var poolFactory =
                         cache.GetPoolManager().CreateFactory().SetSubscriptionEnabled(true);
                     cluster.ApplyLocators(poolFactory);
-                    poolFactory.Create("default");
+                    poolFactory.Create("registerKeysPool");
                     var region = SetupCachingProxyRegion(cache);
-                    region.GetSubscriptionService().RegisterKeys(new List<int> { 123456 });
+                    var interested = new List<int> {  123456 };
+                    region.GetSubscriptionService().RegisterAllKeys();
                     var listener = new SimpleCacheListener();
                     region.AttributesMutator.SetCacheListener(listener);
 
@@ -121,14 +122,18 @@ namespace Apache.Geode.Client.IntegrationTests
                     region.Put(123456, "baz");
                     region.Put(123456, "qux");
 
-                    region.GetSubscriptionService().UnregisterKeys(new List<int> { 123456 });
+                    region.GetSubscriptionService().UnregisterAllKeys();
+                    //region.GetSubscriptionService().UnregisterKeys(interested);
+                    var stillInterested = region.GetSubscriptionService().GetInterestList();
+                    //Assert.Equal(stillInterested.Count, 0);
 
                     Assert.Equal(listener.CreateCount, 1);
                     Assert.Equal(listener.UpdateCount, 3);
                     Assert.Equal(listener.InvalidateCount, 0);
                     Assert.Equal(listener.DestroyCount, 0);
 
-                    region.Clear();
+                    region.Put(123456, "quux");
+                    Assert.Equal(listener.UpdateCount, 3);
                 }
                 finally
                 {

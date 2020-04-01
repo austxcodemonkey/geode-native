@@ -141,7 +141,7 @@ namespace Apache.Geode.Client.IntegrationTests
 
             var cache = cacheFactory.Create();
 
-            ApplyLocators(cache.GetPoolFactory()).Create("default");
+            ApplyLocators(cache.GetPoolFactory().SetSubscriptionEnabled(true)).Create("default");
 
             return cache;
         }

@@ -40,6 +40,7 @@ add_library( ${PROJECT_NAME} SHARED
   QueryTest.cs
   RegionTest.cs
   RegionSSLTest.cs
+  RegisterKeysTest.cs
   Position.cs
   TestBase.cs
   cache.xml
