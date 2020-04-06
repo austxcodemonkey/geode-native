@@ -122,10 +122,9 @@ namespace Apache.Geode.Client.IntegrationTests
                     region.Put(123456, "baz");
                     region.Put(123456, "qux");
 
-                    region.GetSubscriptionService().UnregisterAllKeys();
-                    //region.GetSubscriptionService().UnregisterKeys(interested);
+                    region.GetSubscriptionService().UnregisterKeys(interested);
                     var stillInterested = region.GetSubscriptionService().GetInterestList();
-                    //Assert.Equal(stillInterested.Count, 0);
+                    Assert.Equal(stillInterested.Count, 0);
 
                     Assert.Equal(listener.CreateCount, 1);
                     Assert.Equal(listener.UpdateCount, 3);
