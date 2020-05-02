@@ -65,6 +65,7 @@ target_link_libraries(cpp-integration-test
     ACE::ACE
     GTest::gtest
     GTest::gtest_main
+    GTest::gmock
     Boost::boost
     Boost::system
     Boost::log
