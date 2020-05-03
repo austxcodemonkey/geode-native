@@ -124,7 +124,7 @@ foreach(FILE ${SOURCES})
   endif()
 
   # Some tests depend on these library
-  add_dependencies(${TEST} securityImpl cryptoImpl SqLiteImpl)
+  add_dependencies(${TEST} securityImpl SqLiteImpl)
 
   add_clangformat(${TEST})
 
