@@ -48,10 +48,11 @@ const int64_t INITIAL_CONNECTION_ID = 26739;
     throw ex;                                         \
   } while (0)
 
-struct FinalizeProcessChunk {
- private:
-  TcrMessage& m_reply;
-  uint16_t m_endpointMemId;
+struct FinalizeProcessChunk
+{
+           private:
+            TcrMessage& m_reply;
+            uint16_t m_endpointMemId;
 
  public:
   FinalizeProcessChunk(TcrMessageReply& reply, uint16_t endpointMemId)
