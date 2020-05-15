@@ -17,314 +17,198 @@
 
 #include "TcpConn.hpp"
 
-#include <chrono>
-#include <memory>
-#include <thread>
+#include <iomanip>
+#include <iostream>
 
-#include <ace/SOCK_Acceptor.h>
-#include <ace/SOCK_Connector.h>
+#include <boost/system/error_code.hpp>
+#include <boost/system/system_error.hpp>
 
-#include <geode/internal/chrono/duration.hpp>
-
-#include "CacheImpl.hpp"
-#include "DistributedSystem.hpp"
 #include "util/Log.hpp"
+
+namespace {
+template <int Level, int Name>
+class timeval {
+ public:
+  // This is not an instance of the template, but of the system provided type
+  // to be written to the socket API.
+#if defined(_WINDOWS)
+  using value_type = DWORD;
+#else
+  using value_type = ::timeval;
+#endif
+
+ private:
+  value_type value_{};
+
+ public:
+  timeval() {}
+
+  explicit timeval(value_type v) : value_(v) {}
+
+  timeval &operator=(value_type v) {
+    value_ = v;
+    return *this;
+  }
+
+  value_type value() const { return value_; }
+
+  template <typename Protocol>
+  int level(const Protocol &) const {
+    return Level;
+  }
+
+  template <typename Protocol>
+  int name(const Protocol &) const {
+    return Name;
+  }
+
+  template <typename Protocol>
+  value_type *data(const Protocol &) {
+    return &value_;
+  }
+
+  template <typename Protocol>
+  const value_type *data(const Protocol &) const {
+    return &value_;
+  }
+
+  template <typename Protocol>
+  std::size_t size(const Protocol &) const {
+    return sizeof(value_);
+  }
+
+  template <typename Protocol>
+  void resize(const Protocol &, std::size_t s) {
+    if (s != sizeof(value_))
+      throw std::length_error("timeval socket option resize");
+  }
+};
+
+// Asio doesn't support these socket options directly, but every major platform
+// does. Timeout on IO socket operations are supported by the platform directly.
+// This means We can all receive without needing to use the timeout interface -
+// and more importantly, we can send while holding to per-operation time
+// constraints and without blocking indefinitely.
+//
+// The default timeout is infinite, or by setting the socket option to null,
+// which I won't provide - just don't construct a TcpConn with send and
+// receieve timeouts.
+typedef timeval<SOL_SOCKET, SO_SNDTIMEO> send_timeout;
+typedef timeval<SOL_SOCKET, SO_RCVTIMEO> receive_timeout;
+}  // namespace
 
 namespace apache {
 namespace geode {
 namespace client {
-
-void TcpConn::clearNagle(ACE_HANDLE sock) {
-  int32_t val = 1;
-
-  if (0 != ACE_OS::setsockopt(sock, IPPROTO_TCP, 1,
-                              reinterpret_cast<const char *>(&val),
-                              sizeof(val))) {
-    int32_t lastError = ACE_OS::last_error();
-    LOGERROR("Failed to set TCP_NODELAY on socket. Errno: %d: %s", lastError,
-             ACE_OS::strerror(lastError));
-  }
-}
-
-int32_t TcpConn::maxSize(ACE_HANDLE sock, int32_t flag, int32_t size) {
-  int32_t val = 0;
-
-  int32_t inc = 32120;
-  val = size - (3 * inc);
-  if (val < 0) val = 0;
-  if (size == 0) size = m_maxBuffSizePool;
-  int32_t red = 0;
-  int32_t lastRed = -1;
-  while (lastRed != red) {
-    lastRed = red;
-    val += inc;
-    if (0 != ACE_OS::setsockopt(sock, SOL_SOCKET, flag,
-                                reinterpret_cast<const char *>(&val),
-                                sizeof(val))) {
-      int32_t lastError = ACE_OS::last_error();
-      LOGERROR("Failed to set socket options. Errno: %d : %s ", lastError,
-               ACE_OS::strerror(lastError));
-    }
-    int plen = sizeof(val);
-    if (0 != ACE_OS::getsockopt(sock, SOL_SOCKET, flag,
-                                reinterpret_cast<char *>(&val), &plen)) {
-      int32_t lastError = ACE_OS::last_error();
-      LOGERROR(
-          "Failed to get buffer size for flag %d on socket. Errno: %d : %s",
-          flag, lastError, ACE_OS::strerror(lastError));
-    }
-#ifdef _LINUX
-    val /= 2;
-#endif
-    if ((val >= m_maxBuffSizePool) || (val >= size)) continue;
-    red = val;
-  }
-  return val;
-}
-
-void TcpConn::createSocket(ACE_HANDLE sock) {
-  LOGDEBUG("Creating plain socket stream");
-  m_io = new ACE_SOCK_Stream(sock);
-  // m_io->enable(ACE_NONBLOCK);
-}
-
-void TcpConn::init() {
-#ifdef WITH_IPV6
-  ACE_HANDLE sock = ACE_OS::socket(m_addr.get_type(), SOCK_STREAM, 0);
-#else
-  ACE_HANDLE sock = ACE_OS::socket(AF_INET, SOCK_STREAM, 0);
-#endif
-  if (sock == ACE_INVALID_HANDLE) {
-    int32_t lastError = ACE_OS::last_error();
-    LOGERROR("Failed to create socket. Errno: %d: %s", lastError,
-             ACE_OS::strerror(lastError));
-    char msg[256];
-    std::snprintf(msg, 256, "TcpConn::connect failed with errno: %d: %s",
-                  lastError, ACE_OS::strerror(lastError));
-    throw GeodeIOException(msg);
-  }
-
-  clearNagle(sock);
-
-  int32_t readSize = 0;
-  int32_t writeSize = 0;
-  int32_t originalReadSize = readSize;
-  readSize = maxSize(sock, SO_SNDBUF, readSize);
-  if (originalReadSize != readSize) {
-    // This should get logged once at startup and again only if it changes
-    LOGFINEST("Using socket send buffer size of %d.", readSize);
-  }
-  int32_t originalWriteSize = writeSize;
-  writeSize = maxSize(sock, SO_RCVBUF, writeSize);
-  if (originalWriteSize != writeSize) {
-    // This should get logged once at startup and again only if it changes
-    LOGFINEST("Using socket receive buffer size of %d.", writeSize);
-  }
-
-  createSocket(sock);
-
-  connect();
-}
-
-TcpConn::TcpConn(const char *ipaddr, std::chrono::microseconds waitSeconds,
+TcpConn::TcpConn(const std::string ipaddr,
+                 std::chrono::microseconds connect_timeout,
                  int32_t maxBuffSizePool)
-    : m_io(nullptr),
-      m_addr(ipaddr),
-      m_waitMilliSeconds(waitSeconds),
-      m_maxBuffSizePool(maxBuffSizePool),
-      m_chunkSize(getDefaultChunkSize()) {}
+    : TcpConn{
+          ipaddr.substr(0, ipaddr.find(':')),
+          static_cast<uint16_t>(std::stoi(ipaddr.substr(ipaddr.find(':') + 1))),
+          connect_timeout, maxBuffSizePool} {}
 
-TcpConn::TcpConn(const char *hostname, int32_t port,
-                 std::chrono::microseconds waitSeconds, int32_t maxBuffSizePool)
-    : m_io(nullptr),
-      m_addr(port, hostname),
-      m_waitMilliSeconds(waitSeconds),
-      m_maxBuffSizePool(maxBuffSizePool),
-      m_chunkSize(getDefaultChunkSize()) {}
+TcpConn::TcpConn(const std::string host, uint16_t port,
+                 std::chrono::microseconds /*connect_timeout*/,
+                 int32_t maxBuffSizePool)
+    : socket_{io_context_} {
+  // We must connect first so we have a valid file descriptor to set options on.
+  boost::asio::connect(socket_, boost::asio::ip::tcp::resolver(io_context_)
+                                    .resolve(host, std::to_string(port)));
 
-void TcpConn::listen(const char *hostname, int32_t port,
-                     std::chrono::microseconds waitSeconds) {
-  ACE_INET_Addr addr(port, hostname);
-  listen(addr, waitSeconds);
+  std::stringstream ss;
+  ss << "Connected " << socket_.local_endpoint() << " -> "
+     << socket_.remote_endpoint();
+  LOGINFO(ss.str());
+
+  socket_.set_option(::boost::asio::ip::tcp::no_delay{true});
+  socket_.set_option(
+      ::boost::asio::socket_base::send_buffer_size{maxBuffSizePool});
+  socket_.set_option(
+      ::boost::asio::socket_base::receive_buffer_size{maxBuffSizePool});
 }
 
-void TcpConn::listen(const char *ipaddr,
-                     std::chrono::microseconds waitSeconds) {
-  ACE_INET_Addr addr(ipaddr);
-  listen(addr, waitSeconds);
+TcpConn::TcpConn(const std::string ipaddr,
+                 std::chrono::microseconds connect_timeout,
+                 int32_t maxBuffSizePool, std::chrono::microseconds send_time,
+                 std::chrono::microseconds receive_time)
+    : TcpConn{ipaddr, connect_timeout, maxBuffSizePool} {
+#if defined(_WINDOWS)
+  socket_.set_option(::send_timeout{static_cast<DWORD>(send_time.count())});
+  socket_.set_option(
+      ::receive_timeout{static_cast<DWORD>(receive_time.count())});
+#else
+
+  auto send_seconds =
+      std::chrono::duration_cast<std::chrono::seconds>(send_time);
+  auto send_microseconds =
+      send_time % std::chrono::duration_cast<std::chrono::microseconds>(
+                      std::chrono::seconds{1});
+  socket_.set_option(
+      ::send_timeout{{static_cast<int>(send_seconds.count()),
+                      static_cast<int>(send_microseconds.count())}});
+
+  auto receive_seconds =
+      std::chrono::duration_cast<std::chrono::seconds>(receive_time);
+  auto receive_microseconds =
+      receive_time % std::chrono::duration_cast<std::chrono::microseconds>(
+                         std::chrono::seconds{1});
+  socket_.set_option(
+      ::receive_timeout{{static_cast<int>(receive_seconds.count()),
+                         static_cast<int>(receive_microseconds.count())}});
+#endif
 }
 
-void TcpConn::listen(ACE_INET_Addr addr,
-                     std::chrono::microseconds waitSeconds) {
-  using apache::geode::internal::chrono::duration::to_string;
-
-  ACE_SOCK_Acceptor listener(addr, 1);
-  int32_t retVal = 0;
-  if (waitSeconds > std::chrono::microseconds::zero()) {
-    ACE_Time_Value wtime(waitSeconds);
-    retVal = listener.accept(*m_io, nullptr, &wtime);
-  } else {
-    retVal = listener.accept(*m_io, nullptr);
-  }
-  if (retVal == -1) {
-    char msg[256];
-    int32_t lastError = ACE_OS::last_error();
-    if (lastError == ETIME || lastError == ETIMEDOUT) {
-      throw TimeoutException(
-          "TcpConn::listen Attempt to listen timed out after " +
-          to_string(waitSeconds) + ".");
-    }
-    std::snprintf(msg, 256, "TcpConn::listen failed with errno: %d: %s",
-                  lastError, ACE_OS::strerror(lastError));
-    throw GeodeIOException(msg);
-  }
+TcpConn::~TcpConn() {
+  std::stringstream ss;
+  ss << "Disconnected " << socket_.local_endpoint() << " -> "
+     << socket_.remote_endpoint();
+  LOGFINE(ss.str());
 }
 
-void TcpConn::connect(const char *hostname, int32_t port,
-                      std::chrono::microseconds waitSeconds) {
-  ACE_INET_Addr addr(port, hostname);
-  m_addr = addr;
-  m_waitMilliSeconds = waitSeconds;
-  connect();
+size_t TcpConn::receive(char *buff, size_t len) {
+  auto start = std::chrono::system_clock::now();
+
+  return boost::asio::read(socket_, boost::asio::buffer(buff, len),
+                           [len, start](boost::system::error_code &ec,
+                                        const std::size_t n) -> std::size_t {
+                             if (ec && ec != boost::asio::error::eof) {
+                               // Quit if we encounter an error.
+                               // Defer EOF to timeout.
+                               return 0;
+                             } else if (start + std::chrono::milliseconds(25) <=
+                                        std::chrono::system_clock::now()) {
+                               // Sometimes we don't know how much data to
+                               // expect, so we're reading into an oversized
+                               // buffer without knowing when to quit other than
+                               // by timeout. Typically, if we timeout, we also
+                               // have an EOF, meaning the connection is likely
+                               // broken and will have to be closed. But if we
+                               // have bytes, we may have just done a
+                               // dumb/blind/hail mary receive, so defer broken
+                               // connection handling until the next IO
+                               // operation.
+                               if (n) {
+                                 // This prevents the timeout from being an
+                                 // error condition.
+                                 ec = boost::system::error_code{};
+                               }
+                               // But if n == 0 when we timeout, it's just a
+                               // broken connection.
+
+                               return 0;
+                             }
+
+                             return len - n;
+                           });
 }
 
-void TcpConn::connect(const char *ipaddr,
-                      std::chrono::microseconds waitSeconds) {
-  ACE_INET_Addr addr(ipaddr);
-  m_addr = addr;
-  m_waitMilliSeconds = waitSeconds;
-  connect();
-}
-
-void TcpConn::connect() {
-  using apache::geode::internal::chrono::duration::to_string;
-
-  ACE_INET_Addr ipaddr = m_addr;
-  std::chrono::microseconds waitMicroSeconds = m_waitMilliSeconds;
-
-  ACE_OS::signal(SIGPIPE, SIG_IGN);  // Ignore broken pipe
-
-  LOGFINER("Connecting plain socket stream to %s:%d waiting %s micro sec",
-           ipaddr.get_host_name(), ipaddr.get_port_number(),
-           to_string(waitMicroSeconds).c_str());
-
-  ACE_SOCK_Connector conn;
-  int32_t retVal = 0;
-  if (waitMicroSeconds > std::chrono::microseconds::zero()) {
-    // passing waittime as microseconds
-    ACE_Time_Value wtime(waitMicroSeconds);
-    retVal = conn.connect(*m_io, ipaddr, &wtime);
-  } else {
-    retVal = conn.connect(*m_io, ipaddr);
-  }
-  if (retVal == -1) {
-    char msg[256];
-    int32_t lastError = ACE_OS::last_error();
-    if (lastError == ETIME || lastError == ETIMEDOUT) {
-      //  this is only called by constructor, so we must delete m_io
-      _GEODE_SAFE_DELETE(m_io);
-      throw TimeoutException(
-          "TcpConn::connect Attempt to connect timed out after" +
-          to_string(waitMicroSeconds) + ".");
-    }
-    std::snprintf(msg, 256, "TcpConn::connect failed with errno: %d: %s",
-                  lastError, ACE_OS::strerror(lastError));
-    //  this is only called by constructor, so we must delete m_io
-    close();
-    throw GeodeIOException(msg);
-  }
-  int rc = this->m_io->enable(ACE_NONBLOCK);
-  if (-1 == rc) {
-    char msg[256];
-    int32_t lastError = ACE_OS::last_error();
-    std::snprintf(msg, 256, "TcpConn::NONBLOCK: %d: %s", lastError,
-                  ACE_OS::strerror(lastError));
-
-    LOGINFO(msg);
-  }
-}
-
-void TcpConn::close() {
-  if (m_io != nullptr) {
-    m_io->close();
-    _GEODE_SAFE_DELETE(m_io);
-  }
-}
-
-size_t TcpConn::receive(char *buff, size_t len,
-                        std::chrono::microseconds waitSeconds) {
-  return socketOp(SOCK_READ, buff, len, waitSeconds);
-}
-
-size_t TcpConn::send(const char *buff, size_t len,
-                     std::chrono::microseconds waitSeconds) {
-  return socketOp(SOCK_WRITE, const_cast<char *>(buff), len, waitSeconds);
-}
-
-size_t TcpConn::socketOp(TcpConn::SockOp op, char *buff, size_t len,
-                         std::chrono::microseconds waitDuration) {
-  {
-    ACE_Time_Value waitTime(waitDuration);
-    auto endTime = std::chrono::steady_clock::now() + waitDuration;
-    size_t readLen = 0;
-    ssize_t retVal;
-    bool errnoSet = false;
-
-    auto sendlen = len;
-    size_t totalsend = 0;
-
-    while (len > 0 && waitTime > ACE_Time_Value::zero) {
-      if (len > m_chunkSize) {
-        sendlen = m_chunkSize;
-        len -= m_chunkSize;
-      } else {
-        sendlen = len;
-        len = 0;
-      }
-      do {
-        if (op == SOCK_READ) {
-          retVal = m_io->recv_n(buff, sendlen, &waitTime, &readLen);
-        } else {
-          retVal = m_io->send_n(buff, sendlen, &waitTime, &readLen);
-        }
-        sendlen -= readLen;
-        totalsend += readLen;
-        if (retVal < 0) {
-          int32_t lastError = ACE_OS::last_error();
-          if (lastError == EAGAIN) {
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
-          } else {
-            errnoSet = true;
-            break;
-          }
-        } else if (retVal == 0 && readLen == 0) {
-          ACE_OS::last_error(EPIPE);
-          errnoSet = true;
-          break;
-        }
-
-        buff += readLen;
-        if (sendlen == 0) break;
-        waitTime = endTime - std::chrono::steady_clock::now();
-        if (waitTime <= ACE_Time_Value::zero) break;
-      } while (sendlen > 0);
-      if (errnoSet) break;
-    }
-
-    if (len > 0 && !errnoSet) {
-      ACE_OS::last_error(ETIME);
-    }
-
-    return totalsend;
-  }
+size_t TcpConn::send(const char *buff, size_t len) {
+  return boost::asio::write(socket_, boost::asio::buffer(buff, len));
 }
 
 //  Return the local port for this TCP connection.
-uint16_t TcpConn::getPort() {
-  ACE_INET_Addr localAddr;
-  m_io->get_local_addr(localAddr);
-  return localAddr.get_port_number();
-}
+uint16_t TcpConn::getPort() { return socket_.local_endpoint().port(); }
 
 }  // namespace client
 }  // namespace geode

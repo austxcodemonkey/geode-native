@@ -62,10 +62,10 @@ class ThinClientLocatorHelper {
   GfErrType updateLocators(const std::string& serverGrp = "");
 
  private:
-  Connector* createConnection(Connector*& conn, const char* hostname,
-                              int32_t port,
-                              std::chrono::microseconds waitSeconds,
-                              int32_t maxBuffSizePool = 0);
+  std::unique_ptr<Connector> createConnection(const char* hostname,
+                                              int32_t port,
+                                              std::chrono::microseconds wait,
+                                              int32_t maxBuffSizePool = 0);
   std::mutex m_locatorLock;
   std::vector<ServerLocation> m_locHostPort;
   const ThinClientPoolDM* m_poolDM;

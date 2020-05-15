@@ -17,6 +17,9 @@
 
 #include "TcpSslConn.hpp"
 
+#include <openssl/err.h>
+#include <openssl/x509.h>
+
 #include <chrono>
 #include <thread>
 
@@ -28,166 +31,105 @@
 namespace apache {
 namespace geode {
 namespace client {
+TcpSslConn::TcpSslConn(const std::string ipaddr,
+                       std::chrono::microseconds connect_timeout,
+                       int32_t maxBuffSizePool, const std::string pubkeyfile,
+                       const std::string privkeyfile,
+                       const std::string pemPassword)
+    : TcpSslConn{
+          ipaddr.substr(0, ipaddr.find(':')),
+          static_cast<uint16_t>(std::stoi(ipaddr.substr(ipaddr.find(':') + 1))),
+          connect_timeout,
+          maxBuffSizePool,
+          pubkeyfile,
+          privkeyfile,
+          pemPassword} {}
 
-Ssl* TcpSslConn::getSSLImpl(ACE_HANDLE sock, const char* pubkeyfile,
-                            const char* privkeyfile) {
-  const char* libName = "cryptoImpl";
-  if (m_dll.open(libName, RTLD_NOW | RTLD_GLOBAL, 0) == -1) {
-    char msg[1000] = {0};
-    std::snprintf(msg, 1000, "cannot open library: %s", libName);
-    LOGERROR(msg);
-    throw FileNotFoundException(msg);
+TcpSslConn::TcpSslConn(const std::string hostname, uint16_t port,
+                       std::chrono::microseconds connect_timeout,
+                       int32_t maxBuffSizePool, const std::string pubkeyfile,
+                       const std::string privkeyfile,
+                       const std::string pemPassword)
+    : TcpConn{hostname, port, connect_timeout, maxBuffSizePool},
+      ssl_context_{boost::asio::ssl::context::sslv23_client} {
+  // Most of the SSL configuration provided *through* Asio is on the context.
+  // This configuration is copied into each SSL instance upon construction.
+  // That means you need to get your configuration in order before you
+  // construct the stream and connect the socket.
+  ssl_context_.set_verify_mode(boost::asio::ssl::verify_peer);
+  ssl_context_.load_verify_file(pubkeyfile);
+
+  ssl_context_.set_password_callback(
+      [pemPassword](std::size_t /*max_length*/,
+                    boost::asio::ssl::context::password_purpose /*purpose*/) {
+        return pemPassword;
+      });
+
+  if (!privkeyfile.empty()) {
+    ssl_context_.use_certificate_chain_file(privkeyfile);
+    ssl_context_.use_private_key_file(
+        privkeyfile, boost::asio::ssl::context::file_format::pem);
   }
 
-  gf_create_SslImpl func =
-      reinterpret_cast<gf_create_SslImpl>(m_dll.symbol("gf_create_SslImpl"));
-  if (func == nullptr) {
-    char msg[1000];
-    std::snprintf(msg, 1000,
-                  "cannot find function %s in library gf_create_SslImpl",
-                  "cryptoImpl");
-    LOGERROR(msg);
-    throw IllegalStateException(msg);
-  }
-  return reinterpret_cast<Ssl*>(
-      func(sock, pubkeyfile, privkeyfile, m_pemPassword));
+  auto stream = std::unique_ptr<ssl_stream_type>(
+      new ssl_stream_type{socket_, ssl_context_});
+
+  stream->handshake(ssl_stream_type::client);
+
+  std::stringstream ss;
+  ss << "Setup SSL " << socket_.local_endpoint() << " -> "
+     << socket_.remote_endpoint();
+  LOGINFO(ss.str());
+
+  socket_stream_ = std::move(stream);
 }
 
-void TcpSslConn::createSocket(ACE_HANDLE sock) {
-  LOGDEBUG("Creating SSL socket stream");
-  try {
-    m_ssl = getSSLImpl(sock, m_pubkeyfile, m_privkeyfile);
-  } catch (std::exception& e) {
-    throw SslException(e.what());
-  }
+TcpSslConn::~TcpSslConn() {
+  std::stringstream ss;
+  ss << "Teardown SSL " << socket_.local_endpoint() << " -> "
+     << socket_.remote_endpoint();
+  LOGFINE(ss.str());
 }
 
-void TcpSslConn::listen(ACE_INET_Addr addr,
-                        std::chrono::microseconds waitSeconds) {
-  using apache::geode::internal::chrono::duration::to_string;
+size_t TcpSslConn::receive(char *buff, size_t len) {
+  auto start = std::chrono::system_clock::now();
 
-  int32_t retVal = m_ssl->listen(addr, waitSeconds);
+  return boost::asio::read(*socket_stream_, boost::asio::buffer(buff, len),
+                           [len, start](boost::system::error_code &ec,
+                                        const std::size_t n) -> std::size_t {
+                             if (ec && ec != boost::asio::error::eof) {
+                               // Quit if we encounter an error.
+                               // Defer EOF to timeout.
+                               return 0;
+                             } else if (start + std::chrono::milliseconds(25) <=
+                                        std::chrono::system_clock::now()) {
+                               // Sometimes we don't know how much data to
+                               // expect, so we're reading into an oversized
+                               // buffer without knowing when to quit other than
+                               // by timeout. Typically, if we timeout, we also
+                               // have an EOF, meaning the connection is likely
+                               // broken and will have to be closed. But if we
+                               // have bytes, we may have just done a
+                               // dumb/blind/hail mary receive, so defer broken
+                               // connection handling until the next IO
+                               // operation.
+                               if (n) {
+                                 // This prevents the timeout from being an
+                                 // error condition.
+                                 ec = boost::system::error_code{};
+                               }
+                               // But if n == 0 when we timeout, it's just a
+                               // broken connection.
 
-  if (retVal == -1) {
-    char msg[256];
-    int32_t lastError = ACE_OS::last_error();
-    if (lastError == ETIME || lastError == ETIMEDOUT) {
-      throw TimeoutException(
-          "TcpSslConn::listen Attempt to listen timed out after" +
-          to_string(waitSeconds) + ".");
-    }
-    std::snprintf(msg, 255, "TcpSslConn::listen failed with errno: %d: %s",
-                  lastError, ACE_OS::strerror(lastError));
-    throw GeodeIOException(msg);
-  }
+                               return 0;
+                             }
+
+                             return len - n;
+                           });
 }
 
-void TcpSslConn::connect() {
-  using apache::geode::internal::chrono::duration::to_string;
-
-  ACE_OS::signal(SIGPIPE, SIG_IGN);  // Ignore broken pipe
-
-  // m_ssl->init();
-
-  std::chrono::microseconds waitMicroSeconds = m_waitMilliSeconds;
-
-  LOGDEBUG("Connecting SSL socket stream to %s:%d waiting %s micro sec",
-           m_addr.get_host_name(), m_addr.get_port_number(),
-           to_string(waitMicroSeconds).c_str());
-
-  int32_t retVal = m_ssl->connect(m_addr, waitMicroSeconds);
-
-  if (retVal == -1) {
-    char msg[256];
-    int32_t lastError = ACE_OS::last_error();
-    if (lastError == ETIME || lastError == ETIMEDOUT) {
-      // this is only called by constructor, so we must delete m_ssl
-      _GEODE_SAFE_DELETE(m_ssl);
-      throw TimeoutException(
-          "TcpSslConn::connect Attempt to connect timed out after " +
-          to_string(waitMicroSeconds) + ".");
-    }
-    std::snprintf(msg, 256, "TcpSslConn::connect failed with errno: %d: %s",
-                  lastError, ACE_OS::strerror(lastError));
-    // this is only called by constructor, so we must delete m_ssl
-    _GEODE_SAFE_DELETE(m_ssl);
-    throw GeodeIOException(msg);
-  }
-}
-
-void TcpSslConn::close() {
-  if (m_ssl != nullptr) {
-    m_ssl->close();
-    gf_destroy_SslImpl func = reinterpret_cast<gf_destroy_SslImpl>(
-        m_dll.symbol("gf_destroy_SslImpl"));
-    func(m_ssl);
-    m_ssl = nullptr;
-  }
-}
-
-size_t TcpSslConn::socketOp(TcpConn::SockOp op, char* buff, size_t len,
-                            std::chrono::microseconds waitDuration) {
-  {
-    // passing wait time as micro seconds
-    ACE_Time_Value waitTime(waitDuration);
-    auto endTime = std::chrono::steady_clock::now() + waitDuration;
-    size_t readLen = 0;
-    bool errnoSet = false;
-
-    auto sendlen = len;
-    size_t totalsend = 0;
-
-    while (len > 0 && waitTime > ACE_Time_Value::zero) {
-      if (len > m_chunkSize) {
-        sendlen = m_chunkSize;
-        len -= m_chunkSize;
-      } else {
-        sendlen = len;
-        len = 0;
-      }
-      do {
-        ssize_t retVal;
-        if (op == SOCK_READ) {
-          retVal = m_ssl->recv(buff, sendlen, &waitTime, &readLen);
-        } else {
-          retVal = m_ssl->send(buff, sendlen, &waitTime, &readLen);
-        }
-        sendlen -= readLen;
-        totalsend += readLen;
-        if (retVal < 0) {
-          int32_t lastError = ACE_OS::last_error();
-          if (lastError == EAGAIN) {
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
-          } else {
-            errnoSet = true;
-            break;
-          }
-        } else if (retVal == 0 && readLen == 0) {
-          ACE_OS::last_error(EPIPE);
-          errnoSet = true;
-          break;
-        }
-
-        buff += readLen;
-
-        waitTime = endTime - std::chrono::steady_clock::now();
-        if (waitTime <= ACE_Time_Value::zero) break;
-      } while (sendlen > 0);
-      if (errnoSet) break;
-    }
-
-    if (len > 0 && !errnoSet) {
-      ACE_OS::last_error(ETIME);
-    }
-
-    return totalsend;
-  }
-}
-
-uint16_t TcpSslConn::getPort() {
-  ACE_INET_Addr localAddr;
-  m_ssl->getLocalAddr(localAddr);
-  return localAddr.get_port_number();
+size_t TcpSslConn::send(const char *buff, size_t len) {
+  return boost::asio::write(*socket_stream_, boost::asio::buffer(buff, len));
 }
 
 }  // namespace client

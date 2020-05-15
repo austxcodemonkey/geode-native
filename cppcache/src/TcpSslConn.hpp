@@ -20,9 +20,8 @@
 #ifndef GEODE_TCPSSLCONN_H_
 #define GEODE_TCPSSLCONN_H_
 
-#include <ace/DLL.h>
+#include <boost/asio/ssl.hpp>
 
-#include "../../cryptoimpl/Ssl.hpp"
 #include "TcpConn.hpp"
 
 namespace apache {
@@ -30,71 +29,26 @@ namespace geode {
 namespace client {
 
 class TcpSslConn : public TcpConn {
- private:
-  Ssl* m_ssl;
-  ACE_DLL m_dll;
-  const char* m_pubkeyfile;
-  const char* m_privkeyfile;
-  const char* m_pemPassword;
-  // adongre: Added for Ticket #758
-  // Pass extra parameter for the password
-  typedef void* (*gf_create_SslImpl)(ACE_HANDLE, const char*, const char*,
-                                     const char*);
-  typedef void (*gf_destroy_SslImpl)(void*);
+  size_t receive(char* buff, size_t len) override final;
+  size_t send(const char* buff, size_t len) override final;
 
-  Ssl* getSSLImpl(ACE_HANDLE sock, const char* pubkeyfile,
-                  const char* privkeyfile);
+  using ssl_stream_type =
+      boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>;
 
- protected:
-  size_t socketOp(SockOp op, char* buff, size_t len,
-                  std::chrono::microseconds waitDuration) override;
-
-  void createSocket(ACE_HANDLE sock) override;
+  boost::asio::ssl::context ssl_context_;
+  std::unique_ptr<ssl_stream_type> socket_stream_;
 
  public:
-  TcpSslConn(const char* hostname, int32_t port,
-             std::chrono::microseconds waitSeconds, int32_t maxBuffSizePool,
-             const char* pubkeyfile, const char* privkeyfile,
-             const char* pemPassword)
-      : TcpConn(hostname, port, waitSeconds, maxBuffSizePool),
-        m_ssl(nullptr),
-        m_pubkeyfile(pubkeyfile),
-        m_privkeyfile(privkeyfile),
-        m_pemPassword(pemPassword) {}
+  TcpSslConn(const std::string hostname, uint16_t port,
+             std::chrono::microseconds connect_timeout, int32_t maxBuffSizePool,
+             const std::string pubkeyfile, const std::string privkeyfile,
+             const std::string pemPassword);
 
-  TcpSslConn(const char* ipaddr, std::chrono::microseconds waitSeconds,
-             int32_t maxBuffSizePool, const char* pubkeyfile,
-             const char* privkeyfile, const char* pemPassword)
-      : TcpConn(ipaddr, waitSeconds, maxBuffSizePool),
-        m_ssl(nullptr),
-        m_pubkeyfile(pubkeyfile),
-        m_privkeyfile(privkeyfile),
-        m_pemPassword(pemPassword) {}
+  TcpSslConn(const std::string ipaddr, std::chrono::microseconds wait,
+             int32_t maxBuffSizePool, const std::string pubkeyfile,
+             const std::string privkeyfile, const std::string pemPassword);
 
-  // TODO:  Watch out for virt dtor calling virt methods!
-
-  virtual ~TcpSslConn() override {}
-
-  // Close this tcp connection
-  void close() override;
-
-  // Listen
-  void listen(ACE_INET_Addr addr, std::chrono::microseconds waitSeconds =
-                                      DEFAULT_READ_TIMEOUT) override;
-
-  // connect
-  void connect() override;
-
-  void setOption(int32_t level, int32_t option, void* val,
-                 size_t len) override {
-    if (m_ssl->setOption(level, option, val, static_cast<int32_t>(len)) == -1) {
-      int32_t lastError = ACE_OS::last_error();
-      LOGERROR("Failed to set option, errno: %d: %s", lastError,
-               ACE_OS::strerror(lastError));
-    }
-  }
-
-  uint16_t getPort() override;
+  ~TcpSslConn() override;
 };
 }  // namespace client
 }  // namespace geode

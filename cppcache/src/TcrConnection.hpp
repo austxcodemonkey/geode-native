@@ -49,14 +49,6 @@
 #define SECURITY_CREDENTIALS_NORMAL 1
 #define SECURITY_MULTIUSER_NOTIFICATIONCHANNEL 3
 
-/** Closes and Deletes connection only if it exists */
-#define GF_SAFE_DELETE_CON(x) \
-  do {                        \
-    x->close();               \
-    delete x;                 \
-    x = nullptr;              \
-  } while (0)
-
 namespace apache {
 namespace geode {
 namespace client {
@@ -121,7 +113,7 @@ class TcrConnection {
    * @param     numPorts  Size of ports list
    */
   bool initTcrConnection(
-      TcrEndpoint* endpointObj, const char* endpoint,
+      std::shared_ptr<TcrEndpoint> endpointObj,
       synchronized_set<std::unordered_set<uint16_t>>& ports,
       bool isClientNotification = false, bool isSecondary = false,
       std::chrono::microseconds connectTimeout = DEFAULT_CONNECT_TIMEOUT);
@@ -130,8 +122,6 @@ class TcrConnection {
                 volatile const bool& isConnected)
       : connectionId(0),
         m_connectionManager(&connectionManager),
-        m_endpoint(nullptr),
-        m_endpointObj(nullptr),
         m_connected(isConnected),
         m_conn(nullptr),
         m_hasServerQueue(NON_REDUNDANT_SERVER),
@@ -229,11 +219,6 @@ class TcrConnection {
             std::chrono::microseconds sendTimeoutSec = DEFAULT_WRITE_TIMEOUT,
             bool checkConnected = true);
 
-  void send(std::chrono::microseconds& timeSpent, const char* buffer,
-            size_t len,
-            std::chrono::microseconds sendTimeoutSec = DEFAULT_WRITE_TIMEOUT,
-            bool checkConnected = true);
-
   /**
    * This method is for receiving client notification. It will read 2 times as
    * reading reply in sendRequest()
@@ -292,7 +277,7 @@ class TcrConnection {
 
   uint16_t inline getPort() { return m_port; }
 
-  TcrEndpoint* getEndpointObject() const { return m_endpointObj; }
+  TcrEndpoint* getEndpointObject() const { return m_endpointObj.get(); }
   bool isBeingUsed() { return m_isBeingUsed; }
   bool setAndGetBeingUsed(
       volatile bool isBeingUsed,
@@ -366,9 +351,9 @@ class TcrConnection {
                           std::chrono::microseconds connectTimeout);
 
   /** Create a normal or SSL connection */
-  Connector* createConnection(
+  void createConnection(
       const char* ipaddr,
-      std::chrono::microseconds waitSeconds = DEFAULT_CONNECT_TIMEOUT,
+      std::chrono::microseconds wait = DEFAULT_CONNECT_TIMEOUT,
       int32_t maxBuffSizePool = 0);
 
   /**
@@ -404,10 +389,6 @@ class TcrConnection {
                        std::chrono::microseconds sendTimeout,
                        bool checkConnected = true);
 
-  ConnErrType sendData(std::chrono::microseconds& timeSpent, const char* buffer,
-                       size_t length, std::chrono::microseconds sendTimeout,
-                       bool checkConnected = true);
-
   /**
    * Read data from the connection till receiveTimeoutSec
    */
@@ -416,10 +397,9 @@ class TcrConnection {
                           bool checkConnected = true,
                           bool isNotificationMessage = false);
 
-  const char* m_endpoint;
-  TcrEndpoint* m_endpointObj;
+  std::shared_ptr<TcrEndpoint> m_endpointObj;
   volatile const bool& m_connected;
-  Connector* m_conn;
+  std::unique_ptr<Connector> m_conn;
   ServerQueueStatus m_hasServerQueue;
   int32_t m_queueSize;
   uint16_t m_port;

@@ -19,7 +19,7 @@ project(dotnet-sslputget LANGUAGES CSharp)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 
-find_package(@PRODUCT_NAME_NOSPACE@ REQUIRED COMPONENTS dotnet crypto)
+find_package(@PRODUCT_NAME_NOSPACE@ REQUIRED COMPONENTS dotnet)
 
 add_executable(${PROJECT_NAME} Program.cs)
 
@@ -39,10 +39,4 @@ target_link_libraries(${PROJECT_NAME}
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VS_DOTNET_TARGET_FRAMEWORK_VERSION "v4.5.2"
     VS_DOTNET_REFERENCES "System"
-)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy
-    $<SHELL_PATH:$<TARGET_FILE:@PRODUCT_NAME_NOSPACE@::crypto>>
-    $<SHELL_PATH:$<TARGET_FILE_DIR:${PROJECT_NAME}>>
 )
