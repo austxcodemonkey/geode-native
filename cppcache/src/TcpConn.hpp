@@ -20,7 +20,7 @@
 #ifndef GEODE_TCPCONN_H_
 #define GEODE_TCPCONN_H_
 
-#include <ace/SOCK_Stream.h>
+#include <boost/asio.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 
 #include <geode/internal/geode_globals.hpp>
@@ -31,109 +31,39 @@
 namespace apache {
 namespace geode {
 namespace client {
-
-#ifdef WIN32
-
-#define TCPLEVEL IPPROTO_TCP
-
-#else
-
-#include <sys/socket.h>
-#include <sys/types.h>
-
-#define TCPLEVEL SOL_TCP
-
-#endif
-
 class APACHE_GEODE_EXPORT TcpConn : public Connector {
- private:
-  ACE_SOCK_Stream* m_io;
+  boost::asio::io_context io_context_;
+  boost::asio::ip::tcp::socket socket_{io_context_};
 
- protected:
-  ACE_INET_Addr m_addr;
-  std::chrono::microseconds m_waitMilliSeconds;
+  void run(std::chrono::steady_clock::duration timeout);
 
-  int32_t m_maxBuffSizePool;
+  const int32_t socket_rw_buffer_size_;
 
-  enum SockOp { SOCK_READ, SOCK_WRITE };
-
-  void clearNagle(ACE_HANDLE sock);
-  int32_t maxSize(ACE_HANDLE sock, int32_t flag, int32_t size);
-
-  virtual size_t socketOp(SockOp op, char* buff, size_t len,
-                          std::chrono::microseconds waitDuration);
-
-  virtual void createSocket(ACE_HANDLE sock);
-
- public:
-  size_t m_chunkSize;
-
-  static size_t getDefaultChunkSize() {
-    // Attempt to set chunk size to nearest OS page size
-    // for perf improvement
-    auto pageSize = boost::interprocess::mapped_region::get_page_size();
-    if (pageSize > 16000000) {
-      return 16000000;
-    } else if (pageSize > 0) {
-      return pageSize + (16000000 / pageSize) * pageSize;
-    }
-
-    return 16000000;
-  }
-
-  TcpConn(const char* hostname, int32_t port,
-          std::chrono::microseconds waitSeconds, int32_t maxBuffSizePool);
-  TcpConn(const char* ipaddr, std::chrono::microseconds waitSeconds,
-          int32_t maxBuffSizePool);
-
-  virtual ~TcpConn() override { close(); }
-
-  // Close this tcp connection
-  virtual void close() override;
+  void close() override;
 
   void init() override;
 
-  // Listen
-  void listen(
-      const char* hostname, int32_t port,
-      std::chrono::microseconds waitSeconds = DEFAULT_READ_TIMEOUT_SECS);
-  void listen(const char* ipaddr, std::chrono::microseconds waitSeconds =
-                                      DEFAULT_READ_TIMEOUT_SECS);
-
-  virtual void listen(
-      ACE_INET_Addr addr,
-      std::chrono::microseconds waitSeconds = DEFAULT_READ_TIMEOUT_SECS);
-
-  // connect
-  void connect(const char* hostname, int32_t port,
-               std::chrono::microseconds waitSeconds = DEFAULT_CONNECT_TIMEOUT);
-  void connect(const char* ipaddr,
-               std::chrono::microseconds waitSeconds = DEFAULT_CONNECT_TIMEOUT);
-
-  virtual void connect();
-
   size_t receive(char* buff, size_t len,
-                 std::chrono::microseconds waitSeconds) override;
+                 std::chrono::microseconds wait) override;
   size_t send(const char* buff, size_t len,
-              std::chrono::microseconds waitSeconds) override;
-
-  virtual void setOption(int32_t level, int32_t option, void* val, size_t len) {
-    if (m_io->set_option(level, option, val, static_cast<int32_t>(len)) == -1) {
-      int32_t lastError = ACE_OS::last_error();
-      LOGERROR("Failed to set option, errno: %d: %s", lastError,
-               ACE_OS::strerror(lastError));
-    }
-  }
-
-  void setIntOption(int32_t level, int32_t option, int32_t val) {
-    setOption(level, option, &val, sizeof(int32_t));
-  }
-
-  void setBoolOption(int32_t level, int32_t option, bool val) {
-    setOption(level, option, &val, sizeof(bool));
-  }
+              std::chrono::microseconds wait) override;
 
   virtual uint16_t getPort() override;
+
+ protected:
+  uint16_t port_;
+  std::string host_;
+  std::chrono::microseconds connect_timeout_;
+
+ public:
+  TcpConn(const char* hostname, int32_t port, std::chrono::microseconds wait,
+          int32_t maxBuffSizePool);
+  TcpConn(const char* ipaddr, std::chrono::microseconds wait,
+          int32_t maxBuffSizePool);
+
+  ~TcpConn() override;
+
+  virtual void connect();
 };
 }  // namespace client
 }  // namespace geode

@@ -31,6 +31,7 @@
 #include "LocatorListResponse.hpp"
 #include "QueueConnectionRequest.hpp"
 #include "QueueConnectionResponse.hpp"
+#include "TcpConn.hpp"
 #include "TcpSslConn.hpp"
 #include "TcrConnectionManager.hpp"
 #include "ThinClientPoolDM.hpp"
@@ -68,20 +69,20 @@ ThinClientLocatorHelper::ThinClientLocatorHelper(
 
 Connector* ThinClientLocatorHelper::createConnection(
     Connector*& conn, const char* hostname, int32_t port,
-    std::chrono::microseconds waitSeconds, int32_t maxBuffSizePool) {
+    std::chrono::microseconds wait, int32_t maxBuffSizePool) {
   Connector* socket = nullptr;
   auto& systemProperties = m_poolDM->getConnectionManager()
                                .getCacheImpl()
                                ->getDistributedSystem()
                                .getSystemProperties();
-  if (systemProperties.sslEnabled()) {
-    socket = new TcpSslConn(hostname, port, waitSeconds, maxBuffSizePool,
-                            systemProperties.sslTrustStore().c_str(),
-                            systemProperties.sslKeyStore().c_str(),
-                            systemProperties.sslKeystorePassword().c_str());
-  } else {
-    socket = new TcpConn(hostname, port, waitSeconds, maxBuffSizePool);
-  }
+  // if (systemProperties.sslEnabled()) {
+  //  socket = new TcpSslConn(hostname, port, wait, maxBuffSizePool,
+  //                          systemProperties.sslTrustStore().c_str(),
+  //                          systemProperties.sslKeyStore().c_str(),
+  //                          systemProperties.sslKeystorePassword().c_str());
+  //} else {
+  socket = new TcpConn(hostname, port, wait, maxBuffSizePool);
+  //}
   conn = socket;
   socket->init();
   return socket;

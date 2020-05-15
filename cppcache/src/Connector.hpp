@@ -43,10 +43,11 @@ constexpr std::chrono::milliseconds DEFAULT_WRITE_TIMEOUT =
 
 class Connector {
  public:
-  /* create one socket connection with settings */
-  Connector() {}
-  /* destroy the connection */
-  virtual ~Connector() {}
+  Connector() = default;
+  virtual ~Connector() = default;
+
+  Connector(const Connector &) = delete;
+  Connector &operator=(const Connector &) = delete;
 
   /**
    * Reads <code>len</code> bytes of data and stores them into the buffer
@@ -67,15 +68,14 @@ class Connector {
    *
    * @param      b   the buffer into which the data is read.
    * @param      len   the number of bytes to read.
-   * @param      waitSeconds   the number of seconds to allow the read to
-   * complete.
+   * @param      wait   time to allow the read to complete.
    * @return     the total number of bytes read into the buffer, or
    *             <code>-1</code> if an error was encountered.
    * @exception  GeodeIOException, TimeoutException, IllegalArgumentException,
    * OutOfMemoryException.
    */
   virtual size_t receive(char *b, size_t len,
-                         std::chrono::microseconds waitSeconds) = 0;
+                         std::chrono::microseconds wait) = 0;
 
   /**
    * Writes <code>len</code> bytes from the specified byte array
@@ -83,13 +83,12 @@ class Connector {
    *
    * @param      b     the data.
    * @param      len   the number of bytes to write.
-   * @param      waitSeconds   the number of seconds to allow the write to
-   * complete.
+   * @param      wait   time to allow the write to complete.
    * @return     the actual number of bytes written.
    * @exception  GeodeIOException, TimeoutException, IllegalArgumentException.
    */
   virtual size_t send(const char *b, size_t len,
-                      std::chrono::microseconds waitSeconds) = 0;
+                      std::chrono::microseconds wait) = 0;
 
   /**
    * Initialises the connection.
@@ -105,11 +104,6 @@ class Connector {
    * Returns local port for this TCP connection
    */
   virtual uint16_t getPort() = 0;
-
- private:
-  // Disallow copy constructor and assignment operator.
-  Connector(const Connector &);
-  Connector &operator=(const Connector &);
 };
 }  // namespace client
 }  // namespace geode

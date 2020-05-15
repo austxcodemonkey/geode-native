@@ -57,8 +57,6 @@ class SSLImpl : public apache::geode::client::Ssl {
           const char* password);
   virtual ~SSLImpl() override;
 
-  int setOption(int, int, void*, int) override;
-  int listen(ACE_INET_Addr, std::chrono::microseconds) override;
   int connect(ACE_INET_Addr, std::chrono::microseconds) override;
   ssize_t recv(void*, size_t, const ACE_Time_Value*, size_t*) override;
   ssize_t send(const void*, size_t, const ACE_Time_Value*, size_t*) override;

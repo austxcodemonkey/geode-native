@@ -368,7 +368,7 @@ class APACHE_GEODE_EXPORT TcrConnection {
   /** Create a normal or SSL connection */
   Connector* createConnection(
       const char* ipaddr,
-      std::chrono::microseconds waitSeconds = DEFAULT_CONNECT_TIMEOUT,
+      std::chrono::microseconds wait = DEFAULT_CONNECT_TIMEOUT,
       int32_t maxBuffSizePool = 0);
 
   /**

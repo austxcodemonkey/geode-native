@@ -73,9 +73,7 @@ class SslSockStream {
 
   int set_option(int level, int option, void *optval, int optlen) const;
 
-  int listen(ACE_INET_Addr addr, unsigned waitSeconds);
-
-  int connect(ACE_INET_Addr ipaddr, unsigned waitSeconds);
+  int connect(ACE_INET_Addr ipaddr, unsigned wait);
 
   ssize_t recv_n(void *buf, size_t len, const ACE_Time_Value *timeout = nullptr,
                  size_t *bytes_transferred = nullptr) const;

@@ -102,25 +102,10 @@ void SSLImpl::close() {
   }
 }
 
-int SSLImpl::setOption(int level, int option, void *optval, int optlen) {
-  return m_io->set_option(level, option, optval, optlen);
-}
-
-int SSLImpl::listen(ACE_INET_Addr addr, std::chrono::microseconds waitSeconds) {
-  ACE_SSL_SOCK_Acceptor listener(addr, 1);
-  if (waitSeconds > std::chrono::microseconds::zero()) {
-    ACE_Time_Value wtime(waitSeconds);
-    return listener.accept(*m_io, nullptr, &wtime);
-  } else {
-    return listener.accept(*m_io, nullptr);
-  }
-}
-
-int SSLImpl::connect(ACE_INET_Addr ipaddr,
-                     std::chrono::microseconds waitSeconds) {
+int SSLImpl::connect(ACE_INET_Addr ipaddr, std::chrono::microseconds wait) {
   ACE_SSL_SOCK_Connector conn;
-  if (waitSeconds > std::chrono::microseconds::zero()) {
-    ACE_Time_Value wtime(waitSeconds);
+  if (wait > std::chrono::microseconds::zero()) {
+    ACE_Time_Value wtime(wait);
     return conn.connect(*m_io, ipaddr, &wtime);
   } else {
     return conn.connect(*m_io, ipaddr);

@@ -88,12 +88,8 @@ int SslSockStream::set_option(int level, int option, void *optval,
   return gf_set_option_Ptr(m_ctx, level, option, optval, optlen);
 }
 
-int SslSockStream::listen(ACE_INET_Addr addr, unsigned waitSeconds) {
-  return gf_listen_Ptr(m_ctx, addr, waitSeconds);
-}
-
-int SslSockStream::connect(ACE_INET_Addr ipaddr, unsigned waitSeconds) {
-  return gf_connect_Ptr(m_ctx, ipaddr, waitSeconds);
+int SslSockStream::connect(ACE_INET_Addr ipaddr, unsigned wait) {
+  return gf_connect_Ptr(m_ctx, ipaddr, wait);
 }
 
 ssize_t SslSockStream::recv_n(void *buf, size_t len,

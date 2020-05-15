@@ -25,6 +25,7 @@
 #include "ClientProxyMembershipID.hpp"
 #include "Connector.hpp"
 #include "DistributedSystemImpl.hpp"
+#include "TcpConn.hpp"
 #include "TcpSslConn.hpp"
 #include "TcrConnectionManager.hpp"
 #include "TcrEndpoint.hpp"
@@ -439,14 +440,14 @@ Connector* TcrConnection::createConnection(
   auto& systemProperties = m_connectionManager->getCacheImpl()
                                ->getDistributedSystem()
                                .getSystemProperties();
-  if (systemProperties.sslEnabled()) {
-    socket = new TcpSslConn(endpoint, connectTimeout, maxBuffSizePool,
-                            systemProperties.sslTrustStore().c_str(),
-                            systemProperties.sslKeyStore().c_str(),
-                            systemProperties.sslKeystorePassword().c_str());
-  } else {
-    socket = new TcpConn(endpoint, connectTimeout, maxBuffSizePool);
-  }
+  // if (systemProperties.sslEnabled()) {
+  // socket = new TcpSslConn(endpoint, connectTimeout, maxBuffSizePool,
+  //                        systemProperties.sslTrustStore().c_str(),
+  //                        systemProperties.sslKeyStore().c_str(),
+  //                        systemProperties.sslKeystorePassword().c_str());
+  //} else {
+  socket = new TcpConn(endpoint, connectTimeout, maxBuffSizePool);
+  //}
   // as socket.init() calls throws exception...
   m_conn = socket;
   socket->init();
