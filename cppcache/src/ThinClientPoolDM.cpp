@@ -37,6 +37,14 @@
 #include "statistics/PoolStatsSampler.hpp"
 #include "util/exception.hpp"
 
+/** Closes and Deletes connection only if it exists */
+#define GF_SAFE_DELETE_CON(x) \
+  do {                        \
+    x->close();               \
+    delete x;                 \
+    x = nullptr;              \
+  } while (0)
+
 namespace apache {
 namespace geode {
 namespace client {

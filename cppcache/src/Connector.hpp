@@ -91,16 +91,6 @@ class Connector {
                       std::chrono::microseconds wait) = 0;
 
   /**
-   * Initialises the connection.
-   */
-  virtual void init() = 0;
-
-  /**
-   * Closes the connection.
-   */
-  virtual void close() = 0;
-
-  /**
    * Returns local port for this TCP connection
    */
   virtual uint16_t getPort() = 0;

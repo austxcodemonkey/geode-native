@@ -37,33 +37,21 @@ class APACHE_GEODE_EXPORT TcpConn : public Connector {
 
   void run(std::chrono::steady_clock::duration timeout);
 
-  const int32_t socket_rw_buffer_size_;
-
-  void close() override;
-
-  void init() override;
-
   size_t receive(char* buff, size_t len,
-                 std::chrono::microseconds wait) override;
+                 std::chrono::microseconds wait) override final;
   size_t send(const char* buff, size_t len,
-              std::chrono::microseconds wait) override;
+              std::chrono::microseconds wait) override final;
 
-  virtual uint16_t getPort() override;
-
- protected:
-  uint16_t port_;
-  std::string host_;
-  std::chrono::microseconds connect_timeout_;
+  uint16_t getPort() override final;
 
  public:
-  TcpConn(const char* hostname, int32_t port, std::chrono::microseconds wait,
+  TcpConn(const std::string ipaddr, std::chrono::microseconds wait,
           int32_t maxBuffSizePool);
-  TcpConn(const char* ipaddr, std::chrono::microseconds wait,
-          int32_t maxBuffSizePool);
+
+  TcpConn(const std::string hostname, uint16_t port,
+          std::chrono::microseconds wait, int32_t maxBuffSizePool);
 
   ~TcpConn() override;
-
-  virtual void connect();
 };
 }  // namespace client
 }  // namespace geode

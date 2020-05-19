@@ -22,91 +22,54 @@
 namespace apache {
 namespace geode {
 namespace client {
-TcpConn::TcpConn(const char *ipaddr, std::chrono::microseconds wait,
+TcpConn::TcpConn(const std::string ipaddr,
+                 std::chrono::microseconds connect_timeout,
                  int32_t maxBuffSizePool)
-    : socket_rw_buffer_size_{maxBuffSizePool},
-      port_{static_cast<uint16_t>(atoi(strchr(ipaddr, ':') + 1))},
-      host_{ipaddr, static_cast<size_t>(strchr(ipaddr, ':') - ipaddr)},
-      connect_timeout_{wait} {
-  std::clog << "TcpConn(" << ipaddr << ", " << wait.count() << ", "
-            << maxBuffSizePool << ")\n";
-  std::clog << "host_ = \"" << host_ << "\", port_ = " << port_ << '\n';
-}
+    : TcpConn{
+          ipaddr.substr(0, ipaddr.find(':')),
+          static_cast<uint16_t>(std::stoi(ipaddr.substr(ipaddr.find(':') + 1))),
+          connect_timeout, maxBuffSizePool} {}
 
-TcpConn::TcpConn(const char *hostname, int32_t port,
-                 std::chrono::microseconds wait, int32_t maxBuffSizePool)
-    : socket_rw_buffer_size_{maxBuffSizePool},
-      port_{static_cast<uint16_t>(port)},
-      host_{hostname},
-      connect_timeout_{wait} {
-  std::clog << "TcpConn(" << hostname << ", " << port << ", " << wait.count()
-            << ", " << maxBuffSizePool << ")\n";
-}
-
-TcpConn::~TcpConn() {
-  std::clog << "~TcpConn()\n";
-  close();
-}
-
-void TcpConn::connect() {
-  std::clog << "TcpConn::connect()\n";
-
-  auto endpoints = boost::asio::ip::tcp::resolver(io_context_)
-                       .resolve(host_, std::to_string(port_));
+TcpConn::TcpConn(const std::string host, uint16_t port,
+                 std::chrono::microseconds connect_timeout,
+                 int32_t maxBuffSizePool) {
   boost::system::error_code error;
 
+  // Connect first so we have a valid file descriptor to set options.
   boost::asio::async_connect(
-      socket_, endpoints,
+      socket_,
+      boost::asio::ip::tcp::resolver(io_context_)
+          .resolve(host, std::to_string(port)),
       [&](const boost::system::error_code &result_error,
           const boost::asio::ip::tcp::endpoint &) { error = result_error; });
 
-  run(connect_timeout_);
+  run(connect_timeout);
 
   if (error) {
-    std::cerr << "TcpConn::connect: Error " << error << '\n';
-
-    throw std::system_error(error);
+    throw GeodeIOException(error.message());
   }
+
+  socket_.set_option(::boost::asio::ip::tcp::no_delay{true});
+  socket_.set_option(
+      ::boost::asio::socket_base::send_buffer_size{maxBuffSizePool});
+  socket_.set_option(
+      ::boost::asio::socket_base::receive_buffer_size{maxBuffSizePool});
 }
 
-void TcpConn::close() {
-  std::clog << "TcpConn::close()\n";
-
+TcpConn::~TcpConn() {
+  io_context_.restart();
+  socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
   socket_.close();
   io_context_.run();
 }
 
 void TcpConn::run(std::chrono::steady_clock::duration timeout) {
-  std::clog << "TcpConn::run(" << timeout.count() << ")\n";
   io_context_.restart();
   io_context_.run_for(timeout);
-
-  if (!io_context_.stopped()) {
-    std::clog << "TcpConn::run: context stopped\n";
-    close();
-  }
-}
-
-void TcpConn::init() {
-  std::clog << "TcpConn::init()\n";
-  connect();
-
-  std::clog << "socket_.set_option(::boost::asio::ip::tcp::no_delay{true});\n";
-  socket_.set_option(::boost::asio::ip::tcp::no_delay{true});
-  std::clog << "socket_.set_option(::boost::asio::socket_base::send_buffer_"
-               "size{socket_rw_buffer_size_});\n";
-  socket_.set_option(
-      ::boost::asio::socket_base::send_buffer_size{socket_rw_buffer_size_});
-  std::clog << "socket_.set_option(::boost::asio::socket_base::receive_buffer_"
-               "size{socket_rw_buffer_size_});\n";
-  socket_.set_option(
-      ::boost::asio::socket_base::receive_buffer_size{socket_rw_buffer_size_});
 }
 
 size_t TcpConn::receive(char *buff, size_t len,
-                        std::chrono::microseconds wait) {
-  std::clog << "TcpConn::receive(" << static_cast<void *>(buff) << ", " << len
-            << ", " << wait.count() << ")\n";
+                        std::chrono::microseconds timeout) {
   boost::system::error_code error;
   std::size_t n = 0;
 
@@ -117,22 +80,21 @@ size_t TcpConn::receive(char *buff, size_t len,
         n = result_n;
       });
 
-  run(wait);
+  run(timeout);
 
-  if (error && boost::asio::error::eof != error) {
-    std::clog << "TcpConn::receive: " << n << " bytes\n";
-    std::cerr << "TcpConn::receive: Error " << error << '\n';
-    throw std::system_error(error);
+  if (error == boost::asio::error::eof) {
+  }  // Do nothing, this is normal.
+  else if (error == boost::asio::error::try_again) {
+    throw TimeoutException(error.message());
+  } else if (error) {
+    throw GeodeIOException(error.message());
   }
 
-  std::clog << "TcpConn::receive: " << n << " bytes\n";
   return n;
 }
 
 size_t TcpConn::send(const char *buff, size_t len,
-                     std::chrono::microseconds wait) {
-  std::clog << "TcpConn::send(" << static_cast<const void *>(buff) << ", "
-            << len << ", " << wait.count() << ")\n";
+                     std::chrono::microseconds timeout) {
   boost::system::error_code error;
   std::size_t n = 0;
 
@@ -143,24 +105,19 @@ size_t TcpConn::send(const char *buff, size_t len,
         n = result_n;
       });
 
-  run(wait);
+  run(timeout);
 
-  if (error && boost::asio::error::eof != error) {
-    std::clog << "TcpConn::send: " << n << " bytes\n";
-    std::cerr << "TcpConn::send: Error " << error << '\n';
-    throw std::system_error(error);
+  if (error == boost::asio::error::try_again) {
+    throw TimeoutException(error.message());
+  } else if (error) {
+    throw GeodeIOException(error.message());
   }
 
-  std::clog << "TcpConn::send: " << n << " bytes\n";
   return n;
 }
 
 //  Return the local port for this TCP connection.
-uint16_t TcpConn::getPort() {
-  std::clog << "TcpConn::getPort() -> " << socket_.local_endpoint().port()
-            << '\n';
-  return socket_.local_endpoint().port();
-}
+uint16_t TcpConn::getPort() { return socket_.local_endpoint().port(); }
 
 }  // namespace client
 }  // namespace geode
