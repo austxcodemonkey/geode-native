@@ -47,7 +47,7 @@ size_t getNumOfEntries(std::shared_ptr<Region> &R1) {
 void startDSandCreateCache(std::shared_ptr<Cache> &cache) {
   auto pp = Properties::create();
   auto cacheFactory = CacheFactory(pp);
-  cacheFactory.set("statistic-sampling-enabled", "false");
+  cacheFactory.set("statistic-sampling-enabled", "true");
   cache = std::make_shared<Cache>(cacheFactory.create());
   ASSERT(cache != nullptr, "cache not equal to null expected");
 }
