@@ -62,7 +62,7 @@ namespace Apache.Geode.Client.FwkLib
     private const string JavaServerMapKey = "ServerMap";
     private const string JavaServerName = "cacheserver.bat";
     private const string JavaServerOtherArgs =
-      " statistic-sampling-enabled=true" +
+      " statistic-sampling-enabled=false" +
       " statistic-archive-file=statArchive.gfs mcast-port=0";
     private const string JavaServerJavaArgs =
       " -J-Xmx1280m -J-Xms512m -J-DCacheClientProxy.MESSAGE_QUEUE_SIZE=100000";
