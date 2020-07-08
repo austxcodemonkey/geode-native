@@ -51,7 +51,7 @@ namespace Apache.Geode.Client.UnitTests
     {
       base.InitTests();
       Properties<string, string> config = new Properties<string, string>();
-      config.Insert("statistic-sampling-enabled", "false");
+      config.Insert("statistic-sampling-enabled", "true");
       CacheHelper.InitConfig(config);
     }
 
