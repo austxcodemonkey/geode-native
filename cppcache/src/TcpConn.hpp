@@ -20,6 +20,8 @@
 #ifndef GEODE_TCPCONN_H_
 #define GEODE_TCPCONN_H_
 
+#include <memory>
+
 #include <ace/SOCK_Stream.h>
 #include <boost/interprocess/mapped_region.hpp>
 
