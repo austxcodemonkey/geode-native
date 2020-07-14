@@ -24,8 +24,10 @@
 using ::testing::_;
 using ::testing::StrictMock;
 
+#if __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+#endif // __clang__
 
 class MockStream : public ACE_SOCK_Stream {
  public:
@@ -40,7 +42,9 @@ class MockSocket : public PlainSocket<StrictMock<MockStream>> {
   using PlainSocket::getStream;
 };
 
+#if __clang__
 #pragma clang diagnostic pop
+#endif // __clang__
 
 TEST(PlainSocketTest, connect) {
   StrictMock<MockSocket> socket;

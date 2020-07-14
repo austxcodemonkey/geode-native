@@ -24,8 +24,10 @@
 using ::testing::_;
 using ::testing::StrictMock;
 
+#if __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+#endif // __clang__
 
 class MockACE_SOCK_Stream : public ACE_SOCK_Stream {
  public:
@@ -60,7 +62,9 @@ class MockSimpleProxySocket : public _Base {
   using base_type::getStream;
 };
 
+#if __clang__
 #pragma clang diagnostic pop
+#endif // __clang__
 
 TEST(SimpleProxySocketTest, connect) {
   StrictMock<MockSimpleProxySocket<>> socket("proxy.invalid", 456);
