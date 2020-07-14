@@ -21,6 +21,7 @@
 #define GEODE_CRYPTOIMPL_SSLIMPL_H_
 
 #include <atomic>
+#include <memory>
 
 #ifdef _WIN32
 #pragma warning(push)
