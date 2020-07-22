@@ -112,6 +112,9 @@ DataOutput::DataOutput(const CacheImpl* cache, Pool* pool)
     : m_size(0), m_haveBigBuffer(false), m_cache(cache), m_pool(pool) {
   m_bytes.reset(DataOutput::checkoutBuffer(&m_size));
   m_buf = m_bytes.get();
+  std::stringstream ss;
+  ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this);
+  LOGDEBUG(ss.str());
 }
 
 uint8_t* DataOutput::checkoutBuffer(size_t* size) {
@@ -124,6 +127,12 @@ void DataOutput::checkinBuffer(uint8_t* buffer, size_t size) {
 
 void DataOutput::writeObjectInternal(const std::shared_ptr<Serializable>& ptr,
                                      bool isDelta) {
+  std::stringstream ss;
+  ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): serializing via registry";
+  Exception ex("unused");
+  LOGDEBUG(ss.str() + ex.getStackTrace());
+
   getSerializationRegistry().serialize(ptr, *this, isDelta);
 }
 
@@ -166,6 +175,7 @@ void DataOutput::writeJavaModifiedUtf8(
     writeJavaModifiedUtf8(to_utf16(value));
   }
 }
+
 template APACHE_GEODE_EXPLICIT_TEMPLATE_EXPORT void
 DataOutput::writeJavaModifiedUtf8(const std::u32string&);
 

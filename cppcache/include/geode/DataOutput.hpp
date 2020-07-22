@@ -23,8 +23,10 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <sstream>
 #include <string>
 
+#include "../../src/util/Log.hpp"
 #include "CacheableString.hpp"
 #include "ExceptionTypes.hpp"
 #include "Serializable.hpp"
@@ -55,6 +57,11 @@ class APACHE_GEODE_EXPORT DataOutput {
   inline void write(uint8_t value) {
     ensureCapacity(1);
     writeNoCheck(value);
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): len=" << getBufferLength();
+    Exception ex("unused");
+    LOGDEBUG(ss.str() + ex.getStackTrace());
   }
 
   /**
@@ -69,7 +76,13 @@ class APACHE_GEODE_EXPORT DataOutput {
    *
    * @param value the boolean value to be written
    */
-  inline void writeBoolean(bool value) { write(static_cast<uint8_t>(value)); }
+  inline void writeBoolean(bool value) {
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << ")";
+    LOGDEBUG(ss.str());
+    write(static_cast<uint8_t>(value));
+  }
 
   /**
    * Write an array of unsigned bytes to the <code>DataOutput</code>.
@@ -78,6 +91,10 @@ class APACHE_GEODE_EXPORT DataOutput {
    * @param len the number of bytes from the start of array to be written
    */
   inline void writeBytes(const uint8_t* bytes, int32_t len) {
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): len=" << getBufferLength();
+    LOGDEBUG(ss.str());
     if (len >= 0) {
       ensureCapacity(len + 5);
       writeArrayLen(bytes == nullptr ? 0 : len);  // length of bytes...
@@ -115,6 +132,11 @@ class APACHE_GEODE_EXPORT DataOutput {
     ensureCapacity(len);
     std::memcpy(m_buf, bytes, len);
     m_buf += len;
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): len=" << getBufferLength();
+    Exception ex("unused");
+    LOGDEBUG(ss.str() + ex.getStackTrace());
   }
 
   /**
@@ -141,6 +163,11 @@ class APACHE_GEODE_EXPORT DataOutput {
     ensureCapacity(2);
     *(m_buf++) = static_cast<uint8_t>(value >> 8);
     *(m_buf++) = static_cast<uint8_t>(value);
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): len=" << getBufferLength();
+    Exception ex("unused");
+    LOGDEBUG(ss.str() + ex.getStackTrace());
   }
 
   /**
@@ -152,6 +179,10 @@ class APACHE_GEODE_EXPORT DataOutput {
     ensureCapacity(2);
     *(m_buf++) = static_cast<uint8_t>(value >> 8);
     *(m_buf++) = static_cast<uint8_t>(value);
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): len=" << getBufferLength();
+    LOGDEBUG(ss.str());
   }
 
   /**
@@ -165,6 +196,10 @@ class APACHE_GEODE_EXPORT DataOutput {
     *(m_buf++) = static_cast<uint8_t>(value >> 16);
     *(m_buf++) = static_cast<uint8_t>(value >> 8);
     *(m_buf++) = static_cast<uint8_t>(value);
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): len=" << getBufferLength();
+    LOGDEBUG(ss.str());
   }
 
   /**
@@ -182,6 +217,10 @@ class APACHE_GEODE_EXPORT DataOutput {
     *(m_buf++) = static_cast<uint8_t>(value >> 16);
     *(m_buf++) = static_cast<uint8_t>(value >> 8);
     *(m_buf++) = static_cast<uint8_t>(value);
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): len=" << getBufferLength();
+    LOGDEBUG(ss.str());
   }
 
   /**
@@ -219,6 +258,10 @@ class APACHE_GEODE_EXPORT DataOutput {
    * @param value the 32-bit signed integer array length to be written
    */
   inline void writeArrayLen(int32_t len) {
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): len=" << getBufferLength();
+    LOGDEBUG(ss.str());
     if (len == -1) {
       write(static_cast<int8_t>(-1));
     } else if (len <= 252) {  // 252 is java's ((byte)-4 && 0xFF)
@@ -243,6 +286,10 @@ class APACHE_GEODE_EXPORT DataOutput {
       uint32_t u;
     } v;
     v.f = value;
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << ")";
+    LOGDEBUG(ss.str());
     writeInt(v.u);
   }
 
@@ -252,6 +299,11 @@ class APACHE_GEODE_EXPORT DataOutput {
    * @param value the double precision real number to be written
    */
   inline void writeDouble(double value) {
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << ")";
+    LOGDEBUG(ss.str());
+
     union double_uint64_t {
       double d;
       uint64_t ll;
@@ -308,6 +360,7 @@ class APACHE_GEODE_EXPORT DataOutput {
   template <class _CharT, class... _Tail>
   inline void writeChars(const std::basic_string<_CharT, _Tail...>& value) {
     writeUtf16(value);
+    std::stringstream ss;
   }
 
   /**
@@ -352,6 +405,10 @@ class APACHE_GEODE_EXPORT DataOutput {
   void advanceCursor(size_t offset) {
     ensureCapacity(offset);
     m_buf += offset;
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): offset=" << offset;
+    LOGDEBUG(ss.str());
   }
 
   /**
@@ -359,7 +416,13 @@ class APACHE_GEODE_EXPORT DataOutput {
    *
    * @param offset the offset by which to rewind the cursor
    */
-  void rewindCursor(size_t offset) { m_buf -= offset; }
+  void rewindCursor(size_t offset) {
+    m_buf -= offset;
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): offset=" << offset;
+    LOGDEBUG(ss.str());
+  }
 
   void updateValueAtPos(size_t offset, uint8_t value) {
     m_bytes.get()[offset] = value;
@@ -429,6 +492,10 @@ class APACHE_GEODE_EXPORT DataOutput {
       releaseLock();
     }
     m_buf = m_bytes.get();
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): len=" << getBufferLength();
+    LOGDEBUG(ss.str());
   }
 
   // make sure there is room left for the requested size item.
@@ -475,6 +542,9 @@ class APACHE_GEODE_EXPORT DataOutput {
     if (m_bytes) {
       DataOutput::checkinBuffer(m_bytes.release(), m_size);
     }
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this);
+    LOGDEBUG(ss.str());
   }
 
   DataOutput(const DataOutput&) = delete;
@@ -518,6 +588,10 @@ class APACHE_GEODE_EXPORT DataOutput {
   inline void writeAscii(const std::string& value) {
     uint16_t len = static_cast<uint16_t>(
         std::min<size_t>(value.length(), std::numeric_limits<uint16_t>::max()));
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << ")";
+    LOGDEBUG(ss.str());
     writeInt(len);
     for (size_t i = 0; i < len; i++) {
       // blindly assumes ascii so mask off only 7 bits
@@ -528,6 +602,10 @@ class APACHE_GEODE_EXPORT DataOutput {
   inline void writeAsciiHuge(const std::string& value) {
     uint32_t len = static_cast<uint32_t>(
         std::min<size_t>(value.length(), std::numeric_limits<uint32_t>::max()));
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << ")";
+    LOGDEBUG(ss.str());
     writeInt(static_cast<uint32_t>(len));
     for (size_t i = 0; i < len; i++) {
       // blindly assumes ascii so mask off only 7 bits
@@ -561,6 +639,10 @@ class APACHE_GEODE_EXPORT DataOutput {
   }
 
   inline void writeJavaModifiedUtf8(const char16_t* data, size_t len) {
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << ")";
+    LOGDEBUG(ss.str());
     if (0 == len) {
       writeInt(static_cast<uint16_t>(0));
     } else {
@@ -637,6 +719,10 @@ class APACHE_GEODE_EXPORT DataOutput {
   }
 
   inline void writeUtf16(const char16_t* data, size_t length) {
+    std::stringstream ss;
+    ss << "DataOutput::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << ")";
+    LOGDEBUG(ss.str());
     ensureCapacity(length * 2);
     for (; length > 0; length--, data++) {
       writeNoCheck(static_cast<uint8_t>(*data >> 8));
@@ -657,6 +743,7 @@ class APACHE_GEODE_EXPORT DataOutput {
       // one byte.
       encodedLen++;
     }
+    std::stringstream ss;
   }
 
   inline static void getEncodedLength(const wchar_t val, int32_t& encodedLen) {

@@ -1635,6 +1635,12 @@ TcrMessageDestroyRegion::TcrMessageDestroyRegion(
   m_timeout = DEFAULT_TIMEOUT;
   m_messageResponseTimeout = messageResponsetimeout;
 
+  std::stringstream ss;
+  ss << "TcrMessageDestroyRegion::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   uint32_t numOfParts = 1;
   if (aCallbackArgument != nullptr) {
     ++numOfParts;
@@ -1675,6 +1681,12 @@ TcrMessageClearRegion::TcrMessageClearRegion(
   isSecurityOn = false;
   m_isSecurityHeaderAdded = false;
 
+  std::stringstream ss;
+  ss << "TcrMessageClearRegion::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   uint32_t numOfParts = 1;
   if (aCallbackArgument != nullptr) {
     ++numOfParts;
@@ -1709,6 +1721,12 @@ TcrMessageQuery::TcrMessageQuery(
   m_timeout = DEFAULT_TIMEOUT;
   m_messageResponseTimeout = messageResponsetimeout;
   m_region = nullptr;
+
+  std::stringstream ss;
+  ss << "TcrMessageQuery::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   uint32_t numOfParts = 1;
 
   numOfParts++;
@@ -1739,6 +1757,11 @@ TcrMessageStopCQ::TcrMessageStopCQ(
   m_isSecurityHeaderAdded = false;
   m_isMetaRegion = false;
 
+  std::stringstream ss;
+  ss << "TcrMessageStopCQ::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   uint32_t numOfParts = 1;
 
   numOfParts++;
@@ -1767,6 +1790,12 @@ TcrMessageCloseCQ::TcrMessageCloseCQ(
   m_timeout = DEFAULT_TIMEOUT;
   m_messageResponseTimeout = messageResponsetimeout;
   m_region = nullptr;
+
+  std::stringstream ss;
+  ss << "TcrMessageCloseCQ::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   uint32_t numOfParts = 1;
 
   numOfParts++;
@@ -1796,6 +1825,12 @@ TcrMessageQueryWithParameters::TcrMessageQueryWithParameters(
   m_timeout = DEFAULT_TIMEOUT;
   m_messageResponseTimeout = messageResponsetimeout;
   m_region = nullptr;
+
+  std::stringstream ss;
+  ss << "TcrMessageQueryWithParameters::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   // Find out the numOfParts
   uint32_t numOfParts = 4 + static_cast<uint32_t>(paramList->size());
@@ -1842,6 +1877,12 @@ TcrMessageContainsKey::TcrMessageContainsKey(
 
   numOfParts++;
 
+  std::stringstream ss;
+  ss << "TcrMessageContainsKey::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   if (key == nullptr) {
     throw IllegalArgumentException(
         "key passed to the constructor can't be nullptr");
@@ -1870,6 +1911,12 @@ TcrMessageGetDurableCqs::TcrMessageGetDurableCqs(
   // the server expects at least 1 part, so writing a dummy byte part
   writeBytePart(0);
   writeMessageLength();
+
+  std::stringstream ss;
+  ss << "TcrMessageGetDurableCqs::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 }
 
 TcrMessageRequest::TcrMessageRequest(
@@ -1892,6 +1939,11 @@ TcrMessageRequest::TcrMessageRequest(
   }
 
   numOfParts++;
+
+  std::stringstream ss;
+  ss << "TcrMessageRequest::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   if (key == nullptr) {
     throw IllegalArgumentException(
@@ -1931,6 +1983,12 @@ TcrMessageInvalidate::TcrMessageInvalidate(
 
   numOfParts++;
 
+  std::stringstream ss;
+  ss << "TcrMessageInvalidate::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   if (key == nullptr) {
     throw IllegalArgumentException(
         "key passed to the constructor can't be nullptr");
@@ -1963,6 +2021,12 @@ TcrMessageDestroy::TcrMessageDestroy(
   m_region = region;
   m_timeout = DEFAULT_TIMEOUT;
   uint32_t numOfParts = 2;
+
+  std::stringstream ss;
+  ss << "TcrMessageDestroy::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   if (aCallbackArgument != nullptr) {
     ++numOfParts;
   }
@@ -2020,6 +2084,11 @@ TcrMessagePut::TcrMessagePut(
   m_region = region;
   m_timeout = DEFAULT_TIMEOUT;
 
+  std::stringstream ss;
+  ss << "TcrMessagePut::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   // TODO check the number of parts in this constructor. doubt because in PUT
   // value can be nullptr also.
   uint32_t numOfParts = 5;
@@ -2074,6 +2143,11 @@ TcrMessagePing::TcrMessagePing(DataOutput* dataOutput, bool decodeAll) {
   m_request->write(static_cast<int8_t>(0));  // Early ack is '0'.
   m_msgLength = g_headerLen;
   m_txId = 0;
+
+  std::stringstream ss;
+  ss << "TcrMessagePing::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 }
 
 TcrMessageCloseConnection::TcrMessageCloseConnection(DataOutput* dataOutput,
@@ -2093,6 +2167,12 @@ TcrMessageCloseConnection::TcrMessageCloseConnection(DataOutput* dataOutput,
   // cast away constness here since we want to modify this
   TcrMessage::m_keepAlive = const_cast<uint8_t*>(m_request->getCursor());
   m_request->write(static_cast<int8_t>(0));  // keepalive is '0'.
+
+  std::stringstream ss;
+  ss << "TcrMessageCloseConnection::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 }
 
 TcrMessageClientMarker::TcrMessageClientMarker(DataOutput* dataOutput,
@@ -2100,6 +2180,12 @@ TcrMessageClientMarker::TcrMessageClientMarker(DataOutput* dataOutput,
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::CLIENT_MARKER;
   m_decodeAll = decodeAll;
+
+  std::stringstream ss;
+  ss << "TcrMessageClientMarker::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 }
 
 TcrMessageRegisterInterestList::TcrMessageRegisterInterestList(
@@ -2117,6 +2203,12 @@ TcrMessageRegisterInterestList::TcrMessageRegisterInterestList(
   m_timeout = DEFAULT_TIMEOUT;
   m_isDurable = isDurable;
   m_receiveValues = receiveValues;
+
+  std::stringstream ss;
+  ss << "TcrMessageRegisterInterestList::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   writeHeader(m_msgType, 6);
 
@@ -2173,6 +2265,12 @@ TcrMessageUnregisterInterestList::TcrMessageUnregisterInterestList(
   m_isDurable = isDurable;
   m_receiveValues = receiveValues;
 
+  std::stringstream ss;
+  ss << "TcrMessageUnregisterInterestList::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   auto numInItrestList = keys.size();
   assert(numInItrestList != 0);
   uint32_t numOfParts = 2 + static_cast<uint32_t>(numInItrestList);
@@ -2206,6 +2304,12 @@ TcrMessageCreateRegion::TcrMessageCreateRegion(
   m_isDurable = isDurable;
   m_receiveValues = receiveValues;
 
+  std::stringstream ss;
+  ss << "TcrMessageCreateRegion::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   uint32_t numOfParts = 2;
   writeHeader(m_msgType, numOfParts);
   writeRegionPart(str1);  // parent region name
@@ -2223,6 +2327,12 @@ TcrMessageRegisterInterest::TcrMessageRegisterInterest(
   m_tcdm = connectionDM;
   m_isDurable = isDurable;
   m_receiveValues = receiveValues;
+
+  std::stringstream ss;
+  ss << "TcrMessageRegisterInterest::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   uint32_t numOfParts = 7;
 
@@ -2260,6 +2370,12 @@ TcrMessageUnregisterInterest::TcrMessageUnregisterInterest(
   m_isDurable = isDurable;
   m_receiveValues = receiveValues;
 
+  std::stringstream ss;
+  ss << "TcrMessageUnregisterInterest::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   uint32_t numOfParts = 3;
   numOfParts += 2;
   writeHeader(m_msgType, numOfParts);
@@ -2280,6 +2396,12 @@ TcrMessageTxSynchronization::TcrMessageTxSynchronization(DataOutput* dataOutput,
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::TX_SYNCHRONIZATION;
 
+  std::stringstream ss;
+  ss << "TcrMessageTxSynchronization::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   writeHeader(m_msgType, ordinal == 1 ? 3 : 2);
   writeIntPart(ordinal);
   writeIntPart(txid);
@@ -2294,6 +2416,12 @@ TcrMessageClientReady::TcrMessageClientReady(DataOutput* dataOutput) {
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::CLIENT_READY;
 
+  std::stringstream ss;
+  ss << "TcrMessageClientReady::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   writeHeader(m_msgType, 1);
   // the server expects at least 1 part, so writing a dummy
   writeBytePart(0);
@@ -2303,6 +2431,11 @@ TcrMessageClientReady::TcrMessageClientReady(DataOutput* dataOutput) {
 TcrMessageCommit::TcrMessageCommit(DataOutput* dataOutput) {
   m_msgType = TcrMessage::COMMIT;
   m_request.reset(dataOutput);
+
+  std::stringstream ss;
+  ss << "TcrMessageCommit::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   writeHeader(m_msgType, 1);
   // the server expects at least 1 part, so writing a dummy
@@ -2314,6 +2447,12 @@ TcrMessageRollback::TcrMessageRollback(DataOutput* dataOutput) {
   m_msgType = TcrMessage::ROLLBACK;
   m_request.reset(dataOutput);
 
+  std::stringstream ss;
+  ss << "TcrMessageRollback::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   writeHeader(m_msgType, 1);
   // the server expects at least 1 part, so writing a dummy
   writeBytePart(0);
@@ -2323,6 +2462,12 @@ TcrMessageRollback::TcrMessageRollback(DataOutput* dataOutput) {
 TcrMessageTxFailover::TcrMessageTxFailover(DataOutput* dataOutput) {
   m_msgType = TcrMessage::TX_FAILOVER;
   m_request.reset(dataOutput);
+
+  std::stringstream ss;
+  ss << "TcrMessageTxFailover::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   writeHeader(m_msgType, 1);
   // the server expects at least 1 part, so writing a dummy
@@ -2336,6 +2481,12 @@ TcrMessageMakePrimary::TcrMessageMakePrimary(DataOutput* dataOutput,
   m_msgType = TcrMessage::MAKE_PRIMARY;
   m_request.reset(dataOutput);
 
+  std::stringstream ss;
+  ss << "TcrMessageMakePrimary::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   writeHeader(m_msgType, 1);
   writeBytePart(processedMarker ? 1 : 0);  // boolean processedMarker
   writeMessageLength();
@@ -2346,6 +2497,12 @@ TcrMessagePeriodicAck::TcrMessagePeriodicAck(
     DataOutput* dataOutput, const EventIdMapEntryList& entries) {
   m_msgType = TcrMessage::PERIODIC_ACK;
   m_request.reset(dataOutput);
+
+  std::stringstream ss;
+  ss << "TcrMessagePeriodicAck::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   uint32_t numParts = static_cast<uint32_t>(entries.size());
   writeHeader(m_msgType, numParts);
@@ -2370,6 +2527,11 @@ TcrMessagePutAll::TcrMessagePutAll(
   m_region = region;
   m_messageResponseTimeout = messageResponsetimeout;
   m_request.reset(dataOutput);
+
+  std::stringstream ss;
+  ss << "TcrMessagePutAll::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   // TODO check the number of parts in this constructor. doubt because in PUT
   // value can be nullptr also.
@@ -2441,6 +2603,12 @@ TcrMessageRemoveAll::TcrMessageRemoveAll(
   m_region = region;
   m_request.reset(dataOutput);
 
+  std::stringstream ss;
+  ss << "TcrMessageRemoveAll::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   // TODO check the number of parts in this constructor. doubt because in PUT
   // value can be nullptr also.
   uint32_t numOfParts = 5 + static_cast<uint32_t>(keys.size());
@@ -2488,6 +2656,11 @@ TcrMessageGetAll::TcrMessageGetAll(
   m_regionName = region->getFullPath();
   m_region = region;
   m_request.reset(dataOutput);
+
+  std::stringstream ss;
+  ss << "TcrMessageGetAll::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   /*CacheableObjectArrayPtr keyArr = nullptr;
   if (keys != nullptr) {
@@ -2538,6 +2711,12 @@ TcrMessageExecuteCq::TcrMessageExecuteCq(DataOutput* dataOutput,
                                          ThinClientBaseDM* connectionDM) {
   m_request.reset(dataOutput);
 
+  std::stringstream ss;
+  ss << "TcrMessageExecuteCq::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   m_msgType = TcrMessage::EXECUTECQ_MSG_TYPE;
   m_tcdm = connectionDM;
   m_isDurable = isDurable;
@@ -2563,6 +2742,12 @@ TcrMessageExecuteCqWithIr::TcrMessageExecuteCqWithIr(
     DataOutput* dataOutput, const std::string& str1, const std::string& str2,
     CqState state, bool isDurable, ThinClientBaseDM* connectionDM) {
   m_request.reset(dataOutput);
+
+  std::stringstream ss;
+  ss << "TcrMessageExecuteCqWithIr::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   m_msgType = TcrMessage::EXECUTECQ_WITH_IR_MSG_TYPE;
   m_tcdm = connectionDM;
@@ -2591,6 +2776,12 @@ TcrMessageExecuteFunction::TcrMessageExecuteFunction(
     ThinClientBaseDM* connectionDM, std::chrono::milliseconds timeout) {
   m_request.reset(dataOutput);
 
+  std::stringstream ss;
+  ss << "TcrMessageExecuteFunction::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   m_msgType = TcrMessage::EXECUTE_FUNCTION;
   m_tcdm = connectionDM;
   m_hasResult = getResult;
@@ -2611,6 +2802,12 @@ TcrMessageExecuteRegionFunction::TcrMessageExecuteRegionFunction(
     std::chrono::milliseconds timeout, ThinClientBaseDM* connectionDM,
     int8_t reExecute) {
   m_request.reset(dataOutput);
+
+  std::stringstream ss;
+  ss << "TcrMessageExecuteRegionFunction::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   m_msgType = TcrMessage::EXECUTE_REGION_FUNCTION;
   m_tcdm = connectionDM;
@@ -2665,6 +2862,12 @@ TcrMessageExecuteRegionFunctionSingleHop::
         std::chrono::milliseconds timeout, ThinClientBaseDM* connectionDM) {
   m_request.reset(dataOutput);
 
+  std::stringstream ss;
+  ss << "TcrMessageExecuteRegionFunctionSingleHop::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   m_msgType = TcrMessage::EXECUTE_REGION_FUNCTION_SINGLE_HOP;
   m_tcdm = connectionDM;
   m_regionName =
@@ -2718,6 +2921,12 @@ TcrMessageGetClientPartitionAttributes::TcrMessageGetClientPartitionAttributes(
     DataOutput* dataOutput, const char* regionName) {
   m_request.reset(dataOutput);
 
+  std::stringstream ss;
+  ss << "TcrMessageGetClientPartitionAttributes::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   m_msgType = TcrMessage::GET_CLIENT_PARTITION_ATTRIBUTES;
   writeHeader(m_msgType, 1);
   writeRegionPart(regionName);
@@ -2728,6 +2937,12 @@ TcrMessageGetClientPrMetadata::TcrMessageGetClientPrMetadata(
     DataOutput* dataOutput, const char* regionName) {
   m_request.reset(dataOutput);
 
+  std::stringstream ss;
+  ss << "TcrMessageGetClientPrMetadata::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   m_msgType = TcrMessage::GET_CLIENT_PR_METADATA;
   writeHeader(m_msgType, 1);
   writeRegionPart(regionName);
@@ -2736,6 +2951,11 @@ TcrMessageGetClientPrMetadata::TcrMessageGetClientPrMetadata(
 
 TcrMessageSize::TcrMessageSize(DataOutput* dataOutput, const char* regionName) {
   m_request.reset(dataOutput);
+
+  std::stringstream ss;
+  ss << "TcrMessageSize::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   m_msgType = TcrMessage::SIZE;
   writeHeader(m_msgType, 1);
@@ -2747,6 +2967,12 @@ TcrMessageUserCredential::TcrMessageUserCredential(
     DataOutput* dataOutput, std::shared_ptr<Properties> creds,
     ThinClientBaseDM* connectionDM) {
   m_request.reset(dataOutput);
+
+  std::stringstream ss;
+  ss << "TcrMessageUserCredential::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   m_msgType = TcrMessage::USER_CREDENTIAL_MESSAGE;
   m_tcdm = connectionDM;
@@ -2769,6 +2995,12 @@ TcrMessageUserCredential::TcrMessageUserCredential(
 TcrMessageRemoveUserAuth::TcrMessageRemoveUserAuth(
     DataOutput* dataOutput, bool keepAlive, ThinClientBaseDM* connectionDM) {
   m_request.reset(dataOutput);
+
+  std::stringstream ss;
+  ss << "TcrMessageRemoveUserAuth::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   m_msgType = TcrMessage::REMOVE_USER_AUTH;
   m_tcdm = connectionDM;
@@ -2874,6 +3106,12 @@ TcrMessageRequestEventValue::TcrMessageRequestEventValue(
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::REQUEST_EVENT_VALUE;
 
+  std::stringstream ss;
+  ss << "TcrMessageRequestEventValue::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   uint32_t numOfParts = 1;
   writeHeader(m_msgType, numOfParts);
   writeObjectPart(eventId);
@@ -2886,6 +3124,12 @@ TcrMessageGetPdxIdForType::TcrMessageGetPdxIdForType(
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::GET_PDX_ID_FOR_TYPE;
   m_tcdm = connectionDM;
+
+  std::stringstream ss;
+  ss << "TcrMessageGetPdxIdForType::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   LOGDEBUG("Tcrmessage sending GET_PDX_ID_FOR_TYPE message to server");
   writeHeader(m_msgType, 1);
@@ -2903,6 +3147,12 @@ TcrMessageAddPdxType::TcrMessageAddPdxType(
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::ADD_PDX_TYPE;
   m_tcdm = connectionDM;
+
+  std::stringstream ss;
+  ss << "TcrMessageAddPdxType::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   LOGDEBUG("Tcrmessage sending ADD_PDX_TYPE message to server");
   writeHeader(m_msgType, 2);
@@ -2922,6 +3172,12 @@ TcrMessageGetPdxIdForEnum::TcrMessageGetPdxIdForEnum(
   m_msgType = TcrMessage::GET_PDX_ID_FOR_ENUM;
   m_tcdm = connectionDM;
 
+  std::stringstream ss;
+  ss << "TcrMessageGetPdxIdForEnum::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   LOGDEBUG("Tcrmessage sending GET_PDX_ID_FOR_ENUM message to server");
   writeHeader(m_msgType, 1);
   writeObjectPart(pdxType, false, false);
@@ -2938,6 +3194,12 @@ TcrMessageAddPdxEnum::TcrMessageAddPdxEnum(
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::ADD_PDX_ENUM;
   m_tcdm = connectionDM;
+
+  std::stringstream ss;
+  ss << "TcrMessageAddPdxEnum::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   LOGDEBUG("Tcrmessage sending ADD_PDX_ENUM message to server");
   writeHeader(m_msgType, 2);
@@ -2956,6 +3218,12 @@ TcrMessageGetPdxTypeById::TcrMessageGetPdxTypeById(
   m_msgType = TcrMessage::GET_PDX_TYPE_BY_ID;
   m_tcdm = connectionDM;
 
+  std::stringstream ss;
+  ss << "TcrMessageGetPdxTypeById::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   LOGDEBUG("Tcrmessage sending GET_PDX_TYPE_BY_ID message to server");
   writeHeader(m_msgType, 1);
   m_request->writeInt(4);
@@ -2973,6 +3241,12 @@ TcrMessageGetPdxEnumById::TcrMessageGetPdxEnumById(
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::GET_PDX_ENUM_BY_ID;
   m_tcdm = connectionDM;
+
+  std::stringstream ss;
+  ss << "TcrMessageGetPdxEnumById::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   LOGDEBUG("Tcrmessage sending GET_PDX_ENUM_BY_ID message to server");
   writeHeader(m_msgType, 1);
@@ -2993,6 +3267,12 @@ TcrMessageGetFunctionAttributes::TcrMessageGetFunctionAttributes(
   m_msgType = TcrMessage::GET_FUNCTION_ATTRIBUTES;
   m_tcdm = connectionDM;
 
+  std::stringstream ss;
+  ss << "TcrMessageGetFunctionAttributes::" << __FUNCTION__ << "("
+     << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
+
   uint32_t numOfParts = 1;
   writeHeader(m_msgType, numOfParts);
   writeRegionPart(funcName);  // function name string
@@ -3005,6 +3285,11 @@ TcrMessageKeySet::TcrMessageKeySet(DataOutput* dataOutput,
   m_request.reset(dataOutput);
   m_msgType = TcrMessage::KEY_SET;
   m_tcdm = connectionDM;
+
+  std::stringstream ss;
+  ss << "TcrMessageKeySet::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+     << "): DataOutput=" << static_cast<void*>(m_request.get());
+  LOGDEBUG(ss.str());
 
   uint32_t numOfParts = 1;
   writeHeader(m_msgType, numOfParts);
@@ -3019,6 +3304,10 @@ void TcrMessage::setData(const char* bytearray, int32_t len, uint16_t memId,
     m_request = std::unique_ptr<DataOutput>(new DataOutput(
         m_tcdm->getConnectionManager().getCacheImpl()->createDataOutput(
             getPool())));
+    std::stringstream ss;
+    ss << "TcrMessage::" << __FUNCTION__ << "(" << static_cast<void*>(this)
+       << "): DataOutput=" << static_cast<void*>(m_request.get());
+    LOGDEBUG(ss.str());
   }
   if (bytearray) {
     DeleteArray<const char> delByteArr(bytearray);
