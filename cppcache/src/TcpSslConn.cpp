@@ -74,6 +74,8 @@ TcpSslConn::TcpSslConn(const std::string hostname, uint16_t port,
   auto stream = std::unique_ptr<ssl_stream_type>(
       new ssl_stream_type{socket_, ssl_context_});
 
+  SSL_set_tlsext_host_name(stream->native_handle(), "localhost");
+
   stream->handshake(ssl_stream_type::client);
 
   std::stringstream ss;

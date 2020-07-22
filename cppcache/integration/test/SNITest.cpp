@@ -111,10 +111,11 @@ class SNITest : public ::testing::Test {
   boost::filesystem::path currentWorkingDirectory;
 };
 
-TEST_F(SNITest, DISABLED_connectViaProxyTest) {
+TEST_F(SNITest, connectViaProxyTest) {
+  auto clientSslKeysDir = boost::filesystem::path(
+      getFrameworkString(FrameworkVariable::TestClientSslKeysDir));
   const auto clientTruststore =
-      (currentWorkingDirectory /
-       boost::filesystem::path("sni-test-config/geode-config/truststore.jks"));
+      (clientSslKeysDir / boost::filesystem::path("truststore_sni.pem"));
 
   auto cache = CacheFactory()
                    .set("log-level", "DEBUG")
