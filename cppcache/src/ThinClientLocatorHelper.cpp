@@ -45,7 +45,19 @@ const int BUFF_SIZE = 3000;
 ThinClientLocatorHelper::ThinClientLocatorHelper(
     const std::vector<std::string>& locatorAddresses,
     const ThinClientPoolDM* poolDM)
-    : m_poolDM(poolDM) {
+    : m_poolDM(poolDM), m_sniProxyHost(""), m_sniProxyPort(0) {
+  for (auto&& locatorAddress : locatorAddresses) {
+    m_locHostPort.emplace_back(locatorAddress);
+  }
+}
+
+ThinClientLocatorHelper::ThinClientLocatorHelper(
+    const std::vector<std::string>& locatorAddresses,
+    const std::string& sniProxyHost, int sniProxyPort,
+    const ThinClientPoolDM* poolDM)
+    : m_poolDM(poolDM),
+      m_sniProxyHost(sniProxyHost),
+      m_sniProxyPort(sniProxyPort) {
   for (auto&& locatorAddress : locatorAddresses) {
     m_locHostPort.emplace_back(locatorAddress);
   }
@@ -60,13 +72,22 @@ std::unique_ptr<Connector> ThinClientLocatorHelper::createConnection(
                                ->getDistributedSystem()
                                .getSystemProperties();
   if (systemProperties.sslEnabled()) {
-    return std::unique_ptr<Connector>{new TcpSslConn{
-        hostname, static_cast<uint16_t>(port), wait, maxBuffSizePool,
-        systemProperties.sslTrustStore(), systemProperties.sslKeyStore(),
-        systemProperties.sslKeystorePassword()}};
+    if (m_sniProxyHost.empty()) {
+      return std::unique_ptr<Connector>(new TcpSslConn(
+          hostname, static_cast<uint16_t>(port), wait, maxBuffSizePool,
+          systemProperties.sslTrustStore(), systemProperties.sslKeyStore(),
+          systemProperties.sslKeystorePassword()));
+    }
+    else {
+      return std::unique_ptr<Connector>(new TcpSslConn(
+          hostname, static_cast<uint16_t>(port), m_sniProxyHost, m_sniProxyPort,
+          wait, maxBuffSizePool, systemProperties.sslTrustStore(),
+          systemProperties.sslKeyStore(),
+          systemProperties.sslKeystorePassword()));
+    }
   } else {
-    return std::unique_ptr<Connector>{new TcpConn{
-        hostname, static_cast<uint16_t>(port), wait, maxBuffSizePool}};
+    return std::unique_ptr<Connector>(new TcpConn(
+        hostname, static_cast<uint16_t>(port), wait, maxBuffSizePool));
   }
 }
 

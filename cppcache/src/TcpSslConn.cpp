@@ -31,11 +31,29 @@
 namespace apache {
 namespace geode {
 namespace client {
-TcpSslConn::TcpSslConn(const std::string ipaddr,
+TcpSslConn::TcpSslConn(const std::string& ipaddr,
                        std::chrono::microseconds connect_timeout,
-                       int32_t maxBuffSizePool, const std::string pubkeyfile,
-                       const std::string privkeyfile,
-                       const std::string pemPassword)
+                       const std::string& sniProxy, int32_t maxBuffSizePool,
+                       const std::string& pubkeyfile,
+                       const std::string& privkeyfile,
+                       const std::string& pemPassword)
+    : TcpSslConn{
+          ipaddr.substr(0, ipaddr.find(':')),
+          static_cast<uint16_t>(std::stoi(ipaddr.substr(ipaddr.find(':') + 1))),
+          sniProxy.substr(0, sniProxy.find(':')),
+          static_cast<uint16_t>(
+              std::stoi(sniProxy.substr(sniProxy.find(':') + 1))),
+          connect_timeout,
+          maxBuffSizePool,
+          pubkeyfile,
+          privkeyfile,
+          pemPassword} {}
+
+TcpSslConn::TcpSslConn(const std::string& ipaddr,
+                       std::chrono::microseconds connect_timeout,
+                       int32_t maxBuffSizePool, const std::string& pubkeyfile,
+                       const std::string& privkeyfile,
+                       const std::string& pemPassword)
     : TcpSslConn{
           ipaddr.substr(0, ipaddr.find(':')),
           static_cast<uint16_t>(std::stoi(ipaddr.substr(ipaddr.find(':') + 1))),
@@ -45,13 +63,32 @@ TcpSslConn::TcpSslConn(const std::string ipaddr,
           privkeyfile,
           pemPassword} {}
 
-TcpSslConn::TcpSslConn(const std::string hostname, uint16_t port,
+TcpSslConn::TcpSslConn(const std::string& hostname, uint16_t port,
                        std::chrono::microseconds connect_timeout,
-                       int32_t maxBuffSizePool, const std::string pubkeyfile,
-                       const std::string privkeyfile,
-                       const std::string pemPassword)
+                       int32_t maxBuffSizePool, const std::string& pubkeyfile,
+                       const std::string& privkeyfile,
+                       const std::string& pemPassword)
     : TcpConn{hostname, port, connect_timeout, maxBuffSizePool},
       ssl_context_{boost::asio::ssl::context::sslv23_client} {
+  init(pubkeyfile, privkeyfile, pemPassword);
+}
+
+TcpSslConn::TcpSslConn(const std::string& hostname, uint16_t,
+                       const std::string& sniProxyHostname,
+                       uint16_t sniProxyPort,
+                       std::chrono::microseconds connect_timeout,
+                       int32_t maxBuffSizePool, const std::string& pubkeyfile,
+                       const std::string& privkeyfile,
+                       const std::string& pemPassword)
+    : TcpConn{sniProxyHostname, sniProxyPort, connect_timeout, maxBuffSizePool},
+      ssl_context_{boost::asio::ssl::context::sslv23_client} {
+  init(pubkeyfile, privkeyfile, pemPassword, hostname);
+}
+
+void TcpSslConn::init(const std::string& pubkeyfile,
+                      const std::string& privkeyfile,
+                      const std::string& pemPassword,
+                      const std::string& sniHostname) {
   // Most of the SSL configuration provided *through* Asio is on the context.
   // This configuration is copied into each SSL instance upon construction.
   // That means you need to get your configuration in order before you
@@ -74,7 +111,7 @@ TcpSslConn::TcpSslConn(const std::string hostname, uint16_t port,
   auto stream = std::unique_ptr<ssl_stream_type>(
       new ssl_stream_type{socket_, ssl_context_});
 
-  SSL_set_tlsext_host_name(stream->native_handle(), "localhost");
+  SSL_set_tlsext_host_name(stream->native_handle(), sniHostname.c_str());
 
   stream->handshake(ssl_stream_type::client);
 
@@ -98,7 +135,7 @@ size_t TcpSslConn::receive(char *buff, const size_t len,
   auto start = std::chrono::system_clock::now();
 
   return boost::asio::read(*socket_stream_, boost::asio::buffer(buff, len),
-                           [len, start](boost::system::error_code &ec,
+                           [len, start](boost::system::error_code& ec,
                                         const std::size_t n) -> std::size_t {
                              if (ec && ec != boost::asio::error::eof) {
                                // Quit if we encounter an error.

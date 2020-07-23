@@ -39,16 +39,34 @@ class TcpSslConn : public TcpConn {
   std::unique_ptr<ssl_stream_type> socket_stream_;
 
  public:
-  TcpSslConn(const std::string hostname, uint16_t port,
+  TcpSslConn(const std::string& hostname, uint16_t port,
+             const std::string& sniProxyHostname, uint16_t sniProxyPort,
              std::chrono::microseconds connect_timeout, int32_t maxBuffSizePool,
-             const std::string pubkeyfile, const std::string privkeyfile,
-             const std::string pemPassword);
+             const std::string& pubkeyfile, const std::string& privkeyfile,
+             const std::string& pemPassword);
 
-  TcpSslConn(const std::string ipaddr, std::chrono::microseconds wait,
-             int32_t maxBuffSizePool, const std::string pubkeyfile,
-             const std::string privkeyfile, const std::string pemPassword);
+  TcpSslConn(const std::string& hostname, uint16_t port,
+             std::chrono::microseconds connect_timeout, int32_t maxBuffSizePool,
+             const std::string& pubkeyfile, const std::string& privkeyfile,
+             const std::string& pemPassword);
+
+  TcpSslConn(const std::string& ipaddr,
+             std::chrono::microseconds connect_timeout, int32_t maxBuffSizePool,
+             const std::string& pubkeyfile, const std::string& privkeyfile,
+             const std::string& pemPassword);
+
+  TcpSslConn(const std::string& ipaddr,
+             std::chrono::microseconds connect_timeout,
+             const std::string& sniProxy, int32_t maxBuffSizePool,
+             const std::string& pubkeyfile, const std::string& privkeyfile,
+             const std::string& pemPassword);
 
   ~TcpSslConn() override;
+
+ private:
+  void init(const std::string& pubkeyfile, const std::string& privkeyfile,
+            const std::string& pemPassword,
+            const std::string& sniHostname = "");
 };
 }  // namespace client
 }  // namespace geode
