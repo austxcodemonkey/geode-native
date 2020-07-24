@@ -719,6 +719,9 @@ bool TcrMessage::readExceptionPart(DataInput& input, uint8_t isLastChunk,
 void TcrMessage::writeObjectPart(
     const std::shared_ptr<Serializable>& se, bool isDelta, bool callToData,
     const std::vector<std::shared_ptr<CacheableKey>>* getAllKeyList) {
+  std::stringstream ss;
+  ss << __FUNCTION__ << "(" << static_cast<void*>(this) << ")";
+  LOGDEBUG(ss.str());
   //  no nullptr check since for some messages nullptr object may be valid
   uint32_t size = 0;
   // write a dummy size of 4 bytes.
@@ -886,6 +889,9 @@ void TcrMessage::writeStringPart(const std::string& str) {
 
 void TcrMessage::writeEventIdPart(int reserveSize,
                                   bool fullValueAfterDeltaFail) {
+  std::stringstream ss;
+  ss << __FUNCTION__ << "(" << static_cast<void*>(this) << ")";
+  LOGDEBUG(ss.str());
   EventId eid(true, reserveSize, fullValueAfterDeltaFail);  // set true so we
                                                             // auto-gen next
                                                             // per-thread

@@ -20,6 +20,7 @@
 #ifndef GEODE_EVENTID_H_
 #define GEODE_EVENTID_H_
 
+#include <sstream>
 #include <string>
 
 #include <geode/DataOutput.hpp>
@@ -90,6 +91,10 @@ class APACHE_GEODE_EXPORT EventId
   int64_t getEventIdData(DataInput& input, char numberCode);
 
   inline void writeIdsData(DataOutput& output) {
+    std::stringstream ss;
+    ss << __FUNCTION__ << "(" << static_cast<void*>(this) << ")";
+    LOGDEBUG(ss.str());
+
     //  Write EventId threadid and seqno.
     int idsBufferLength = 18;
     output.writeInt(idsBufferLength);
