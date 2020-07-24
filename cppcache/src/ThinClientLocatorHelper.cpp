@@ -77,8 +77,7 @@ std::unique_ptr<Connector> ThinClientLocatorHelper::createConnection(
           hostname, static_cast<uint16_t>(port), wait, maxBuffSizePool,
           systemProperties.sslTrustStore(), systemProperties.sslKeyStore(),
           systemProperties.sslKeystorePassword()));
-    }
-    else {
+    } else {
       return std::unique_ptr<Connector>(new TcpSslConn(
           hostname, static_cast<uint16_t>(port), m_sniProxyHost, m_sniProxyPort,
           wait, maxBuffSizePool, systemProperties.sslTrustStore(),

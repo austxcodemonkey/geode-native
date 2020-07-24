@@ -54,31 +54,30 @@ std::shared_ptr<PoolAttributes> PoolAttributes::clone() {
 bool PoolAttributes::operator==(const PoolAttributes& other) const {
   bool result = false;
 
-  if ((m_isThreadLocalConn == other.m_isThreadLocalConn)
-    && (m_freeConnTimeout == other.m_freeConnTimeout)
-    && (m_loadCondInterval == other.m_loadCondInterval)
-    && (m_sockBufferSize == other.m_sockBufferSize)
-    && (m_readTimeout == other.m_readTimeout)
-    && (m_minConns == other.m_minConns)
-    && (m_maxConns == other.m_maxConns)
-    && (m_retryAttempts == other.m_retryAttempts)
-    && (m_statsInterval == other.m_statsInterval)
-    && (m_redundancy == other.m_redundancy)
-    && (m_msgTrackTimeout == other.m_msgTrackTimeout)
-    && (m_subsAckInterval == other.m_subsAckInterval)
-    && (m_idleTimeout == other.m_idleTimeout)
-    && (m_pingInterval == other.m_pingInterval)
-    && (m_updateLocatorListInterval == other.m_updateLocatorListInterval)
-    && (m_subsEnabled == other.m_subsEnabled)
-    && (m_multiuserSecurityMode == other.m_multiuserSecurityMode)
-    && (m_isPRSingleHopEnabled == other.m_isPRSingleHopEnabled)
-    && (m_serverGrp == other.m_serverGrp)
-    && (m_initLocList.size() == other.m_initLocList.size())
-    && (m_initServList.size() == other.m_initServList.size())
-    && (compareVectorOfStrings(m_initLocList, other.m_initLocList))
-    && (compareVectorOfStrings(m_initServList, other.m_initServList))
-    && (m_sniProxyHost == other.m_sniProxyHost)
-    && (m_sniProxyPort == other.m_sniProxyPort)) {
+  if ((m_isThreadLocalConn == other.m_isThreadLocalConn) &&
+      (m_freeConnTimeout == other.m_freeConnTimeout) &&
+      (m_loadCondInterval == other.m_loadCondInterval) &&
+      (m_sockBufferSize == other.m_sockBufferSize) &&
+      (m_readTimeout == other.m_readTimeout) &&
+      (m_minConns == other.m_minConns) && (m_maxConns == other.m_maxConns) &&
+      (m_retryAttempts == other.m_retryAttempts) &&
+      (m_statsInterval == other.m_statsInterval) &&
+      (m_redundancy == other.m_redundancy) &&
+      (m_msgTrackTimeout == other.m_msgTrackTimeout) &&
+      (m_subsAckInterval == other.m_subsAckInterval) &&
+      (m_idleTimeout == other.m_idleTimeout) &&
+      (m_pingInterval == other.m_pingInterval) &&
+      (m_updateLocatorListInterval == other.m_updateLocatorListInterval) &&
+      (m_subsEnabled == other.m_subsEnabled) &&
+      (m_multiuserSecurityMode == other.m_multiuserSecurityMode) &&
+      (m_isPRSingleHopEnabled == other.m_isPRSingleHopEnabled) &&
+      (m_serverGrp == other.m_serverGrp) &&
+      (m_initLocList.size() == other.m_initLocList.size()) &&
+      (m_initServList.size() == other.m_initServList.size()) &&
+      (compareVectorOfStrings(m_initLocList, other.m_initLocList)) &&
+      (compareVectorOfStrings(m_initServList, other.m_initServList)) &&
+      (m_sniProxyHost == other.m_sniProxyHost) &&
+      (m_sniProxyPort == other.m_sniProxyPort)) {
     result = true;
   }
 
