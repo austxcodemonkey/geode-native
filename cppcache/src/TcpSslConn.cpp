@@ -23,6 +23,8 @@
 #include <chrono>
 #include <thread>
 
+#include <boost/exception/diagnostic_information.hpp>
+
 #include <geode/SystemProperties.hpp>
 
 #include "CacheImpl.hpp"
@@ -93,34 +95,45 @@ void TcpSslConn::init(const std::string& pubkeyfile,
   // This configuration is copied into each SSL instance upon construction.
   // That means you need to get your configuration in order before you
   // construct the stream and connect the socket.
-  ssl_context_.set_verify_mode(boost::asio::ssl::verify_peer);
-  ssl_context_.load_verify_file(pubkeyfile);
+  LOGDEBUG(
+      "*** TcpSslConn init, pubkeyfile = %s, pemPassword = %s, sniHostname = "
+      "%s",
+      pubkeyfile.c_str(), pemPassword.c_str(), sniHostname.c_str());
 
-  ssl_context_.set_password_callback(
-      [pemPassword](std::size_t /*max_length*/,
-                    boost::asio::ssl::context::password_purpose /*purpose*/) {
-        return pemPassword;
-      });
+  try {
+    ssl_context_.set_verify_mode(boost::asio::ssl::verify_peer);
+    ssl_context_.load_verify_file(pubkeyfile);
 
-  if (!privkeyfile.empty()) {
-    ssl_context_.use_certificate_chain_file(privkeyfile);
-    ssl_context_.use_private_key_file(
-        privkeyfile, boost::asio::ssl::context::file_format::pem);
+    ssl_context_.set_password_callback(
+        [pemPassword](std::size_t /*max_length*/,
+                      boost::asio::ssl::context::password_purpose /*purpose*/) {
+          return pemPassword;
+        });
+
+    if (!privkeyfile.empty()) {
+      ssl_context_.use_certificate_chain_file(privkeyfile);
+      ssl_context_.use_private_key_file(
+          privkeyfile, boost::asio::ssl::context::file_format::pem);
+    }
+
+    auto stream = std::unique_ptr<ssl_stream_type>(
+        new ssl_stream_type{socket_, ssl_context_});
+
+    SSL_set_tlsext_host_name(stream->native_handle(), sniHostname.c_str());
+
+    stream->handshake(ssl_stream_type::client);
+
+    std::stringstream ss;
+    ss << "Setup SSL " << socket_.local_endpoint() << " -> "
+       << socket_.remote_endpoint();
+    LOGINFO(ss.str());
+
+    socket_stream_ = std::move(stream);
+  } catch (const boost::exception& ex) {
+    // error handling
+    std::string info = boost::diagnostic_information(ex);
+    LOGDEBUG("caught boost exception: %s", info);
   }
-
-  auto stream = std::unique_ptr<ssl_stream_type>(
-      new ssl_stream_type{socket_, ssl_context_});
-
-  SSL_set_tlsext_host_name(stream->native_handle(), sniHostname.c_str());
-
-  stream->handshake(ssl_stream_type::client);
-
-  std::stringstream ss;
-  ss << "Setup SSL " << socket_.local_endpoint() << " -> "
-     << socket_.remote_endpoint();
-  LOGINFO(ss.str());
-
-  socket_stream_ = std::move(stream);
 }
 
 TcpSslConn::~TcpSslConn() {
