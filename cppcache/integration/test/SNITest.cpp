@@ -118,7 +118,8 @@ TEST_F(SNITest, connectViaProxyTest) {
       (clientSslKeysDir / boost::filesystem::path("truststore_sni.pem"));
 
   auto cache = CacheFactory()
-                   .set("log-level", "DEBUG")
+                   .set("log-level", "debug")
+                   .set("log-file", "SNIProxyTest.log")
                    .set("ssl-enabled", "true")
                    .set("ssl-truststore", clientTruststore.string())
                    .create();
@@ -147,7 +148,7 @@ TEST_F(SNITest, connectionFailsTest) {
        boost::filesystem::path("sni-test-config/geode-config/truststore.jks"));
 
   auto cache = CacheFactory()
-                   .set("log-level", "DEBUG")
+                   .set("log-level", "none")
                    .set("ssl-enabled", "true")
                    .set("ssl-truststore", clientTruststore.string())
                    .create();

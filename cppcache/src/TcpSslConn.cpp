@@ -132,7 +132,7 @@ void TcpSslConn::init(const std::string& pubkeyfile,
   } catch (const boost::exception& ex) {
     // error handling
     std::string info = boost::diagnostic_information(ex);
-    LOGDEBUG("caught boost exception: %s", info);
+    LOGDEBUG("caught boost exception: %s", info.c_str());
   }
 }
 
