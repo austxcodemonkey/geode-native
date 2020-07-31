@@ -33,7 +33,8 @@ class Ssl {
   virtual ~Ssl() {}
   virtual int setOption(int, int, void*, int) = 0;
   virtual int listen(ACE_INET_Addr, std::chrono::microseconds) = 0;
-  virtual int connect(ACE_INET_Addr, std::chrono::microseconds) = 0;
+  virtual int connect(ACE_INET_Addr, const std::string& proxyHostname,
+                      std::chrono::microseconds) = 0;
   virtual ssize_t recv(void*, size_t, const ACE_Time_Value*, size_t*) = 0;
   virtual ssize_t send(const void*, size_t, const ACE_Time_Value*, size_t*) = 0;
   virtual int getLocalAddr(ACE_Addr&) = 0;

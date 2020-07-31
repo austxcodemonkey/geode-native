@@ -18,7 +18,9 @@
 #include "SSLImpl.hpp"
 
 #include <cstdint>
+#include <iostream>
 #include <stdexcept>
+#include <string>
 
 #include <ace/Guard_T.h>
 
@@ -116,9 +118,11 @@ int SSLImpl::listen(ACE_INET_Addr addr, std::chrono::microseconds waitSeconds) {
   }
 }
 
-int SSLImpl::connect(ACE_INET_Addr ipaddr,
+int SSLImpl::connect(ACE_INET_Addr ipaddr, const std::string &proxyHostname,
                      std::chrono::microseconds waitSeconds) {
   ACE_SSL_SOCK_Connector conn;
+
+  SSL_set_tlsext_host_name(m_io->ssl(), proxyHostname.c_str());
   if (waitSeconds > std::chrono::microseconds::zero()) {
     ACE_Time_Value wtime(waitSeconds);
     return conn.connect(*m_io, ipaddr, &wtime);

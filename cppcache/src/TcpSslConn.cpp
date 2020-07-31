@@ -28,6 +28,16 @@
 namespace apache {
 namespace geode {
 namespace client {
+void TcpSslConn::initSsl(const std::string& pubkeyfile, const std::string&,
+                         const std::string& pemPassword,
+                         const std::string& sniHostname,
+                         const uint16_t sniPort) {
+  LOGDEBUG(
+      "*** TcpSslConn init, pubkeyfile = %s, pemPassword = %s, sniHostname = "
+      "%s",
+      pubkeyfile.c_str(), pemPassword.c_str(), sniHostname.c_str());
+  m_sniPort = sniPort;
+}
 
 Ssl* TcpSslConn::getSSLImpl(ACE_HANDLE sock, const char* pubkeyfile,
                             const char* privkeyfile) {
@@ -50,13 +60,13 @@ Ssl* TcpSslConn::getSSLImpl(ACE_HANDLE sock, const char* pubkeyfile,
     throw IllegalStateException(msg);
   }
   return reinterpret_cast<Ssl*>(
-      func(sock, pubkeyfile, privkeyfile, m_pemPassword));
+      func(sock, pubkeyfile, privkeyfile, m_pemPassword.c_str()));
 }
 
 void TcpSslConn::createSocket(ACE_HANDLE sock) {
   LOGDEBUG("Creating SSL socket stream");
   try {
-    m_ssl = getSSLImpl(sock, m_pubkeyfile, m_privkeyfile);
+    m_ssl = getSSLImpl(sock, m_pubkeyfile.c_str(), m_privkeyfile.c_str());
   } catch (std::exception& e) {
     throw SslException(e.what());
   }
@@ -87,15 +97,13 @@ void TcpSslConn::connect() {
 
   ACE_OS::signal(SIGPIPE, SIG_IGN);  // Ignore broken pipe
 
-  // m_ssl->init();
-
   std::chrono::microseconds waitMicroSeconds = m_waitMilliSeconds;
 
   LOGDEBUG("Connecting SSL socket stream to %s:%d waiting %s micro sec",
            m_addr.get_host_name(), m_addr.get_port_number(),
            to_string(waitMicroSeconds).c_str());
 
-  int32_t retVal = m_ssl->connect(m_addr, waitMicroSeconds);
+  int32_t retVal = m_ssl->connect(m_addr, m_sniHostname, waitMicroSeconds);
 
   if (retVal == -1) {
     char msg[256];

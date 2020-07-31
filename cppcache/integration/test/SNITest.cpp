@@ -28,6 +28,7 @@
 #include <geode/RegionShortcut.hpp>
 
 #include "framework/Cluster.h"
+#include "framework/TestConfig.h"
 
 namespace snitest {
 
@@ -41,7 +42,8 @@ class SNITest : public ::testing::Test {
  protected:
   SNITest() {
     certificatePassword = std::string("apachegeode");
-    currentWorkingDirectory = boost::filesystem::current_path();
+    clientSslKeysDir = boost::filesystem::path(
+        getFrameworkString(FrameworkVariable::TestClientSslKeysDir));
   }
 
   ~SNITest() override = default;
@@ -108,16 +110,16 @@ class SNITest : public ::testing::Test {
   }
 
   std::string certificatePassword;
-  boost::filesystem::path currentWorkingDirectory;
+  boost::filesystem::path clientSslKeysDir;
 };
 
-TEST_F(SNITest, DISABLED_connectViaProxyTest) {
+TEST_F(SNITest, connectViaProxyTest) {
   const auto clientTruststore =
-      (currentWorkingDirectory /
-       boost::filesystem::path("sni-test-config/geode-config/truststore.jks"));
+      (clientSslKeysDir / boost::filesystem::path("/truststore_sni.pem"));
 
   auto cache = CacheFactory()
-                   .set("log-level", "DEBUG")
+                   .set("log-level", "debug")
+                   .set("log-file", "SNITest.log")
                    .set("ssl-enabled", "true")
                    .set("ssl-truststore", clientTruststore.string())
                    .create();
@@ -127,7 +129,8 @@ TEST_F(SNITest, DISABLED_connectViaProxyTest) {
 
   cache.getPoolManager()
       .createFactory()
-      .addLocator("localhost", portNumber)
+      .setSniProxy("localhost", portNumber)
+      .addLocator("locator-maeve", 10334)
       .create("pool");
 
   auto region = cache.createRegionFactory(RegionShortcut::PROXY)
@@ -141,8 +144,7 @@ TEST_F(SNITest, DISABLED_connectViaProxyTest) {
 
 TEST_F(SNITest, connectionFailsTest) {
   const auto clientTruststore =
-      (currentWorkingDirectory /
-       boost::filesystem::path("sni-test-config/geode-config/truststore.jks"));
+      (clientSslKeysDir / boost::filesystem::path("/truststore_sni.pem"));
 
   auto cache = CacheFactory()
                    .set("log-level", "DEBUG")
@@ -152,7 +154,8 @@ TEST_F(SNITest, connectionFailsTest) {
 
   cache.getPoolManager()
       .createFactory()
-      .addLocator("localhost", 10334)
+      .setSniProxy("badProxyName", 40000)
+      .addLocator("locator-maeve", 10334)
       .create("pool");
 
   auto region = cache.createRegionFactory(RegionShortcut::PROXY)
@@ -166,8 +169,7 @@ TEST_F(SNITest, connectionFailsTest) {
 
 TEST_F(SNITest, doNothingTest) {
   const auto clientTruststore =
-      (currentWorkingDirectory /
-       boost::filesystem::path("sni-test-config/geode-config/truststore.jks"));
+      (clientSslKeysDir / boost::filesystem::path("/truststore_sni.pem"));
 
   auto cache = CacheFactory()
                    .set("log-level", "DEBUG")

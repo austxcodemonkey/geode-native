@@ -33,11 +33,12 @@ class TcpSslConn : public TcpConn {
  private:
   Ssl* m_ssl;
   ACE_DLL m_dll;
-  const char* m_pubkeyfile;
-  const char* m_privkeyfile;
-  const char* m_pemPassword;
-  // adongre: Added for Ticket #758
-  // Pass extra parameter for the password
+  uint16_t m_sniPort;
+  std::string m_sniHostname;
+  std::string m_pubkeyfile;
+  std::string m_privkeyfile;
+  std::string m_pemPassword;
+
   typedef void* (*gf_create_SslImpl)(ACE_HANDLE, const char*, const char*,
                                      const char*);
   typedef void (*gf_destroy_SslImpl)(void*);
@@ -52,12 +53,27 @@ class TcpSslConn : public TcpConn {
   void createSocket(ACE_HANDLE sock) override;
 
  public:
-  TcpSslConn(const char* hostname, int32_t port,
+  TcpSslConn(
              std::chrono::microseconds waitSeconds, int32_t maxBuffSizePool,
-             const char* pubkeyfile, const char* privkeyfile,
-             const char* pemPassword)
-      : TcpConn(hostname, port, waitSeconds, maxBuffSizePool),
+             const std::string& sniProxyHostname, uint16_t sniProxyPort,
+             const std::string& pubkeyfile, const std::string& privkeyfile,
+             const std::string& pemPassword)
+      : TcpConn(sniProxyHostname.c_str(), sniProxyPort, waitSeconds, maxBuffSizePool),
         m_ssl(nullptr),
+        m_sniPort(sniProxyPort),
+        m_sniHostname(sniProxyHostname),
+        m_pubkeyfile(pubkeyfile),
+        m_privkeyfile(privkeyfile),
+        m_pemPassword(pemPassword) {}
+
+  TcpSslConn(const std::string& hostname, uint16_t port,
+             std::chrono::microseconds connect_timeout, int32_t maxBuffSizePool,
+             const std::string& pubkeyfile, const std::string& privkeyfile,
+             const std::string& pemPassword)
+      : TcpConn(hostname.c_str(), port, connect_timeout, maxBuffSizePool),
+        m_ssl(nullptr),
+        m_sniPort(0),
+        m_sniHostname(""),
         m_pubkeyfile(pubkeyfile),
         m_privkeyfile(privkeyfile),
         m_pemPassword(pemPassword) {}
@@ -67,14 +83,20 @@ class TcpSslConn : public TcpConn {
              const char* privkeyfile, const char* pemPassword)
       : TcpConn(ipaddr, waitSeconds, maxBuffSizePool),
         m_ssl(nullptr),
+        m_sniPort(0),
+        m_sniHostname(""),
         m_pubkeyfile(pubkeyfile),
         m_privkeyfile(privkeyfile),
         m_pemPassword(pemPassword) {}
 
-  // TODO:  Watch out for virt dtor calling virt methods!
+
 
   virtual ~TcpSslConn() override {}
 
+ private:
+  void initSsl(const std::string& pubkeyfile, const std::string& privkeyfile,
+               const std::string& pemPassword,
+               const std::string& sniHostname = "", const uint16_t sniPort = 0);
   // Close this tcp connection
   void close() override;
 
