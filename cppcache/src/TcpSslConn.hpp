@@ -53,15 +53,14 @@ class TcpSslConn : public TcpConn {
   void createSocket(ACE_HANDLE sock) override;
 
  public:
-  TcpSslConn(
-             std::chrono::microseconds waitSeconds, int32_t maxBuffSizePool,
-             const std::string& sniProxyHostname, uint16_t sniProxyPort,
-             const std::string& pubkeyfile, const std::string& privkeyfile,
-             const std::string& pemPassword)
-      : TcpConn(sniProxyHostname.c_str(), sniProxyPort, waitSeconds, maxBuffSizePool),
+  TcpSslConn(const std::string& hostname, std::chrono::microseconds waitSeconds,
+             int32_t maxBuffSizePool, const std::string& sniProxyHostname,
+             uint16_t sniProxyPort, const std::string& pubkeyfile,
+             const std::string& privkeyfile, const std::string& pemPassword)
+      : TcpConn(sniProxyHostname.c_str(), sniProxyPort, waitSeconds,
+                maxBuffSizePool),
         m_ssl(nullptr),
-        m_sniPort(sniProxyPort),
-        m_sniHostname(sniProxyHostname),
+        m_sniHostname(hostname),
         m_pubkeyfile(pubkeyfile),
         m_privkeyfile(privkeyfile),
         m_pemPassword(pemPassword) {}
@@ -72,7 +71,6 @@ class TcpSslConn : public TcpConn {
              const std::string& pemPassword)
       : TcpConn(hostname.c_str(), port, connect_timeout, maxBuffSizePool),
         m_ssl(nullptr),
-        m_sniPort(0),
         m_sniHostname(""),
         m_pubkeyfile(pubkeyfile),
         m_privkeyfile(privkeyfile),
@@ -88,8 +86,6 @@ class TcpSslConn : public TcpConn {
         m_pubkeyfile(pubkeyfile),
         m_privkeyfile(privkeyfile),
         m_pemPassword(pemPassword) {}
-
-
 
   virtual ~TcpSslConn() override {}
 

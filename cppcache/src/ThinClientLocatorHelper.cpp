@@ -93,8 +93,7 @@ Connector* ThinClientLocatorHelper::createConnection(
           systemProperties.sslTrustStore(), systemProperties.sslKeyStore(),
           systemProperties.sslKeystorePassword());
     } else {
-      socket = new TcpSslConn(
-                              waitSeconds, maxBuffSizePool, m_sniProxyHost,
+      socket = new TcpSslConn(hostname, waitSeconds, maxBuffSizePool, m_sniProxyHost,
                               m_sniProxyPort, systemProperties.sslTrustStore(),
                               systemProperties.sslKeyStore(),
                               systemProperties.sslKeystorePassword());

@@ -432,10 +432,22 @@ Connector* TcrConnection::createConnection(
                                ->getDistributedSystem()
                                .getSystemProperties();
   if (systemProperties.sslEnabled()) {
-    socket = new TcpSslConn(endpoint, connectTimeout, maxBuffSizePool,
-                            systemProperties.sslTrustStore().c_str(),
-                            systemProperties.sslKeyStore().c_str(),
-                            systemProperties.sslKeystorePassword().c_str());
+    auto sniProxyHostname = m_poolDM->getSNIProxyHostname();
+    auto sniPort = m_poolDM->getSNIPort();
+    if (sniProxyHostname.empty()) {
+      socket = new TcpSslConn(endpoint, connectTimeout, maxBuffSizePool,
+                              systemProperties.sslTrustStore().c_str(),
+                              systemProperties.sslKeyStore().c_str(),
+                              systemProperties.sslKeystorePassword().c_str());
+    } else {
+      auto ipaddr = std::string(endpoint);
+      auto hostname = ipaddr.substr(0, ipaddr.find(':'));
+      socket = new TcpSslConn(hostname, connectTimeout, maxBuffSizePool,
+                              sniProxyHostname, sniPort,
+                              systemProperties.sslTrustStore().c_str(),
+                              systemProperties.sslKeyStore().c_str(),
+                              systemProperties.sslKeystorePassword().c_str());
+    }
   } else {
     socket = new TcpConn(endpoint, connectTimeout, maxBuffSizePool);
   }
