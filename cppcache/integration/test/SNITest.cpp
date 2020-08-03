@@ -115,7 +115,7 @@ class SNITest : public ::testing::Test {
   boost::filesystem::path currentWorkingDirectory;
 };
 
-TEST_F(SNITest, DISABLED_connectViaProxyTest){};
+TEST_F(SNITest, DISABLED_connectViaProxyTest) {}
 
 TEST_F(SNITest, connectViaProxyTest) {
   const auto clientTruststore =
