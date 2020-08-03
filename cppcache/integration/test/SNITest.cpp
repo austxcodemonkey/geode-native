@@ -44,6 +44,7 @@ class SNITest : public ::testing::Test {
     certificatePassword = std::string("apachegeode");
     clientSslKeysDir = boost::filesystem::path(
         getFrameworkString(FrameworkVariable::TestClientSslKeysDir));
+    currentWorkingDirectory = boost::filesystem::current_path();
   }
 
   ~SNITest() override = default;
@@ -111,7 +112,10 @@ class SNITest : public ::testing::Test {
 
   std::string certificatePassword;
   boost::filesystem::path clientSslKeysDir;
+  boost::filesystem::path currentWorkingDirectory;
 };
+
+TEST_F(SNITest, DISABLED_connectViaProxyTest){};
 
 TEST_F(SNITest, connectViaProxyTest) {
   const auto clientTruststore =
@@ -135,7 +139,7 @@ TEST_F(SNITest, connectViaProxyTest) {
 
   auto region = cache.createRegionFactory(RegionShortcut::PROXY)
                     .setPoolName("pool")
-                    .create("region");
+                    .create("jellyfish");
 
   region->put("1", "one");
 
