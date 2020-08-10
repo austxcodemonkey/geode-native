@@ -30,8 +30,8 @@ namespace apache {
 namespace geode {
 namespace client {
 class APACHE_GEODE_EXPORT TcpConn : public Connector {
-  size_t receive(char* buff, size_t len) override;
-  size_t send(const char* buff, size_t len) override;
+  size_t receive(char*, size_t, std::chrono::milliseconds) override;
+  size_t send(const char*, size_t, std::chrono::milliseconds) override;
 
   uint16_t getPort() override final;
 

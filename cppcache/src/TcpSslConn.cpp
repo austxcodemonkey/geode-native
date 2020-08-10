@@ -91,7 +91,8 @@ TcpSslConn::~TcpSslConn() {
   LOGFINE(ss.str());
 }
 
-size_t TcpSslConn::receive(char *buff, size_t len) {
+size_t TcpSslConn::receive(char *buff, const size_t len,
+                           std::chrono::milliseconds) {
   auto start = std::chrono::system_clock::now();
 
   return boost::asio::read(*socket_stream_, boost::asio::buffer(buff, len),
@@ -128,7 +129,8 @@ size_t TcpSslConn::receive(char *buff, size_t len) {
                            });
 }
 
-size_t TcpSslConn::send(const char *buff, size_t len) {
+size_t TcpSslConn::send(const char *buff, const size_t len,
+                        std::chrono::milliseconds) {
   return boost::asio::write(*socket_stream_, boost::asio::buffer(buff, len));
 }
 

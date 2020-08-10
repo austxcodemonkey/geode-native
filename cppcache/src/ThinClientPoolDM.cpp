@@ -404,6 +404,7 @@ void ThinClientPoolDM::manageConnections(std::atomic<bool>& isRunning) {
       }
     }
   }
+
   LOGFINE("ThinClientPoolDM: ending manageConnections thread");
 }
 
@@ -432,8 +433,9 @@ void ThinClientPoolDM::cleanStaleConnections(std::atomic<bool>& isRunning) {
       removelist.push_back(conn);
     } else if (conn) {
       auto nextIdle =
-          _idle - std::chrono::duration_cast<std::chrono::milliseconds>(
-                      TcrConnection::clock::now() - conn->getLastAccessed());
+          _idle -
+          std::chrono::duration_cast<std::chrono::milliseconds>(
+              std::chrono::steady_clock::now() - conn->getLastAccessed());
       if (nextIdle > std::chrono::seconds::zero() && nextIdle < _nextIdle) {
         _nextIdle = nextIdle;
       }
@@ -452,7 +454,10 @@ void ThinClientPoolDM::cleanStaleConnections(std::atomic<bool>& isRunning) {
        iter != removelist.end(); ++iter) {
     TcrConnection* conn = *iter;
     if (replaceCount <= 0) {
-      GF_SAFE_DELETE_CON(conn);
+      try {
+        GF_SAFE_DELETE_CON(conn);
+      } catch (...) {
+      }
       removeEPConnections(1, false);
       getStats().incLoadCondDisconnects();
       LOGDEBUG("Removed a connection");
@@ -463,21 +468,28 @@ void ThinClientPoolDM::cleanStaleConnections(std::atomic<bool>& isRunning) {
                            /*hasExpired(conn) ? nullptr :*/ conn);
       if (newConn) {
         auto nextIdle =
-            _idle - std::chrono::duration_cast<std::chrono::milliseconds>(
-                        TcrConnection::clock::now() - conn->getLastAccessed());
+            _idle -
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - conn->getLastAccessed());
         if (nextIdle > std::chrono::seconds::zero() && nextIdle < _nextIdle) {
           _nextIdle = nextIdle;
         }
         put(newConn, false);
         if (newConn != conn) {
-          GF_SAFE_DELETE_CON(conn);
+          try {
+            GF_SAFE_DELETE_CON(conn);
+          } catch (...) {
+          }
           removeEPConnections(1, false);
           getStats().incLoadCondDisconnects();
           LOGDEBUG("Removed a connection");
         }
       } else {
         if (hasExpired(conn)) {
-          GF_SAFE_DELETE_CON(conn);
+          try {
+            GF_SAFE_DELETE_CON(conn);
+          } catch (...) {
+          }
           removeEPConnections(1, false);
           getStats().incLoadCondDisconnects();
           LOGDEBUG("Removed a connection");
@@ -486,7 +498,7 @@ void ThinClientPoolDM::cleanStaleConnections(std::atomic<bool>& isRunning) {
           auto nextIdle =
               _idle -
               std::chrono::duration_cast<std::chrono::milliseconds>(
-                  TcrConnection::clock::now() - conn->getLastAccessed());
+                  std::chrono::steady_clock::now() - conn->getLastAccessed());
           if (nextIdle > std::chrono::seconds::zero() && nextIdle < _nextIdle) {
             _nextIdle = nextIdle;
           }
@@ -1444,7 +1456,10 @@ GfErrType ThinClientPoolDM::sendSyncRequest(
                         request.getMessageType() ==
                             TcrMessage::EXECUTE_REGION_FUNCTION_SINGLE_HOP);
           if (conn) {
-            GF_SAFE_DELETE_CON(conn);
+            try {
+              GF_SAFE_DELETE_CON(conn);
+            } catch (...) {
+            }
           }
           excludeServers.insert(ServerLocation(ep->name()));
           if (error == GF_IOERR) {
@@ -2037,17 +2052,20 @@ void ThinClientPoolDM::pingServerLocal() {
 
 void ThinClientPoolDM::updateLocatorList(std::atomic<bool>& isRunning) {
   LOGFINE("Starting updateLocatorList thread for pool %s", m_poolName.c_str());
+
   while (isRunning) {
     m_updateLocatorListSema.acquire();
     if (isRunning && !m_connManager.isNetDown()) {
       (m_locHelper)->updateLocators(getServerGroup());
     }
   }
+
   LOGFINE("Ending updateLocatorList thread for pool %s", m_poolName.c_str());
 }
 
 void ThinClientPoolDM::pingServer(std::atomic<bool>& isRunning) {
   LOGFINE("Starting ping thread for pool %s", m_poolName.c_str());
+
   while (isRunning) {
     m_pingSema.acquire();
     if (isRunning && !m_connManager.isNetDown()) {
@@ -2055,6 +2073,7 @@ void ThinClientPoolDM::pingServer(std::atomic<bool>& isRunning) {
       m_pingSema.acquire();
     }
   }
+
   LOGFINE("Ending ping thread for pool %s", m_poolName.c_str());
 }
 

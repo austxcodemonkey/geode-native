@@ -95,11 +95,12 @@ GfErrType ThinClientLocatorHelper::getAllServers(
 
       if (!conn->send(
               reinterpret_cast<char*>(const_cast<uint8_t*>(data.getBuffer())),
-              data.getBufferLength())) {
+              data.getBufferLength(), m_poolDM->getReadTimeout())) {
         continue;
       }
       char buff[BUFF_SIZE];
-      const auto receivedLength = conn->receive(buff);
+      const auto receivedLength =
+          conn->receive(buff, m_poolDM->getReadTimeout());
 
       if (!receivedLength) {
         continue;
@@ -125,6 +126,8 @@ GfErrType ThinClientLocatorHelper::getAllServers(
     } catch (const Exception& excp) {
       LOGFINE("Exception while querying locator: %s: %s",
               excp.getName().c_str(), excp.what());
+      continue;
+    } catch (...) {
       continue;
     }
   }
@@ -175,11 +178,12 @@ GfErrType ThinClientLocatorHelper::getEndpointForNewCallBackConn(
 
       if (!conn->send(
               reinterpret_cast<char*>(const_cast<uint8_t*>(data.getBuffer())),
-              data.getBufferLength())) {
+              data.getBufferLength(), m_poolDM->getReadTimeout())) {
         continue;
       }
       char buff[BUFF_SIZE];
-      const auto receivedLength = conn->receive(buff);
+      const auto receivedLength =
+          conn->receive(buff, m_poolDM->getReadTimeout());
 
       if (!receivedLength) {
         continue;
@@ -204,6 +208,8 @@ GfErrType ThinClientLocatorHelper::getEndpointForNewCallBackConn(
     } catch (const Exception& excp) {
       LOGFINE("Exception while querying locator: %s: %s",
               excp.getName().c_str(), excp.what());
+      continue;
+    } catch (...) {
       continue;
     }
   }
@@ -263,11 +269,12 @@ GfErrType ThinClientLocatorHelper::getEndpointForNewFwdConn(
       }
       if (!conn->send(
               reinterpret_cast<char*>(const_cast<uint8_t*>(data.getBuffer())),
-              data.getBufferLength())) {
+              data.getBufferLength(), m_poolDM->getReadTimeout())) {
         continue;
       }
       char buff[BUFF_SIZE];
-      const auto receivedLength = conn->receive(buff);
+      const auto receivedLength =
+          conn->receive(buff, m_poolDM->getReadTimeout());
 
       if (!receivedLength) {
         continue;  // return GF_EUNDEF;
@@ -339,12 +346,13 @@ GfErrType ThinClientLocatorHelper::updateLocators(
       data.writeObject(request);
       if (!conn->send(
               reinterpret_cast<char*>(const_cast<uint8_t*>(data.getBuffer())),
-              data.getBufferLength())) {
+              data.getBufferLength(), m_poolDM->getReadTimeout())) {
         conn = nullptr;
         continue;
       }
       char buff[BUFF_SIZE];
-      const auto receivedLength = conn->receive(buff);
+      const auto receivedLength =
+          conn->receive(buff, m_poolDM->getReadTimeout());
 
       if (!receivedLength) {
         continue;

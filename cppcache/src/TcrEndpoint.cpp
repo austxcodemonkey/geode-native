@@ -143,8 +143,7 @@ GfErrType TcrEndpoint::createNewConnectionWL(
     if (locked) {
       try {
         LOGFINE("TcrEndpoint::createNewConnectionWL got lock");
-        newConn =
-            new TcrConnection(m_cacheImpl->tcrConnectionManager(), m_connected);
+        newConn = new TcrConnection(m_cacheImpl->tcrConnectionManager());
         newConn->initTcrConnection(shared_from_this(), m_ports,
                                    isClientNotification, isSecondary,
                                    connectTimeout);
@@ -192,8 +191,7 @@ GfErrType TcrEndpoint::createNewConnection(
     try {
       if (newConn == nullptr) {
         if (!needtoTakeConnectLock() || !appThreadRequest) {
-          newConn = new TcrConnection(m_cacheImpl->tcrConnectionManager(),
-                                      m_connected);
+          newConn = new TcrConnection(m_cacheImpl->tcrConnectionManager());
           bool authenticate = newConn->initTcrConnection(
               shared_from_this(), m_ports, isClientNotification, isSecondary,
               connectTimeout);
@@ -1170,7 +1168,10 @@ void TcrEndpoint::triggerRedundancyThread() {
 void TcrEndpoint::closeConnection(TcrConnection*& conn) {
   conn->close();
   m_ports.erase(conn->getPort());
-  _GEODE_SAFE_DELETE(conn);
+  try {
+    _GEODE_SAFE_DELETE(conn);
+  } catch (...) {
+  }
 }
 
 void TcrEndpoint::closeConnections() {

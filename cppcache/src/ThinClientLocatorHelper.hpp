@@ -39,6 +39,7 @@ namespace client {
 
 class ThinClientPoolDM;
 class Connector;
+class TcrConnection;
 
 class ThinClientLocatorHelper {
  public:

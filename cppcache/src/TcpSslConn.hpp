@@ -29,8 +29,8 @@ namespace geode {
 namespace client {
 
 class TcpSslConn : public TcpConn {
-  size_t receive(char* buff, size_t len) override final;
-  size_t send(const char* buff, size_t len) override final;
+  size_t receive(char*, size_t, std::chrono::milliseconds) override final;
+  size_t send(const char*, size_t, std::chrono::milliseconds) override final;
 
   using ssl_stream_type =
       boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>;

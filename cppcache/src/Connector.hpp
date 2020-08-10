@@ -71,7 +71,8 @@ class APACHE_GEODE_EXPORT Connector {
    * @exception  GeodeIOException, TimeoutException, IllegalArgumentException,
    * OutOfMemoryException.
    */
-  virtual size_t receive(char *b, size_t len) = 0;
+  virtual size_t receive(char *b, size_t len,
+                         std::chrono::milliseconds timeout) = 0;
 
   /**
    * Writes <code>len</code> bytes from the specified byte array
@@ -83,7 +84,8 @@ class APACHE_GEODE_EXPORT Connector {
    * @return     the actual number of bytes written.
    * @exception  GeodeIOException, TimeoutException, IllegalArgumentException.
    */
-  virtual size_t send(const char *b, size_t len) = 0;
+  virtual size_t send(const char *b, size_t len,
+                      std::chrono::milliseconds timeout) = 0;
 
   /**
    * Returns local port for this TCP connection
@@ -100,8 +102,9 @@ class APACHE_GEODE_EXPORT Connector {
    * @exception GeodeIOException, TimeoutException
    */
   template <typename T, size_t size>
-  size_t send(const T (&array)[size]) {
-    return send(reinterpret_cast<const char *>(array), sizeof(T) * size);
+  size_t send(const T (&array)[size], std::chrono::milliseconds timeout) {
+    return send(reinterpret_cast<const char *>(array), sizeof(T) * size,
+                timeout);
   }
 
   /**
@@ -114,8 +117,8 @@ class APACHE_GEODE_EXPORT Connector {
    * @exception GeodeIOException, TimeoutException
    */
   template <typename T, size_t size>
-  size_t receive(T (&array)[size]) {
-    return receive(reinterpret_cast<char *>(array), sizeof(T) * size);
+  size_t receive(T (&array)[size], std::chrono::milliseconds timeout) {
+    return receive(reinterpret_cast<char *>(array), sizeof(T) * size, timeout);
   }
 };
 }  // namespace client
