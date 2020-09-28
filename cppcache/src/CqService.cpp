@@ -47,12 +47,7 @@ CqService::CqService(ThinClientBaseDM* tccdm,
 }
 CqService::~CqService() noexcept { LOGDEBUG("CqService Destroyed"); }
 
-void CqService::updateStats() {
-  auto stats = std::dynamic_pointer_cast<CqServiceVsdStats>(m_stats);
-
-  stats->setNumCqsActive(0);
-  stats->setNumCqsStopped(0);
-
+void CqService::updateStats() { auto stats = std::dynamic_pointer_cast<CqServiceVsdStats>(m_stats); stats->setNumCqsActive(0); stats->setNumCqsStopped(0); 
   auto&& lock = m_cqQueryMap.make_lock();
 
   stats->setNumCqsOnClient(static_cast<uint32_t>(m_cqQueryMap.size()));
