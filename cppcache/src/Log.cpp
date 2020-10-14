@@ -47,16 +47,11 @@ const std::shared_ptr<spdlog::logger>& getCurrentLogger() {
 uint32_t calculateMaxFilesForSpaceLimit(uint32_t logDiskSpaceLimit,
                                         uint32_t logFileSizeLimit) {
   uint32_t maxFiles = 1;
-  uint32_t diskSpaceLimit = logDiskSpaceLimit;
 
-  if (!diskSpaceLimit) {
-    // User says it's fine to just fill up their disk with log files, so let's
-    // pick a reasonable max disk space of, say, 1GB
-    diskSpaceLimit = __1G__;
-  }
   if (logFileSizeLimit) {
     maxFiles = logDiskSpaceLimit / logFileSizeLimit;
   }
+
   return maxFiles;
 }
 
@@ -120,11 +115,12 @@ APACHE_GEODE_EXPORT void LogInit(apache::geode::client::LogLevel logLevel,
             "logging.");
         throw ex;
       }
+      auto diskSpaceLimit = logDiskSpaceLimit ? logDiskSpaceLimit : __1G__;
       auto maxFiles =
-          calculateMaxFilesForSpaceLimit(logDiskSpaceLimit, logFileSizeLimit);
+          calculateMaxFilesForSpaceLimit(diskSpaceLimit, logFileSizeLimit);
       currentLevel = logLevel;
       currentLogger = spdlog::rotating_logger_mt("file", logFilename,
-                                                 logDiskSpaceLimit, maxFiles);
+                                                 diskSpaceLimit, maxFiles);
       currentLogger->set_level(geodeLogLevelToSpdlogLevel(currentLevel));
     }
   } catch (const spdlog::spdlog_ex ex) {
@@ -258,9 +254,117 @@ void LogDebug(const char* format, ...) {
     char buf[LOG_SCRATCH_BUFFER_SIZE];
     va_list vl;
     va_start(vl, format);
-    vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl);
-    currentLogger->debug(buf);
+    if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
+      if (currentLogger) {
+        currentLogger->debug(buf);
+      }
+    }
   }
 }
 
 void LogDebug(const std::string& msg) { LogDebug(msg.c_str()); }
+
+void LogFinest(const char* format, ...) {
+  if (currentLevel >= apache::geode::client::LogLevel::Finest) {
+    char buf[LOG_SCRATCH_BUFFER_SIZE];
+    va_list vl;
+    va_start(vl, format);
+    if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
+      if (currentLogger) {
+        currentLogger->debug(buf);
+      }
+    }
+  }
+}
+
+void LogFinest(const std::string& msg) { LogFinest(msg.c_str()); }
+
+void LogFiner(const char* format, ...) {
+  if (currentLevel >= apache::geode::client::LogLevel::Finer) {
+    char buf[LOG_SCRATCH_BUFFER_SIZE];
+    va_list vl;
+    va_start(vl, format);
+    if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
+      if (currentLogger) {
+        currentLogger->debug(buf);
+      }
+    }
+  }
+}
+
+void LogFiner(const std::string& msg) { LogFiner(msg.c_str()); }
+
+void LogFine(const char* format, ...) {
+  if (currentLevel >= apache::geode::client::LogLevel::Fine) {
+    char buf[LOG_SCRATCH_BUFFER_SIZE];
+    va_list vl;
+    va_start(vl, format);
+    if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
+      if (currentLogger) {
+        currentLogger->debug(buf);
+      }
+    }
+  }
+}
+
+void LogFine(const std::string& msg) { LogFine(msg.c_str()); }
+
+void LogConfig(const char* format, ...) {
+  if (currentLevel >= apache::geode::client::LogLevel::Config) {
+    char buf[LOG_SCRATCH_BUFFER_SIZE];
+    va_list vl;
+    va_start(vl, format);
+    if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
+      if (currentLogger) {
+        currentLogger->info(buf);
+      }
+    }
+  }
+}
+
+void LogConfig(const std::string& msg) { LogConfig(msg.c_str()); }
+
+void LogInfo(const char* format, ...) {
+  if (currentLevel >= apache::geode::client::LogLevel::Info) {
+    char buf[LOG_SCRATCH_BUFFER_SIZE];
+    va_list vl;
+    va_start(vl, format);
+    if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
+      if (currentLogger) {
+        currentLogger->info(buf);
+      }
+    }
+  }
+}
+
+void LogInfo(const std::string& msg) { LogInfo(msg.c_str()); }
+
+void LogWarning(const char* format, ...) {
+  if (currentLevel >= apache::geode::client::LogLevel::Warning) {
+    char buf[LOG_SCRATCH_BUFFER_SIZE];
+    va_list vl;
+    va_start(vl, format);
+    if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
+      if (currentLogger) {
+        currentLogger->warn(buf);
+      }
+    }
+  }
+}
+
+void LogWarning(const std::string& msg) { LogWarning(msg.c_str()); }
+
+void LogError(const char* format, ...) {
+  if (currentLevel >= apache::geode::client::LogLevel::Error) {
+    char buf[LOG_SCRATCH_BUFFER_SIZE];
+    va_list vl;
+    va_start(vl, format);
+    if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
+      if (currentLogger) {
+        currentLogger->error(buf);
+      }
+    }
+  }
+}
+
+void LogError(const std::string& msg) { LogError(msg.c_str()); }

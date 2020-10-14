@@ -49,15 +49,28 @@ APACHE_GEODE_EXPORT std::string StringFromLogLevel(
 
 void LogDebug(const char* format, ...);
 void LogDebug(const std::string& msg);
+void LogFinest(const char* format, ...);
+void LogFinest(const std::string& msg);
+void LogFiner(const char* format, ...);
+void LogFiner(const std::string& msg);
+void LogFine(const char* format, ...);
+void LogFine(const std::string& msg);
+void LogConfig(const char* format, ...);
+void LogConfig(const std::string& msg);
+void LogInfo(const char* format, ...);
+void LogInfo(const std::string& msg);
+void LogWarning(const char* format, ...);
+void LogWarning(const std::string& msg);
+void LogError(const char* format, ...);
+void LogError(const std::string& msg);
 
 #define LOGDEBUG LogDebug
-
-#define LOGERROR LoggyMcLogFace
-#define LOGWARN LoggyMcLogFace
-#define LOGINFO LoggyMcLogFace
-#define LOGCONFIG LoggyMcLogFace
-#define LOGFINE LoggyMcLogFace
-#define LOGFINER LoggyMcLogFace
-#define LOGFINEST LoggyMcLogFace
+#define LOGFINEST LogFinest
+#define LOGFINER LogFiner
+#define LOGFINE LogFine
+#define LOGCONFIG LogConfig
+#define LOGINFO LogInfo
+#define LOGWARN LogWarning
+#define LOGERROR LogError
 
 #endif  // GEODE_LOG_H_

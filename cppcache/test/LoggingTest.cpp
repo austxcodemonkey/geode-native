@@ -88,7 +88,7 @@ TEST(LoggingTest, logInit) {
       apache::geode::client::IllegalArgumentException);
 }
 
-TEST(LoggingTest, logAtEachLevel) {
+TEST(LoggingTest, logToFileAtEachLevel) {
   ASSERT_NO_THROW(
       LogInit(apache::geode::client::LogLevel::Debug, testLogFileName));
   LogDebug("This is a debug string");
@@ -96,4 +96,69 @@ TEST(LoggingTest, logAtEachLevel) {
   LogClose();
   ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
   ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
+  boost::filesystem::remove(testLogFileName);
+  ASSERT_FALSE(boost::filesystem::exists(testLogFileName));
+
+  ASSERT_NO_THROW(
+      LogInit(apache::geode::client::LogLevel::Finest, testLogFileName));
+  LogFinest("This is a 'finest' string");
+  LogFinest("This is a formatted 'finest' string (%d)", __1M__);
+  LogClose();
+  ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
+  ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
+  boost::filesystem::remove(testLogFileName);
+
+  ASSERT_NO_THROW(
+      LogInit(apache::geode::client::LogLevel::Finer, testLogFileName));
+  LogFiner("This is a 'finer' string");
+  LogFiner("This is a formatted 'finer' string (%d)", __1M__);
+  LogClose();
+  ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
+  ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
+  boost::filesystem::remove(testLogFileName);
+
+  ASSERT_NO_THROW(
+      LogInit(apache::geode::client::LogLevel::Fine, testLogFileName));
+  LogFine("This is a 'fine' string");
+  LogFine("This is a formatted 'fine' string (%d)", __1M__);
+  LogClose();
+  ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
+  ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
+  boost::filesystem::remove(testLogFileName);
+
+  ASSERT_NO_THROW(
+      LogInit(apache::geode::client::LogLevel::Config, testLogFileName));
+  LogConfig("This is a 'config' string");
+  LogConfig("This is a formatted 'config' string (%d)", __1M__);
+  LogClose();
+  ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
+  ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
+  boost::filesystem::remove(testLogFileName);
+
+  ASSERT_NO_THROW(
+      LogInit(apache::geode::client::LogLevel::Info, testLogFileName));
+  LogInfo("This is a 'finer' string");
+  LogInfo("This is a formatted 'finer' string (%d)", __1M__);
+  LogClose();
+  ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
+  ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
+  boost::filesystem::remove(testLogFileName);
+
+  ASSERT_NO_THROW(
+      LogInit(apache::geode::client::LogLevel::Warning, testLogFileName));
+  LogWarning("This is a 'warning' string");
+  LogWarning("This is a formatted 'warning' string (%d)", __1M__);
+  LogClose();
+  ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
+  ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
+  boost::filesystem::remove(testLogFileName);
+
+  ASSERT_NO_THROW(
+      LogInit(apache::geode::client::LogLevel::Error, testLogFileName));
+  LogError("This is a 'error' string");
+  LogError("This is a formatted 'error' string (%d)", __1M__);
+  LogClose();
+  ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
+  ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
+  boost::filesystem::remove(testLogFileName);
 }
