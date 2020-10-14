@@ -32,9 +32,11 @@ using apache::geode::client::CacheFactory;
 using apache::geode::client::LogLevel;
 using apache::geode::client::RegionShortcut;
 
-const int __1KB__ = 1024;
-const int __4KB__ = 4 * __1KB__;
-const int __1MB__ = __1KB__ * __1KB__;
+const int __1K__ = 1024;
+const int __4K__ = 4 * __1K__;
+const int __1M__ = __1K__ * __1K__;
+
+const char* testLogFileName = "LoggingTest.log";
 
 /**
  * Verify we can initialize the logger with any combination of level, filename,
@@ -75,13 +77,23 @@ TEST(LoggingTest, logInit) {
                apache::geode::client::IllegalArgumentException);
 
   // Specify disk or file limit without a filename
-  ASSERT_THROW(LogInit(apache::geode::client::LogLevel::Config, "", __4KB__),
+  ASSERT_THROW(LogInit(apache::geode::client::LogLevel::Config, "", __4K__),
                apache::geode::client::IllegalArgumentException);
-  ASSERT_THROW(LogInit(apache::geode::client::LogLevel::Config, "", 0, __4KB__),
+  ASSERT_THROW(LogInit(apache::geode::client::LogLevel::Config, "", 0, __4K__),
                apache::geode::client::IllegalArgumentException);
 
   // Specify a disk space limit smaller than the file size limit
   ASSERT_THROW(
-      LogInit(apache::geode::client::LogLevel::Config, "", __1MB__, __4KB__),
+      LogInit(apache::geode::client::LogLevel::Config, "", __1M__, __4K__),
       apache::geode::client::IllegalArgumentException);
+}
+
+TEST(LoggingTest, logAtEachLevel) {
+  ASSERT_NO_THROW(
+      LogInit(apache::geode::client::LogLevel::Debug, testLogFileName));
+  LogDebug("This is a debug string");
+  LogDebug("This is a formatted debug string (%d)", __1M__);
+  LogClose();
+  ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
+  ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
 }

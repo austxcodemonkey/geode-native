@@ -27,7 +27,11 @@
 #include <geode/internal/geode_globals.hpp>
 #include <geode/util/LogLevel.hpp>
 
+#include "spdlog/spdlog.h"
+
 #define _GF_MSG_LIMIT 8192
+
+const std::shared_ptr<spdlog::logger>& getCurrentLogger();
 
 APACHE_GEODE_EXPORT void LoggyMcLogFace(const char*, ...);
 APACHE_GEODE_EXPORT void LoggyMcLogFace(const std::string&, ...);
@@ -38,12 +42,16 @@ APACHE_GEODE_EXPORT void LogInit(
     std::string logFilename = "", uint32_t logFileSizeLimit = 0,
     uint32_t logDiskSpaceLimit = 0);
 APACHE_GEODE_EXPORT void LogSetLevel(apache::geode::client::LogLevel);
-APACHE_GEODE_EXPORT apache::geode::client::LogLevel logLevelFromString(
+APACHE_GEODE_EXPORT apache::geode::client::LogLevel LogLevelFromString(
     const std::string&);
-APACHE_GEODE_EXPORT std::string stringFromLogLevel(
+APACHE_GEODE_EXPORT std::string StringFromLogLevel(
     apache::geode::client::LogLevel);
 
-#define LOGDEBUG LoggyMcLogFace
+void LogDebug(const char* format, ...);
+void LogDebug(const std::string& msg);
+
+#define LOGDEBUG LogDebug
+
 #define LOGERROR LoggyMcLogFace
 #define LOGWARN LoggyMcLogFace
 #define LOGINFO LoggyMcLogFace
