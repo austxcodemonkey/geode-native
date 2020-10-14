@@ -33,7 +33,10 @@ APACHE_GEODE_EXPORT void LoggyMcLogFace(const char*, ...);
 APACHE_GEODE_EXPORT void LoggyMcLogFace(const std::string&, ...);
 
 APACHE_GEODE_EXPORT void LogClose();
-APACHE_GEODE_EXPORT void LogInit(...);
+APACHE_GEODE_EXPORT void LogInit(
+    apache::geode::client::LogLevel = apache::geode::client::LogLevel::Config,
+    std::string logFilename = "", uint32_t logFileSizeLimit = 0,
+    uint32_t logDiskSpaceLimit = 0);
 APACHE_GEODE_EXPORT void LogSetLevel(apache::geode::client::LogLevel);
 APACHE_GEODE_EXPORT apache::geode::client::LogLevel logLevelFromString(
     const std::string&);

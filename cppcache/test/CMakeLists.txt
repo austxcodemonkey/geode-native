@@ -43,6 +43,7 @@ add_executable(apache-geode_unittests
   InterestResultPolicyTest.cpp
   LocalRegionTest.cpp
   LRUQueueTest.cpp
+  LoggingTest.cpp
   PdxInstanceImplTest.cpp
   PdxTypeTest.cpp
   QueueConnectionRequestTest.cpp

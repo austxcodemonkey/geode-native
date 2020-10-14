@@ -89,6 +89,7 @@ target_link_libraries(_apache-geode INTERFACE
   Boost::thread
   Boost::stacktrace
   XercesC::XercesC
+  SPDLog::SPDLog
 )
 
 if (USE_PCH)
