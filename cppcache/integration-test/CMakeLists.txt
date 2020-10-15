@@ -29,6 +29,7 @@ target_link_libraries(test-cppcache-utils
   PUBLIC
     apache-geode
     framework
+    SPDLog::SPDLog
 )
 set_target_properties(test-cppcache-utils PROPERTIES
   CXX_VISIBILITY_PRESET hidden
@@ -53,6 +54,7 @@ target_link_libraries(unit_test_callbacks
     _WarningsAsError
   PUBLIC
     apache-geode
+    SPDLog::SPDLog
 )
 target_include_directories(unit_test_callbacks
   PRIVATE

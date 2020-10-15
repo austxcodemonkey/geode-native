@@ -92,6 +92,7 @@ target_link_libraries(testobject
   PUBLIC
     apache-geode
     framework
+    SPDLog::SPDLog
   PRIVATE
     ACE::ACE
     _WarningsAsError

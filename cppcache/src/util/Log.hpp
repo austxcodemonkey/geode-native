@@ -47,22 +47,22 @@ APACHE_GEODE_EXPORT apache::geode::client::LogLevel LogLevelFromString(
 APACHE_GEODE_EXPORT std::string StringFromLogLevel(
     apache::geode::client::LogLevel);
 
-void LogDebug(const char* format, ...);
-void LogDebug(const std::string& msg);
-void LogFinest(const char* format, ...);
-void LogFinest(const std::string& msg);
-void LogFiner(const char* format, ...);
-void LogFiner(const std::string& msg);
-void LogFine(const char* format, ...);
-void LogFine(const std::string& msg);
-void LogConfig(const char* format, ...);
-void LogConfig(const std::string& msg);
-void LogInfo(const char* format, ...);
-void LogInfo(const std::string& msg);
-void LogWarning(const char* format, ...);
-void LogWarning(const std::string& msg);
-void LogError(const char* format, ...);
-void LogError(const std::string& msg);
+APACHE_GEODE_EXPORT void LogDebug(const char* format, ...);
+APACHE_GEODE_EXPORT void LogDebug(const std::string& msg);
+APACHE_GEODE_EXPORT void LogFinest(const char* format, ...);
+APACHE_GEODE_EXPORT void LogFinest(const std::string& msg);
+APACHE_GEODE_EXPORT void LogFiner(const char* format, ...);
+APACHE_GEODE_EXPORT void LogFiner(const std::string& msg);
+APACHE_GEODE_EXPORT void LogFine(const char* format, ...);
+APACHE_GEODE_EXPORT void LogFine(const std::string& msg);
+APACHE_GEODE_EXPORT void LogConfig(const char* format, ...);
+APACHE_GEODE_EXPORT void LogConfig(const std::string& msg);
+APACHE_GEODE_EXPORT void LogInfo(const char* format, ...);
+APACHE_GEODE_EXPORT void LogInfo(const std::string& msg);
+APACHE_GEODE_EXPORT void LogWarning(const char* format, ...);
+APACHE_GEODE_EXPORT void LogWarning(const std::string& msg);
+APACHE_GEODE_EXPORT void LogError(const char* format, ...);
+APACHE_GEODE_EXPORT void LogError(const std::string& msg);
 
 #define LOGDEBUG LogDebug
 #define LOGFINEST LogFinest

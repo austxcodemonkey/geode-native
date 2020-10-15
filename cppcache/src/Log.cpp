@@ -32,9 +32,6 @@
 std::shared_ptr<spdlog::logger> currentLogger;
 apache::geode::client::LogLevel currentLevel;
 
-APACHE_GEODE_EXPORT void LoggyMcLogFace(const char*, ...) {}
-APACHE_GEODE_EXPORT void LoggyMcLogFace(const std::string&, ...) {}
-
 const int __1K__ = 1024;
 const int __1M__ = __1K__ * __1K__;
 const int __1G__ = __1K__ * __1M__;
@@ -61,35 +58,45 @@ spdlog::level::level_enum geodeLogLevelToSpdlogLevel(
   switch (logLevel) {
     case apache::geode::client::LogLevel::None:
       level = spdlog::level::level_enum::off;
+      break;
     case apache::geode::client::LogLevel::Error:
       level = spdlog::level::level_enum::err;
+      break;
     case apache::geode::client::LogLevel::Warning:
       level = spdlog::level::level_enum::warn;
+      break;
     case apache::geode::client::LogLevel::Info:
       level = spdlog::level::level_enum::info;
+      break;
     case apache::geode::client::LogLevel::Default:
       level = spdlog::level::level_enum::info;
+      break;
     case apache::geode::client::LogLevel::Config:
       level = spdlog::level::level_enum::info;
+      break;
     case apache::geode::client::LogLevel::Fine:
       level = spdlog::level::level_enum::debug;
+      break;
     case apache::geode::client::LogLevel::Finer:
       level = spdlog::level::level_enum::debug;
+      break;
     case apache::geode::client::LogLevel::Finest:
       level = spdlog::level::level_enum::debug;
+      break;
     case apache::geode::client::LogLevel::Debug:
       level = spdlog::level::level_enum::debug;
+      break;
     case apache::geode::client::LogLevel::All:
       level = spdlog::level::level_enum::debug;
+      break;
   }
 
   return level;
 }
 
-APACHE_GEODE_EXPORT void LogInit(apache::geode::client::LogLevel logLevel,
-                                 std::string logFilename,
-                                 uint32_t logFileSizeLimit,
-                                 uint32_t logDiskSpaceLimit) {
+APACHE_GEODE_EXPORT APACHE_GEODE_EXPORT void LogInit(
+    apache::geode::client::LogLevel logLevel, std::string logFilename,
+    uint32_t logFileSizeLimit, uint32_t logDiskSpaceLimit) {
   try {
     if (logFilename.empty()) {
       if (logFileSizeLimit || logDiskSpaceLimit) {
@@ -140,59 +147,24 @@ APACHE_GEODE_EXPORT void LogInit(apache::geode::client::LogLevel logLevel,
                                                  logFileSizeLimit, maxFiles);
       currentLogger->set_level(geodeLogLevelToSpdlogLevel(currentLevel));
     }
-  } catch (const spdlog::spdlog_ex ex) {
+  } catch (const spdlog::spdlog_ex& ex) {
     throw apache::geode::client::IllegalStateException(ex.what());
   }
 }
 
-APACHE_GEODE_EXPORT void LogClose() {
+APACHE_GEODE_EXPORT APACHE_GEODE_EXPORT void LogClose() {
   if (currentLogger) {
     spdlog::drop(currentLogger->name());
   }
   currentLogger = nullptr;
 }
 
-APACHE_GEODE_EXPORT void LogSetLevel(apache::geode::client::LogLevel) {}
-
-APACHE_GEODE_EXPORT apache::geode::client::LogLevel logLevelFromString(
-    const std::string& levelName) {
-  auto level = apache::geode::client::LogLevel::None;
-
-  if (levelName.size()) {
-    auto localLevelName = levelName;
-
-    std::transform(localLevelName.begin(), localLevelName.end(),
-                   localLevelName.begin(), ::tolower);
-
-    if (localLevelName == "none") {
-      level = apache::geode::client::LogLevel::None;
-    } else if (localLevelName == "error") {
-      level = apache::geode::client::LogLevel::Error;
-    } else if (localLevelName == "warning") {
-      level = apache::geode::client::LogLevel::Warning;
-    } else if (localLevelName == "info") {
-      level = apache::geode::client::LogLevel::Info;
-    } else if (localLevelName == "default") {
-      level = apache::geode::client::LogLevel::Default;
-    } else if (localLevelName == "config") {
-      level = apache::geode::client::LogLevel::Config;
-    } else if (localLevelName == "fine") {
-      level = apache::geode::client::LogLevel::Fine;
-    } else if (localLevelName == "finer") {
-      level = apache::geode::client::LogLevel::Finer;
-    } else if (localLevelName == "finest") {
-      level = apache::geode::client::LogLevel::Finest;
-    } else if (localLevelName == "debug") {
-      level = apache::geode::client::LogLevel::Debug;
-    } else if (localLevelName == "all") {
-      level = apache::geode::client::LogLevel::All;
-    } else {
-      throw apache::geode::client::IllegalArgumentException(
-          ("Unexpected log localLevelName: " + localLevelName).c_str());
-    }
+APACHE_GEODE_EXPORT APACHE_GEODE_EXPORT void LogSetLevel(
+    apache::geode::client::LogLevel level) {
+  currentLevel = level;
+  if (currentLogger) {
+    currentLogger->set_level(geodeLogLevelToSpdlogLevel(level));
   }
-
-  return level;
 }
 
 APACHE_GEODE_EXPORT apache::geode::client::LogLevel LogLevelFromString(
@@ -229,7 +201,7 @@ APACHE_GEODE_EXPORT apache::geode::client::LogLevel LogLevelFromString(
       level = apache::geode::client::LogLevel::All;
     } else {
       throw apache::geode::client::IllegalArgumentException(
-          ("Unexpected log localLevelName: " + localLevelName).c_str());
+          ("Unexpected log level name: " + localLevelName).c_str());
     }
   }
 
@@ -242,31 +214,42 @@ APACHE_GEODE_EXPORT std::string StringFromLogLevel(
   switch (level) {
     case apache::geode::client::LogLevel::None:
       levelName = "none";
+      break;
     case apache::geode::client::LogLevel::Error:
       levelName = "error";
+      break;
     case apache::geode::client::LogLevel::Warning:
       levelName = "warning";
+      break;
     case apache::geode::client::LogLevel::Info:
       levelName = "info";
+      break;
     case apache::geode::client::LogLevel::Default:
       levelName = "default";
+      break;
     case apache::geode::client::LogLevel::Config:
       levelName = "config";
+      break;
     case apache::geode::client::LogLevel::Fine:
       levelName = "fine";
+      break;
     case apache::geode::client::LogLevel::Finer:
       levelName = "finer";
+      break;
     case apache::geode::client::LogLevel::Finest:
       levelName = "finest";
+      break;
     case apache::geode::client::LogLevel::Debug:
       levelName = "debug";
+      break;
     case apache::geode::client::LogLevel::All:
       levelName = "all";
+      break;
   }
   return levelName;
 }
 
-void LogDebug(const char* format, ...) {
+APACHE_GEODE_EXPORT void LogDebug(const char* format, ...) {
   if (currentLevel >= apache::geode::client::LogLevel::Debug) {
     char buf[LOG_SCRATCH_BUFFER_SIZE];
     va_list vl;
@@ -279,9 +262,11 @@ void LogDebug(const char* format, ...) {
   }
 }
 
-void LogDebug(const std::string& msg) { LogDebug(msg.c_str()); }
+APACHE_GEODE_EXPORT void LogDebug(const std::string& msg) {
+  LogDebug(msg.c_str());
+}
 
-void LogFinest(const char* format, ...) {
+APACHE_GEODE_EXPORT void LogFinest(const char* format, ...) {
   if (currentLevel >= apache::geode::client::LogLevel::Finest) {
     char buf[LOG_SCRATCH_BUFFER_SIZE];
     va_list vl;
@@ -294,9 +279,11 @@ void LogFinest(const char* format, ...) {
   }
 }
 
-void LogFinest(const std::string& msg) { LogFinest(msg.c_str()); }
+APACHE_GEODE_EXPORT void LogFinest(const std::string& msg) {
+  LogFinest(msg.c_str());
+}
 
-void LogFiner(const char* format, ...) {
+APACHE_GEODE_EXPORT void LogFiner(const char* format, ...) {
   if (currentLevel >= apache::geode::client::LogLevel::Finer) {
     char buf[LOG_SCRATCH_BUFFER_SIZE];
     va_list vl;
@@ -309,9 +296,11 @@ void LogFiner(const char* format, ...) {
   }
 }
 
-void LogFiner(const std::string& msg) { LogFiner(msg.c_str()); }
+APACHE_GEODE_EXPORT void LogFiner(const std::string& msg) {
+  LogFiner(msg.c_str());
+}
 
-void LogFine(const char* format, ...) {
+APACHE_GEODE_EXPORT void LogFine(const char* format, ...) {
   if (currentLevel >= apache::geode::client::LogLevel::Fine) {
     char buf[LOG_SCRATCH_BUFFER_SIZE];
     va_list vl;
@@ -324,9 +313,11 @@ void LogFine(const char* format, ...) {
   }
 }
 
-void LogFine(const std::string& msg) { LogFine(msg.c_str()); }
+APACHE_GEODE_EXPORT void LogFine(const std::string& msg) {
+  LogFine(msg.c_str());
+}
 
-void LogConfig(const char* format, ...) {
+APACHE_GEODE_EXPORT void LogConfig(const char* format, ...) {
   if (currentLevel >= apache::geode::client::LogLevel::Config) {
     char buf[LOG_SCRATCH_BUFFER_SIZE];
     va_list vl;
@@ -339,9 +330,11 @@ void LogConfig(const char* format, ...) {
   }
 }
 
-void LogConfig(const std::string& msg) { LogConfig(msg.c_str()); }
+APACHE_GEODE_EXPORT void LogConfig(const std::string& msg) {
+  LogConfig(msg.c_str());
+}
 
-void LogInfo(const char* format, ...) {
+APACHE_GEODE_EXPORT void LogInfo(const char* format, ...) {
   if (currentLevel >= apache::geode::client::LogLevel::Info) {
     char buf[LOG_SCRATCH_BUFFER_SIZE];
     va_list vl;
@@ -354,9 +347,11 @@ void LogInfo(const char* format, ...) {
   }
 }
 
-void LogInfo(const std::string& msg) { LogInfo(msg.c_str()); }
+APACHE_GEODE_EXPORT void LogInfo(const std::string& msg) {
+  LogInfo(msg.c_str());
+}
 
-void LogWarning(const char* format, ...) {
+APACHE_GEODE_EXPORT void LogWarning(const char* format, ...) {
   if (currentLevel >= apache::geode::client::LogLevel::Warning) {
     char buf[LOG_SCRATCH_BUFFER_SIZE];
     va_list vl;
@@ -369,9 +364,11 @@ void LogWarning(const char* format, ...) {
   }
 }
 
-void LogWarning(const std::string& msg) { LogWarning(msg.c_str()); }
+APACHE_GEODE_EXPORT void LogWarning(const std::string& msg) {
+  LogWarning(msg.c_str());
+}
 
-void LogError(const char* format, ...) {
+APACHE_GEODE_EXPORT void LogError(const char* format, ...) {
   if (currentLevel >= apache::geode::client::LogLevel::Error) {
     char buf[LOG_SCRATCH_BUFFER_SIZE];
     va_list vl;
@@ -384,4 +381,6 @@ void LogError(const char* format, ...) {
   }
 }
 
-void LogError(const std::string& msg) { LogError(msg.c_str()); }
+APACHE_GEODE_EXPORT void LogError(const std::string& msg) {
+  LogError(msg.c_str());
+}
