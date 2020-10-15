@@ -109,18 +109,35 @@ APACHE_GEODE_EXPORT void LogInit(apache::geode::client::LogLevel logLevel,
             "\" is not valid for a log file.");
         throw ex;
       }
-      if (logFileSizeLimit > logDiskSpaceLimit) {
+      if (logDiskSpaceLimit && logFileSizeLimit > logDiskSpaceLimit) {
         apache::geode::client::IllegalArgumentException ex(
             "File size limit must be smaller than disk space limit for "
             "logging.");
         throw ex;
       }
-      auto diskSpaceLimit = logDiskSpaceLimit ? logDiskSpaceLimit : __1G__;
+      auto diskSpaceLimit =
+          logDiskSpaceLimit ? logDiskSpaceLimit : 100 * __1M__;
+      // Use 90% of requested disk space limit as actual limit for logger.  This
+      // guarantees in the vast majority of cases the disk space number will be
+      // treated as an *absolute* limit.  There are a couple of cases where we
+      // will exceed the disk space limit. First, if the very last message in
+      // all log files is longer than 10% of the file size limit.  For example,
+      // if you set a file size limit of 1MB and your last message in the file
+      // is longer than 1MB, the file size limit will be exceeded by > 10%.  If
+      // every file had this problem, you'd exceed the *adjusted* disk space
+      // limit by > 10%, and we'd exceed the disk space limit. The 2nd case is a
+      // specific instance of the 1st - if the file size limit is == the disk
+      // space limit, you only need one of these "extremely long" log messages,
+      // since you only have one log file. Again, though, it also has to be the
+      // last message in the file.  Bottom line, it's very unlikely we'll exceed
+      // the disk space limit unless someone goes out of their way to do so.
+      auto adjustedLimit = 9 * static_cast<uint64_t>(diskSpaceLimit) / 10;
+      diskSpaceLimit = static_cast<uint32_t>(adjustedLimit);
       auto maxFiles =
           calculateMaxFilesForSpaceLimit(diskSpaceLimit, logFileSizeLimit);
       currentLevel = logLevel;
       currentLogger = spdlog::rotating_logger_mt("file", logFilename,
-                                                 diskSpaceLimit, maxFiles);
+                                                 logFileSizeLimit, maxFiles);
       currentLogger->set_level(geodeLogLevelToSpdlogLevel(currentLevel));
     }
   } catch (const spdlog::spdlog_ex ex) {
