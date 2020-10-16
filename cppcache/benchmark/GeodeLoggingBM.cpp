@@ -80,7 +80,7 @@ void GeodeLogCombo(benchmark::State& state) {
 
 template <void T(benchmark::State&)>
 void GeodeLogToConsole(benchmark::State& state) {
-  LogSetLevel(LogLevel::All);
+  LogInit(LogLevel::All);
 
   T(state);
 
