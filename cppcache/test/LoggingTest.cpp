@@ -284,4 +284,16 @@ TEST_F(LoggingTest, verifyDiskSpaceLimit) {
 
   ASSERT_TRUE(size <= DISK_SPACE_LIMIT);
 }
+
+TEST_F(LoggingTest, logToStream) {
+  ASSERT_NO_THROW(LogInit(apache::geode::client::LogLevel::Debug));
+  LogError("This is an ERROR level message");
+  LogWarning("This is an WARNING level message");
+  LogInfo("This is an INFO level message");
+  LogConfig("This is an CONFIG level message");
+  LogFine("This is an FINE level message");
+  LogFiner("This is an FINER level message");
+  LogFinest("This is an FINEST level message");
+  LogDebug("This is an DEBUG level message");
+}
 }  // namespace

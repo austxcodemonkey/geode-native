@@ -79,7 +79,7 @@ DistributedSystem DistributedSystem::create(
       throw;
     }
   } else {
-    LogSetLevel(systemProperties->logLevel());
+    LogInit(systemProperties->logLevel());
   }
 
   try {

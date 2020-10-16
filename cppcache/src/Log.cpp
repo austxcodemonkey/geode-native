@@ -45,9 +45,9 @@ uint32_t calculateMaxFilesForSpaceLimit(uint32_t logDiskSpaceLimit,
                                         uint32_t logFileSizeLimit) {
   uint32_t maxFiles = 1;
 
-  if (logFileSizeLimit) {
-    maxFiles = logDiskSpaceLimit / logFileSizeLimit;
-  }
+  maxFiles = logDiskSpaceLimit / logFileSizeLimit;
+  // Must specify at least 1!
+  maxFiles = maxFiles ? maxFiles : 1;
 
   return maxFiles;
 }
@@ -140,11 +140,12 @@ APACHE_GEODE_EXPORT APACHE_GEODE_EXPORT void LogInit(
       // the disk space limit unless someone goes out of their way to do so.
       auto adjustedLimit = 9 * static_cast<uint64_t>(diskSpaceLimit) / 10;
       diskSpaceLimit = static_cast<uint32_t>(adjustedLimit);
+      auto fileSizeLimit = logFileSizeLimit ? logFileSizeLimit : diskSpaceLimit;
       auto maxFiles =
-          calculateMaxFilesForSpaceLimit(diskSpaceLimit, logFileSizeLimit);
+          calculateMaxFilesForSpaceLimit(diskSpaceLimit, fileSizeLimit);
       currentLevel = logLevel;
       currentLogger = spdlog::rotating_logger_mt("file", logFilename,
-                                                 logFileSizeLimit, maxFiles);
+                                                 fileSizeLimit, maxFiles);
       currentLogger->set_level(geodeLogLevelToSpdlogLevel(currentLevel));
     }
   } catch (const spdlog::spdlog_ex& ex) {
