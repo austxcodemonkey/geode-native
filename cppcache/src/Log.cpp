@@ -107,6 +107,12 @@ APACHE_GEODE_EXPORT APACHE_GEODE_EXPORT void LogInit(
         throw ex;
       }
       currentLevel = logLevel;
+      // Check for multiple initialization
+      if (currentLogger && currentLogger->name() == "console") {
+        return;
+      } else {
+        LogClose();
+      }
       currentLogger = spdlog::stderr_color_mt("console");
       currentLogger->set_level(geodeLogLevelToSpdlogLevel(currentLevel));
     } else {
@@ -144,6 +150,12 @@ APACHE_GEODE_EXPORT APACHE_GEODE_EXPORT void LogInit(
       auto maxFiles =
           calculateMaxFilesForSpaceLimit(diskSpaceLimit, fileSizeLimit);
       currentLevel = logLevel;
+      // Check for multiple initialization
+      if (currentLogger && currentLogger->name() == "file") {
+        return;
+      } else {
+        LogClose();
+      }
       currentLogger = spdlog::rotating_logger_mt("file", logFilename,
                                                  fileSizeLimit, maxFiles);
       currentLogger->set_level(geodeLogLevelToSpdlogLevel(currentLevel));
