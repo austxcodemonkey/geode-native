@@ -94,7 +94,7 @@ spdlog::level::level_enum geodeLogLevelToSpdlogLevel(
   return level;
 }
 
-APACHE_GEODE_EXPORT APACHE_GEODE_EXPORT void LogInit(
+APACHE_GEODE_EXPORT void LogInit(
     apache::geode::client::LogLevel logLevel, std::string logFilename,
     uint32_t logFileSizeLimit, uint32_t logDiskSpaceLimit) {
   try {
@@ -165,14 +165,14 @@ APACHE_GEODE_EXPORT APACHE_GEODE_EXPORT void LogInit(
   }
 }
 
-APACHE_GEODE_EXPORT APACHE_GEODE_EXPORT void LogClose() {
+APACHE_GEODE_EXPORT void LogClose() {
   if (currentLogger) {
     spdlog::drop(currentLogger->name());
   }
   currentLogger = nullptr;
 }
 
-APACHE_GEODE_EXPORT APACHE_GEODE_EXPORT void LogSetLevel(
+APACHE_GEODE_EXPORT void LogSetLevel(
     apache::geode::client::LogLevel level) {
   currentLevel = level;
   if (currentLogger) {
@@ -347,7 +347,7 @@ APACHE_GEODE_EXPORT void LogConfig(const std::string& msg) {
   LogConfig(msg.c_str());
 }
 
-APACHE_GEODE_EXPORT void LogInfo(const char* format, ...) {
+void LogInfo(const char* format, ...) {
   if (currentLevel >= apache::geode::client::LogLevel::Info) {
     char buf[LOG_SCRATCH_BUFFER_SIZE];
     va_list vl;
@@ -360,7 +360,7 @@ APACHE_GEODE_EXPORT void LogInfo(const char* format, ...) {
   }
 }
 
-APACHE_GEODE_EXPORT void LogInfo(const std::string& msg) {
+void LogInfo(const std::string& msg) {
   LogInfo(msg.c_str());
 }
 

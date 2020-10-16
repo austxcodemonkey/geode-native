@@ -33,9 +33,6 @@
 
 const std::shared_ptr<spdlog::logger>& getCurrentLogger();
 
-APACHE_GEODE_EXPORT void LoggyMcLogFace(const char*, ...);
-APACHE_GEODE_EXPORT void LoggyMcLogFace(const std::string&, ...);
-
 APACHE_GEODE_EXPORT void LogClose();
 APACHE_GEODE_EXPORT void LogInit(
     apache::geode::client::LogLevel = apache::geode::client::LogLevel::Config,
