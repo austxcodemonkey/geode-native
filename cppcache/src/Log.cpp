@@ -391,6 +391,8 @@ void Log::error(const std::string& msg) { error(msg.c_str()); }
 
 void Log::log(LogLevel level, const char* msg) {
   switch (level) {
+    case LogLevel::None:
+      break;
     case LogLevel::Error:
       error(msg);
       break;
