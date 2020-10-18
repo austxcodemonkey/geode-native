@@ -99,119 +99,141 @@ class LoggingTest : public testing::Test {
  */
 TEST_F(LoggingTest, logInit) {
   // Check all valid levels
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::None));
+  ASSERT_NO_THROW(
+      apache::geode::client::Log::init(apache::geode::client::LogLevel::None));
   apache::geode::client::Log::close();
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Error));
+  ASSERT_NO_THROW(
+      apache::geode::client::Log::init(apache::geode::client::LogLevel::Error));
   apache::geode::client::Log::close();
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Warning));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Warning));
   apache::geode::client::Log::close();
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Info));
+  ASSERT_NO_THROW(
+      apache::geode::client::Log::init(apache::geode::client::LogLevel::Info));
   apache::geode::client::Log::close();
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Default));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Default));
   apache::geode::client::Log::close();
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Config));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Config));
   apache::geode::client::Log::close();
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Fine));
+  ASSERT_NO_THROW(
+      apache::geode::client::Log::init(apache::geode::client::LogLevel::Fine));
   apache::geode::client::Log::close();
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Finer));
+  ASSERT_NO_THROW(
+      apache::geode::client::Log::init(apache::geode::client::LogLevel::Finer));
   apache::geode::client::Log::close();
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Finest));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Finest));
   apache::geode::client::Log::close();
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Debug));
+  ASSERT_NO_THROW(
+      apache::geode::client::Log::init(apache::geode::client::LogLevel::Debug));
   apache::geode::client::Log::close();
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::All));
+  ASSERT_NO_THROW(
+      apache::geode::client::Log::init(apache::geode::client::LogLevel::All));
   apache::geode::client::Log::close();
 
   // Init with valid filename
-  ASSERT_NO_THROW(
-      apache::geode::client::Log::init(apache::geode::client::LogLevel::Config, "LoggingTest.log"));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Config, "LoggingTest.log"));
   apache::geode::client::Log::close();
 
   // Init with invalid filename
-  ASSERT_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Config, "#?$?%.log"),
+  ASSERT_THROW(apache::geode::client::Log::init(
+                   apache::geode::client::LogLevel::Config, "#?$?%.log"),
                apache::geode::client::IllegalArgumentException);
 
   // Specify disk or file limit without a filename
-  ASSERT_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Config, "", __4K__),
+  ASSERT_THROW(apache::geode::client::Log::init(
+                   apache::geode::client::LogLevel::Config, "", __4K__),
                apache::geode::client::IllegalArgumentException);
-  ASSERT_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Config, "", 0, __4K__),
+  ASSERT_THROW(apache::geode::client::Log::init(
+                   apache::geode::client::LogLevel::Config, "", 0, __4K__),
                apache::geode::client::IllegalArgumentException);
 
   // Specify a disk space limit smaller than the file size limit
-  ASSERT_THROW(
-      apache::geode::client::Log::init(apache::geode::client::LogLevel::Config, "", __1M__, __4K__),
-      apache::geode::client::IllegalArgumentException);
+  ASSERT_THROW(apache::geode::client::Log::init(
+                   apache::geode::client::LogLevel::Config, "", __1M__, __4K__),
+               apache::geode::client::IllegalArgumentException);
 }
 
 TEST_F(LoggingTest, logToFileAtEachLevel) {
-  ASSERT_NO_THROW(
-      apache::geode::client::Log::init(apache::geode::client::LogLevel::Debug, testLogFileName));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Debug, testLogFileName));
   apache::geode::client::Log::debug("This is a debug string");
-  apache::geode::client::Log::debug("This is a formatted debug string (%d)", __1M__);
+  apache::geode::client::Log::debug("This is a formatted debug string (%d)",
+                                    __1M__);
   apache::geode::client::Log::close();
   ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
   ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
   boost::filesystem::remove(testLogFileName);
   ASSERT_FALSE(boost::filesystem::exists(testLogFileName));
 
-  ASSERT_NO_THROW(
-      apache::geode::client::Log::init(apache::geode::client::LogLevel::Finest, testLogFileName));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Finest, testLogFileName));
   apache::geode::client::Log::finest("This is a 'finest' string");
-  apache::geode::client::Log::finest("This is a formatted 'finest' string (%d)", __1M__);
+  apache::geode::client::Log::finest("This is a formatted 'finest' string (%d)",
+                                     __1M__);
   apache::geode::client::Log::close();
   ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
   ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
   boost::filesystem::remove(testLogFileName);
 
-  ASSERT_NO_THROW(
-      apache::geode::client::Log::init(apache::geode::client::LogLevel::Finer, testLogFileName));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Finer, testLogFileName));
   apache::geode::client::Log::finer("This is a 'finer' string");
-  apache::geode::client::Log::finer("This is a formatted 'finer' string (%d)", __1M__);
+  apache::geode::client::Log::finer("This is a formatted 'finer' string (%d)",
+                                    __1M__);
   apache::geode::client::Log::close();
   ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
   ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
   boost::filesystem::remove(testLogFileName);
 
-  ASSERT_NO_THROW(
-      apache::geode::client::Log::init(apache::geode::client::LogLevel::Fine, testLogFileName));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Fine, testLogFileName));
   apache::geode::client::Log::fine("This is a 'fine' string");
-  apache::geode::client::Log::fine("This is a formatted 'fine' string (%d)", __1M__);
+  apache::geode::client::Log::fine("This is a formatted 'fine' string (%d)",
+                                   __1M__);
   apache::geode::client::Log::close();
   ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
   ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
   boost::filesystem::remove(testLogFileName);
 
-  ASSERT_NO_THROW(
-      apache::geode::client::Log::init(apache::geode::client::LogLevel::Config, testLogFileName));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Config, testLogFileName));
   apache::geode::client::Log::config("This is a 'config' string");
-  apache::geode::client::Log::config("This is a formatted 'config' string (%d)", __1M__);
+  apache::geode::client::Log::config("This is a formatted 'config' string (%d)",
+                                     __1M__);
   apache::geode::client::Log::close();
   ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
   ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
   boost::filesystem::remove(testLogFileName);
 
-  ASSERT_NO_THROW(
-      apache::geode::client::Log::init(apache::geode::client::LogLevel::Info, testLogFileName));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Info, testLogFileName));
   apache::geode::client::Log::info("This is a 'finer' string");
-  apache::geode::client::Log::info("This is a formatted 'finer' string (%d)", __1M__);
+  apache::geode::client::Log::info("This is a formatted 'finer' string (%d)",
+                                   __1M__);
   apache::geode::client::Log::close();
   ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
   ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
   boost::filesystem::remove(testLogFileName);
 
-  ASSERT_NO_THROW(
-      apache::geode::client::Log::init(apache::geode::client::LogLevel::Warning, testLogFileName));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Warning, testLogFileName));
   apache::geode::client::Log::warning("This is a 'warning' string");
-  apache::geode::client::Log::warning("This is a formatted 'warning' string (%d)", __1M__);
+  apache::geode::client::Log::warning(
+      "This is a formatted 'warning' string (%d)", __1M__);
   apache::geode::client::Log::close();
   ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
   ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
   boost::filesystem::remove(testLogFileName);
 
-  ASSERT_NO_THROW(
-      apache::geode::client::Log::init(apache::geode::client::LogLevel::Error, testLogFileName));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Error, testLogFileName));
   apache::geode::client::Log::error("This is a 'error' string");
-  apache::geode::client::Log::error("This is a formatted 'error' string (%d)", __1M__);
+  apache::geode::client::Log::error("This is a formatted 'error' string (%d)",
+                                    __1M__);
   apache::geode::client::Log::close();
   ASSERT_TRUE(boost::filesystem::exists(testLogFileName));
   ASSERT_TRUE(boost::filesystem::file_size(testLogFileName) > 0);
@@ -219,8 +241,8 @@ TEST_F(LoggingTest, logToFileAtEachLevel) {
 }
 
 TEST_F(LoggingTest, verifyFileSizeLimit) {
-  ASSERT_NO_THROW(
-      apache::geode::client::Log::init(apache::geode::client::LogLevel::Debug, testLogFileName, __1K__));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Debug, testLogFileName, __1K__));
   for (auto i = 0; i < 4; i++) {
     apache::geode::client::Log::debug(__1KStringLiteral);
   }
@@ -259,8 +281,9 @@ TEST_F(LoggingTest, verifyDiskSpaceLimit) {
   const int NUMBER_OF_ITERATIONS = 100;
   const int DISK_SPACE_LIMIT = NUMBER_OF_ITERATIONS * __1K__;
 
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Debug,
-                          testLogFileName, __1K__, DISK_SPACE_LIMIT));
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Debug, testLogFileName, __1K__,
+      DISK_SPACE_LIMIT));
   for (auto i = 0; i < NUMBER_OF_ITERATIONS; i++) {
     apache::geode::client::Log::debug(__1KStringLiteral);
   }
@@ -286,7 +309,8 @@ TEST_F(LoggingTest, verifyDiskSpaceLimit) {
 }
 
 TEST_F(LoggingTest, logToStream) {
-  ASSERT_NO_THROW(apache::geode::client::Log::init(apache::geode::client::LogLevel::Debug));
+  ASSERT_NO_THROW(
+      apache::geode::client::Log::init(apache::geode::client::LogLevel::Debug));
   apache::geode::client::Log::error("This is an ERROR level message");
   apache::geode::client::Log::warning("This is an WARNING level message");
   apache::geode::client::Log::info("This is an INFO level message");

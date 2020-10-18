@@ -71,8 +71,8 @@ DistributedSystem DistributedSystem::create(
     try {
       Log::close();
       Log::init(systemProperties->logLevel(), logFilename.c_str(),
-              systemProperties->logFileSizeLimit(),
-              systemProperties->logDiskSpaceLimit());
+                systemProperties->logFileSizeLimit(),
+                systemProperties->logDiskSpaceLimit());
     } catch (const GeodeIOException&) {
       Log::close();
       systemProperties = nullptr;
