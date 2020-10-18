@@ -27,6 +27,7 @@
 #include "util/Log.hpp"
 #include "util/string.hpp"
 
+using apache::geode::client::Log;
 using apache::geode::client::LogLevel;
 using apache::geode::client::to_utf16;
 using apache::geode::client::to_utf8;
@@ -80,11 +81,11 @@ void GeodeLogCombo(benchmark::State& state) {
 
 template <void T(benchmark::State&)>
 void GeodeLogToConsole(benchmark::State& state) {
-  LogInit(LogLevel::All);
+  Log::init(LogLevel::All);
 
   T(state);
 
-  LogClose();
+  Log::close();
 }
 
 template <void T(benchmark::State&)>
@@ -94,11 +95,11 @@ void GeodeLogToFile(benchmark::State& state) {
                   std::to_string(__LINE__) + ".log";
   boost::filesystem::path logPath(filename);
 
-  LogInit(LogLevel::All, filename.c_str());
+  Log::init(LogLevel::All, filename.c_str());
 
   T(state);
 
-  LogClose();
+  Log::close();
 
   if (boost::filesystem::exists(logPath)) {
     boost::filesystem::remove(logPath);

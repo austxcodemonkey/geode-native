@@ -317,7 +317,7 @@ void SystemProperties::processProperty(const std::string& property,
     m_logFilename = value;
   } else if (property == LogLevelProperty) {
     try {
-      m_logLevel = LogLevelFromString(value);
+      m_logLevel = Log::stringToLogLevel(value);
     } catch (IllegalArgumentException&) {
       throwError(
           ("SystemProperties: unknown log level " + property + "=" + value));
@@ -430,7 +430,7 @@ void SystemProperties::logSettings() {
   settings += std::to_string(logFileSizeLimit());
 
   settings += "\n  log-level = ";
-  settings += StringFromLogLevel(logLevel());
+  settings += Log::logLevelToString(logLevel());
 
   settings += "\n  max-fe-threads = ";
   settings += std::to_string(threadPoolSize());

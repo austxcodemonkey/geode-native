@@ -105,7 +105,7 @@ CacheImpl::CacheImpl(Cache* c, const std::shared_ptr<Properties>& dsProps,
     m_cacheStats =
         new CachePerfStats(m_statisticsManager->getStatisticsFactory());
   } catch (const NullPointerException&) {
-    LogClose();
+    Log::close();
     throw;
   }
 
