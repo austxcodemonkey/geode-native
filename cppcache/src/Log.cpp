@@ -277,6 +277,9 @@ void Log::debug(const char* format, ...) {
     if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
       if (currentLogger) {
         currentLogger->debug(buf);
+      } else {
+        init(currentLevel);
+        currentLogger->debug(buf);
       }
     }
   }
@@ -291,6 +294,9 @@ void Log::finest(const char* format, ...) {
     va_start(vl, format);
     if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
       if (currentLogger) {
+        currentLogger->debug(buf);
+      } else {
+        init(currentLevel);
         currentLogger->debug(buf);
       }
     }
@@ -307,6 +313,9 @@ void Log::finer(const char* format, ...) {
     if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
       if (currentLogger) {
         currentLogger->debug(buf);
+      } else {
+        init(currentLevel);
+        currentLogger->debug(buf);
       }
     }
   }
@@ -321,6 +330,9 @@ void Log::fine(const char* format, ...) {
     va_start(vl, format);
     if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
       if (currentLogger) {
+        currentLogger->debug(buf);
+      } else {
+        init(currentLevel);
         currentLogger->debug(buf);
       }
     }
@@ -337,6 +349,9 @@ void Log::config(const char* format, ...) {
     if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
       if (currentLogger) {
         currentLogger->info(buf);
+      } else {
+        init(currentLevel);
+        currentLogger->info(buf);
       }
     }
   }
@@ -351,6 +366,9 @@ void Log::info(const char* format, ...) {
     va_start(vl, format);
     if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
       if (currentLogger) {
+        currentLogger->info(buf);
+      } else {
+        init(currentLevel);
         currentLogger->info(buf);
       }
     }
@@ -367,6 +385,9 @@ void Log::warning(const char* format, ...) {
     if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
       if (currentLogger) {
         currentLogger->warn(buf);
+      } else {
+        init(currentLevel);
+        currentLogger->warn(buf);
       }
     }
   }
@@ -381,6 +402,9 @@ void Log::error(const char* format, ...) {
     va_start(vl, format);
     if (vsnprintf(buf, LOG_SCRATCH_BUFFER_SIZE, format, vl) > 0) {
       if (currentLogger) {
+        currentLogger->error(buf);
+      } else {
+        init(currentLevel);
         currentLogger->error(buf);
       }
     }
