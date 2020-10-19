@@ -117,9 +117,9 @@ void Log::init(LogLevel logLevel, const std::string& logFilename,
       currentLogger = spdlog::stderr_color_mt("console");
       currentLogger->set_level(geodeLogLevelToSpdlogLevel(currentLevel));
     } else {
-      if (!boost::filesystem::portable_file_name(logFilename)) {
-        IllegalArgumentException ex(std::string("The filename \"") +
-                                    logFilename +
+      auto filename = boost::filesystem::path(logFilename).filename().string();
+      if (!boost::filesystem::portable_file_name(filename)) {
+        IllegalArgumentException ex(std::string("The filename \"") + filename +
                                     "\" is not valid for a log file.");
         throw ex;
       }
