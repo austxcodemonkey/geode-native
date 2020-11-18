@@ -24,6 +24,7 @@
 
 #include <geode/CacheFactory.hpp>
 #include <geode/DataOutput.hpp>
+#include <geode/internal/DSCode.hpp>
 
 #include "ByteArrayFixture.hpp"
 #include "DataInputInternal.hpp"
@@ -38,6 +39,7 @@ using apache::geode::client::CacheableString;
 using apache::geode::client::DataInputInternal;
 using apache::geode::client::DataOutput;
 using apache::geode::client::DataOutputInternal;
+using apache::geode::client::DSCode;
 using apache::geode::client::SerializationRegistry;
 
 class TestDataOutput : public DataOutputInternal {
@@ -107,6 +109,9 @@ TEST_F(CacheableStringTests, CreateFromStdStringLValue) {
 
 TEST_F(CacheableStringTests, TestToDataAscii) {
   auto origStr = CacheableString::create("You had me at meat tornado.");
+
+  EXPECT_EQ(origStr->getDsCode(), DSCode::CacheableASCIIString);
+
   DataOutputInternal out;
   origStr->toData(out);
 
@@ -130,6 +135,9 @@ TEST_F(CacheableStringTests, TestFromDataAscii) {
 
 TEST_F(CacheableStringTests, TestToDataNonAscii) {
   auto origStr = CacheableString::create(u8"You had me at meat tornad\u00F6.");
+
+  EXPECT_EQ(origStr->getDsCode(), DSCode::CacheableString);
+
   DataOutputInternal out;
   origStr->toData(out);
 
@@ -158,6 +166,9 @@ TEST_F(CacheableStringTests, TestToDataAsciiHuge) {
   originalLen++;
 
   auto origStr = CacheableString::create(utf8.c_str());
+
+  EXPECT_EQ(origStr->getDsCode(), DSCode::CacheableASCIIStringHuge);
+
   TestDataOutput out;
   origStr->toData(out);
 
@@ -194,6 +205,9 @@ TEST_F(CacheableStringTests, TestToDataNonAsciiHuge) {
           .from_bytes(utf8);
 
   auto origStr = CacheableString::create(utf8.c_str());
+
+  EXPECT_EQ(origStr->getDsCode(), DSCode::CacheableStringHuge);
+
   TestDataOutput out;
   origStr->toData(out);
 
