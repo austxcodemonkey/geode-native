@@ -20,11 +20,15 @@
 #ifndef GEODE_EVENTID_H_
 #define GEODE_EVENTID_H_
 
+#include <inttypes.h>
+
 #include <string>
 
 #include <geode/DataOutput.hpp>
 #include <geode/internal/DataSerializableFixedId.hpp>
 #include <geode/internal/geode_globals.hpp>
+
+#include "util/Log.hpp"
 
 /** @file
  */
@@ -99,6 +103,8 @@ class APACHE_GEODE_EXPORT EventId
     output.writeInt(m_eidThr);
     output.write(static_cast<uint8_t>(longCode));
     output.writeInt(m_eidSeq);
+    LOGDEBUG("%s(%p): Wrote tid=%" PRId64 ", seqid=%" PRId64, __FUNCTION__,
+             this, m_eidThr, m_eidSeq);
   }
 
   /** Constructor, given the values. */

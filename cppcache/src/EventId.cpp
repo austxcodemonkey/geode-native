@@ -16,16 +16,23 @@
  */
 #include "EventId.hpp"
 
+#include <inttypes.h>
+
 #include <atomic>
 #include <cstring>
 
 #include <geode/DataInput.hpp>
 
 #include "ClientProxyMembershipID.hpp"
+#include "util/Log.hpp"
 
 namespace apache {
 namespace geode {
 namespace client {
+
+const std::string disclaimer(
+    "This is a private (debugging) build for BMO.  It is UNSUPPORTED for "
+    "production use.");
 
 class EventIdTSS {
  private:
@@ -61,6 +68,7 @@ thread_local EventIdTSS EventIdTSS::s_eventId;
 void EventId::toData(DataOutput& output) const {
   //  This method is always expected to write out nonstatic distributed
   //  memberid.
+  LOGDEBUG("%s(%p) - called", __FUNCTION__, this);
   output.writeBytes(reinterpret_cast<const int8_t*>(m_eidMem), m_eidMemLen);
   output.writeArrayLen(18);
   char longCode = 3;
@@ -73,6 +81,7 @@ void EventId::toData(DataOutput& output) const {
 }
 
 void EventId::fromData(DataInput& input) {
+  LOGDEBUG("%s(%p) - called", __FUNCTION__, this);
   // TODO: statics being assigned; not thread-safe??
   m_eidMemLen = input.readArrayLength();
   input.readBytesOnly(reinterpret_cast<int8_t*>(m_eidMem), m_eidMemLen);
@@ -93,6 +102,7 @@ int64_t EventId::getSeqNum() const { return m_eidSeq; }
 
 int64_t EventId::getEventIdData(DataInput& input, char numberCode) {
   int64_t retVal = 0;
+  LOGDEBUG("%s(%p) - called", __FUNCTION__, this);
 
   //  Read number based on numeric code written by java server.
   if (numberCode == 0) {
@@ -113,12 +123,15 @@ int64_t EventId::getEventIdData(DataInput& input, char numberCode) {
 }
 
 std::shared_ptr<Serializable> EventId::createDeserializable() {
+  LOGDEBUG("%s - called", __FUNCTION__);
   return std::make_shared<EventId>(false);
   // use false since we dont want to inc sequence
   // (for de-serialization)
 }
 
 EventId::EventId(char* memId, uint32_t memIdLen, int64_t thr, int64_t seq) {
+  LOGDEBUG("%s(%p) - memId=%s, memIdLen=%d, thr=%lld, seq=%lld", __FUNCTION__,
+           this, memId, memIdLen, thr, seq);
   // TODO: statics being assigned; not thread-safe??
   std::memcpy(m_eidMem, memId, memIdLen);
   m_eidMemLen = memIdLen;
@@ -138,6 +151,12 @@ EventId::EventId(bool doInit, uint32_t reserveSize,
       m_eidSeq(0),
       m_bucketId(-1),
       m_breadcrumbCounter(0) {
+  LOGDEBUG("%s(%p) - doInit=%s, reserveSize=%d, fullValueAfterDeltaFail=%s",
+           __FUNCTION__, this, doInit ? "true" : "false", reserveSize,
+           fullValueAfterDeltaFail ? "true" : "false");
+  Exception ex("Debugging - used to dump callstack");
+  LOGDEBUG("%s(%p) - callstack\n%s", __FUNCTION__, this,
+           ex.getStackTrace().c_str());
   if (!doInit) return;
 
   if (fullValueAfterDeltaFail) {
@@ -155,11 +174,15 @@ EventId::EventId(bool doInit, uint32_t reserveSize,
 void EventId::initFromTSS() {
   m_eidThr = EventIdTSS::s_eventId.getEidThr();
   m_eidSeq = EventIdTSS::s_eventId.getAndIncEidSeq();
+  LOGDEBUG("%s(%p) - called, tid=%lld, seqid=%lld", __FUNCTION__, this,
+           m_eidThr, m_eidSeq);
 }
 
 void EventId::initFromTSS_SameThreadIdAndSameSequenceId() {
   m_eidThr = EventIdTSS::s_eventId.getEidThr();
   m_eidSeq = EventIdTSS::s_eventId.getSeqNum();
+  LOGDEBUG("%s(%p) - called, tid=%lld, seqid=%lld", __FUNCTION__, this,
+           m_eidThr, m_eidSeq);
 }
 
 }  // namespace client
