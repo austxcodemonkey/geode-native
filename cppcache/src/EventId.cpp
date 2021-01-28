@@ -34,36 +34,41 @@ const std::string disclaimer(
     "This is a private (debugging) build for BMO.  It is UNSUPPORTED for "
     "production use.");
 
-class EventIdTSS {
- private:
-  static std::atomic<int64_t> s_eidThrId;
-
-  int64_t m_eidThrTSS;
-  int64_t m_eidSeqTSS;
-
-  ~EventIdTSS() = default;
-  EventIdTSS(const EventIdTSS&) = delete;
-  EventIdTSS& operator=(const EventIdTSS&) = delete;
-
+class ThreadIdCounter {
  public:
-  // this should get called just once per thread due to first access to TSS
-  EventIdTSS() {
-    m_eidThrTSS = ++s_eidThrId;
-    m_eidSeqTSS = 0;
+  static std::atomic<int64_t>& instance() {
+    static std::atomic<int64_t> threadId_;
+    return threadId_;
+  }
+};
+
+class EventIdTSS {
+ public:
+  static EventIdTSS& instance() {
+    thread_local EventIdTSS idTss_;
+    return idTss_;
   }
 
-  inline int64_t getEidThr() { return m_eidThrTSS; }
+  int64_t nextSequenceId() {
+    sequenceId_++;
+    return sequenceId_;
+  }
 
-  inline int64_t getAndIncEidSeq() { return m_eidSeqTSS++; }
+  int64_t currentSequenceId() { return sequenceId_; }
 
-  inline int64_t getSeqNum() { return m_eidSeqTSS - 1; }
+  int64_t threadId() { return threadId_; }
 
-  static thread_local EventIdTSS s_eventId;
+ private:
+  EventIdTSS() {
+    threadId_ = ++ThreadIdCounter::instance();
+    sequenceId_ = 0;
+    LOGDEBUG("%s(%p): threadId_=%lld, sequenceId_=%lld", __FUNCTION__, this,
+             threadId_, sequenceId_);
+  }
 
-};  // class EventIdTSS
-
-std::atomic<int64_t> EventIdTSS::s_eidThrId;
-thread_local EventIdTSS EventIdTSS::s_eventId;
+  int64_t threadId_;
+  int64_t sequenceId_;
+};
 
 void EventId::toData(DataOutput& output) const {
   //  This method is always expected to write out nonstatic distributed
@@ -154,9 +159,6 @@ EventId::EventId(bool doInit, uint32_t reserveSize,
   LOGDEBUG("%s(%p) - doInit=%s, reserveSize=%d, fullValueAfterDeltaFail=%s",
            __FUNCTION__, this, doInit ? "true" : "false", reserveSize,
            fullValueAfterDeltaFail ? "true" : "false");
-  Exception ex("Debugging - used to dump callstack");
-  LOGDEBUG("%s(%p) - callstack\n%s", __FUNCTION__, this,
-           ex.getStackTrace().c_str());
   if (!doInit) return;
 
   if (fullValueAfterDeltaFail) {
@@ -167,20 +169,20 @@ EventId::EventId(bool doInit, uint32_t reserveSize,
   }
 
   for (uint32_t i = 0; i < reserveSize; i++) {
-    EventIdTSS::s_eventId.getAndIncEidSeq();
+    EventIdTSS::instance().nextSequenceId();
   }
 }
 
 void EventId::initFromTSS() {
-  m_eidThr = EventIdTSS::s_eventId.getEidThr();
-  m_eidSeq = EventIdTSS::s_eventId.getAndIncEidSeq();
+  m_eidThr = EventIdTSS::instance().threadId();
+  m_eidSeq = EventIdTSS::instance().nextSequenceId();
   LOGDEBUG("%s(%p) - called, tid=%lld, seqid=%lld", __FUNCTION__, this,
            m_eidThr, m_eidSeq);
 }
 
 void EventId::initFromTSS_SameThreadIdAndSameSequenceId() {
-  m_eidThr = EventIdTSS::s_eventId.getEidThr();
-  m_eidSeq = EventIdTSS::s_eventId.getSeqNum();
+  m_eidThr = EventIdTSS::instance().threadId();
+  m_eidSeq = EventIdTSS::instance().currentSequenceId();
   LOGDEBUG("%s(%p) - called, tid=%lld, seqid=%lld", __FUNCTION__, this,
            m_eidThr, m_eidSeq);
 }
