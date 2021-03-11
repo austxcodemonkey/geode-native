@@ -46,14 +46,10 @@ Cache createCache() {
   return cache;
 }
 
-std::shared_ptr<Pool> createPool(Cluster& cluster, Cache& cache) {
-  auto poolFactory = cache.getPoolManager().createFactory();
-  cluster.applyLocators(poolFactory);
-  poolFactory.setPRSingleHopEnabled(true);
-  poolFactory.setSubscriptionEnabled(true);
-  return poolFactory.create("default");
-}
+TEST(CachelessTest, testCachelessWhateverThatIs) {
+  Cluster cluster{LocatorCount{1}, ServerCount{1}};
 
-TEST(CachelessTest, testCachelessWhateverThatIs) {}
+  cluster.start();
+}
 
 }  // namespace
