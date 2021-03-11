@@ -16,6 +16,7 @@
 add_executable(cpp-integration-test
   AuthInitializeTest.cpp
   BasicIPv6Test.cpp
+  CachelessTest.cpp
   CacheWriterTest.cpp
   CacheXmlTest.cpp
   CleanIdleConnections.cpp
