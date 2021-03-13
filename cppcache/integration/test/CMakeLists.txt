@@ -22,6 +22,7 @@ add_executable(cpp-integration-test
   CleanIdleConnections.cpp
   ClientTransactionXATest.cpp
   CommitConflictExceptionTest.cpp
+  CountingListener.hpp
   CqPlusAuthInitializeTest.cpp
   CqTest.cpp
   DataSerializableTest.cpp
