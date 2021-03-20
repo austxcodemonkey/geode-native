@@ -15,14 +15,10 @@
 # limitations under the License.
 from read_values import (
     call_reader_function,
-    parse_key_or_value,
     read_byte_value,
-    read_cacheable,
     read_int_value,
-    read_short_value,
-    read_unsigned_byte_value,
-    read_unsigned_vl,
     read_string_value,
+    read_long_value,
 )
 from numeric_conversion import int_to_hex_string
 
@@ -51,3 +47,54 @@ def read_int_part(message_bytes, offset):
     int_value, offset = call_reader_function(message_bytes, offset, read_int_value)
     int_part["Value"] = int_to_hex_string(int_value)
     return int_part, offset
+
+
+def read_region_part(message_bytes, offset):
+    region_part = {}
+    (region_part["Size"], offset) = call_reader_function(
+        message_bytes, offset, read_int_value
+    )
+    (region_part["IsObject"], offset) = call_reader_function(
+        message_bytes, offset, read_byte_value
+    )
+    (region_part["Name"], offset) = read_string_value(
+        message_bytes, region_part["Size"], offset
+    )
+    return (region_part, offset)
+
+
+def read_event_id_part(message_bytes, offset):
+    event_id_part = {}
+    (event_id_part["Size"], offset) = call_reader_function(
+        message_bytes, offset, read_int_value
+    )
+    (event_id_part["IsObject"], offset) = call_reader_function(
+        message_bytes, offset, read_byte_value
+    )
+    (event_id_part["LongCode1"], offset) = call_reader_function(
+        message_bytes, offset, read_byte_value
+    )
+    (event_id_part["EventIdThread"], offset) = call_reader_function(
+        message_bytes, offset, read_long_value
+    )
+    (event_id_part["LongCode2"], offset) = call_reader_function(
+        message_bytes, offset, read_byte_value
+    )
+    (event_id_part["EventIdSequence"], offset) = call_reader_function(
+        message_bytes, offset, read_long_value
+    )
+    return (event_id_part, offset)
+
+
+def read_raw_boolean_part(message_bytes, offset):
+    bool_part = {}
+    (bool_part["Size"], offset) = call_reader_function(
+        message_bytes, offset, read_int_value
+    )
+    (bool_part["IsObject"], offset) = call_reader_function(
+        message_bytes, offset, read_byte_value
+    )
+    bool_val = 0
+    (bool_val, offset) = call_reader_function(message_bytes, offset, read_byte_value)
+    bool_part["Value"] = "False" if bool_val == 0 else "True"
+    return (bool_part, offset)

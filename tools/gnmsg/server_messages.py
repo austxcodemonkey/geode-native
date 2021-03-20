@@ -24,7 +24,13 @@ from read_values import (
     read_unsigned_vl,
     read_string_value,
 )
-from read_parts import read_object_header, read_object_part, read_int_part
+from read_parts import (
+    read_int_part,
+    read_object_header,
+    read_object_part,
+    read_raw_boolean_part,
+    read_region_part,
+)
 from numeric_conversion import decimal_string_to_hex_string, int_to_hex_string
 from gnmsg_globals import global_protocol_state
 from enum import IntFlag
@@ -258,7 +264,27 @@ def read_exception_msg(properties, message_bytes, offset):
     properties["StringRepresentationPart"] = object_part
 
 
+#
+# TODO: understand format of ClientHasCq and CQs parts.  Java code seems to be
+# writing a boolean value for ClientHasCq, but it's mysteriously *two* bytes
+# long, so I'm not sure what to make of that.  Also unsure what the format or
+# purpose of the CQs part actually is.
+#
+# There's a lot of confusing data around this message, in fact.  Geode native
+# has code to build a CLEAR_REGION message, presumably to send to the server,
+# but it doesn't format the message like this one is, and there's no actual
+# code I'm aware of in Geode native that actually *sends* said message, so that
+# one may actually be vestigial.
+#
+def read_clear_region_message(properties, message_bytes, offset):
+    properties["Region"], offset = read_region_part(message_bytes, offset)
+    properties["Callback"], offset = read_object_part(message_bytes, offset)
+    properties["ClientHasCq"], offset = read_object_part(message_bytes, offset)
+    properties["CQs"], offset = read_object_part(message_bytes, offset)
+
+
 server_message_parsers = {
+    "CLEAR_REGION": read_clear_region_message,
     "CONTAINS_KEY_RESPONSE": read_contains_key_response,
     "DESTROY_REPLY": read_destroy_reply,
     "EXCEPTION": read_exception_msg,

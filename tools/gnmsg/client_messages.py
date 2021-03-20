@@ -23,29 +23,20 @@ from read_values import (
     read_cacheable,
     read_int_value,
     read_jmutf8_string_value,
-    read_long_value,
     read_short_value,
-    read_string_value,
     read_unsigned_byte_value,
 )
-from read_parts import read_object_header, read_int_part
-from numeric_conversion import decimal_string_to_hex_string, int_to_hex_string
+from read_parts import (
+    read_object_header,
+    read_int_part,
+    read_raw_boolean_part,
+    read_region_part,
+    read_event_id_part,
+)
+
+from numeric_conversion import decimal_string_to_hex_string
 
 CHARS_IN_MESSAGE_HEADER = 34
-
-
-def parse_region_part(message_bytes, offset):
-    region_part = {}
-    (region_part["Size"], offset) = call_reader_function(
-        message_bytes, offset, read_int_value
-    )
-    (region_part["IsObject"], offset) = call_reader_function(
-        message_bytes, offset, read_byte_value
-    )
-    (region_part["Name"], offset) = read_string_value(
-        message_bytes, region_part["Size"], offset
-    )
-    return (region_part, offset)
 
 
 def parse_object_part(message_bytes, offset):
@@ -58,29 +49,6 @@ def parse_object_part(message_bytes, offset):
     )
     offset += 2 * object_part["Size"]
     return (object_part, offset)
-
-
-def parse_event_id_part(message_bytes, offset):
-    event_id_part = {}
-    (event_id_part["Size"], offset) = call_reader_function(
-        message_bytes, offset, read_int_value
-    )
-    (event_id_part["IsObject"], offset) = call_reader_function(
-        message_bytes, offset, read_byte_value
-    )
-    (event_id_part["LongCode1"], offset) = call_reader_function(
-        message_bytes, offset, read_byte_value
-    )
-    (event_id_part["EventIdThread"], offset) = call_reader_function(
-        message_bytes, offset, read_long_value
-    )
-    (event_id_part["LongCode2"], offset) = call_reader_function(
-        message_bytes, offset, read_byte_value
-    )
-    (event_id_part["EventIdSequence"], offset) = call_reader_function(
-        message_bytes, offset, read_long_value
-    )
-    return (event_id_part, offset)
 
 
 def parse_operation_part(message_bytes, offset):
@@ -195,20 +163,6 @@ def parse_raw_byte_part(message_bytes, offset):
     return (byte_part, offset)
 
 
-def parse_raw_boolean_part(message_bytes, offset):
-    bool_part = {}
-    (bool_part["Size"], offset) = call_reader_function(
-        message_bytes, offset, read_int_value
-    )
-    (bool_part["IsObject"], offset) = call_reader_function(
-        message_bytes, offset, read_byte_value
-    )
-    bool_val = 0
-    (bool_val, offset) = call_reader_function(message_bytes, offset, read_byte_value)
-    bool_part["Value"] = "False" if bool_val == 0 else "True"
-    return (bool_part, offset)
-
-
 def parse_byte_and_timeout_part(message_bytes, offset):
     byte_and_timeout_part = {}
     (byte_and_timeout_part["Size"], offset) = call_reader_function(
@@ -228,7 +182,7 @@ def parse_byte_and_timeout_part(message_bytes, offset):
 
 
 def read_put_message(properties, message_bytes, offset):
-    (properties["Region"], offset) = parse_region_part(message_bytes, offset)
+    (properties["Region"], offset) = read_region_part(message_bytes, offset)
     (properties["Operation"], offset) = parse_operation_part(message_bytes, offset)
 
     (properties["Flags"], offset) = parse_flags_part(message_bytes, offset)
@@ -239,11 +193,11 @@ def read_put_message(properties, message_bytes, offset):
 
     (properties["Value"], offset) = parse_key_or_value(message_bytes, offset)
 
-    (properties["EventId"], offset) = parse_event_id_part(message_bytes, offset)
+    (properties["EventId"], offset) = read_event_id_part(message_bytes, offset)
 
 
 def read_request_message(properties, message_bytes, offset):
-    (properties["Region"], offset) = parse_region_part(message_bytes, offset)
+    (properties["Region"], offset) = read_region_part(message_bytes, offset)
     (properties["Key"], offset) = parse_key_or_value(message_bytes, offset)
 
 
@@ -265,7 +219,7 @@ def read_close_connection_message(properties, message_bytes, offset):
 
 
 def read_contains_key_message(properties, message_bytes, offset):
-    (properties["RegionPart"], offset) = parse_region_part(message_bytes, offset)
+    (properties["RegionPart"], offset) = read_region_part(message_bytes, offset)
     (properties["Key"], offset) = parse_key_or_value(message_bytes, offset)
     (request_type, offset) = parse_raw_int_part(message_bytes, offset)
     if request_type["Value"] == 1:
@@ -279,15 +233,15 @@ def read_destroy_message(properties, message_bytes, offset):
         raise Exception(
             "Parser can't handle callback argument in DESTROY message.  Send this log file to the dev team!"
         )
-    (properties["Region"], offset) = parse_region_part(message_bytes, offset)
+    (properties["Region"], offset) = read_region_part(message_bytes, offset)
     (properties["Key"], offset) = parse_key_or_value(message_bytes, offset)
     (properties["ExpectedOldValue"], offset) = parse_key_or_value(message_bytes, offset)
     (properties["Operation"], offset) = parse_operation_part(message_bytes, offset)
-    (properties["EventId"], offset) = parse_event_id_part(message_bytes, offset)
+    (properties["EventId"], offset) = read_event_id_part(message_bytes, offset)
 
 
 def read_get_client_partition_attributes_message(properties, message_bytes, offset):
-    (properties["RegionPart"], offset) = parse_region_part(message_bytes, offset)
+    (properties["RegionPart"], offset) = read_region_part(message_bytes, offset)
     for i in range(1, properties["Parts"]):
         (properties["ObjectPart" + str(i)], offset) = parse_object_part(
             message_bytes, offset
@@ -295,7 +249,7 @@ def read_get_client_partition_attributes_message(properties, message_bytes, offs
 
 
 def read_get_client_pr_metadata_message(properties, message_bytes, offset):
-    (properties["RegionPart"], offset) = parse_region_part(message_bytes, offset)
+    (properties["RegionPart"], offset) = read_region_part(message_bytes, offset)
     for i in range(1, properties["Parts"]):
         (properties["ObjectPart" + str(i)], offset) = parse_object_part(
             message_bytes, offset
@@ -303,8 +257,8 @@ def read_get_client_pr_metadata_message(properties, message_bytes, offset):
 
 
 def read_query_message(properties, message_bytes, offset):
-    (properties["Query"], offset) = parse_region_part(message_bytes, offset)
-    (properties["EventId"], offset) = parse_event_id_part(message_bytes, offset)
+    (properties["Query"], offset) = read_region_part(message_bytes, offset)
+    (properties["EventId"], offset) = read_event_id_part(message_bytes, offset)
     if properties["Parts"] == 3:
         timeout_part = {}
         (timeout_part["Size"], offset) = call_reader_function(
@@ -327,7 +281,7 @@ def read_executecq_msg_type_message(properties, message_bytes, offset):
     (properties["CQName"], offset) = parse_raw_string_part(message_bytes, offset)
     (properties["QueryString"], offset) = parse_raw_string_part(message_bytes, offset)
     (properties["CqState"], offset) = parse_raw_int_part(message_bytes, offset)
-    (properties["Durable"], offset) = parse_raw_boolean_part(message_bytes, offset)
+    (properties["Durable"], offset) = read_raw_boolean_part(message_bytes, offset)
     (properties["RegionDataPolicy"], offset) = parse_raw_byte_part(
         message_bytes, offset
     )
@@ -343,15 +297,15 @@ def read_executecq_with_ir_msg_type_message(properties, message_bytes, offset):
     (properties["CQName"], offset) = parse_raw_string_part(message_bytes, offset)
     (properties["QueryString"], offset) = parse_raw_string_part(message_bytes, offset)
     (properties["CqState"], offset) = parse_raw_int_part(message_bytes, offset)
-    (properties["Durable"], offset) = parse_raw_boolean_part(message_bytes, offset)
+    (properties["Durable"], offset) = read_raw_boolean_part(message_bytes, offset)
     (properties["RegionDataPolicy"], offset) = parse_raw_byte_part(
         message_bytes, offset
     )
 
 
 def read_stopcq_or_closecq_msg_type_message(properties, message_bytes, offset):
-    (properties["Region"], offset) = parse_region_part(message_bytes, offset)
-    (properties["EventId"], offset) = parse_event_id_part(message_bytes, offset)
+    (properties["Region"], offset) = read_region_part(message_bytes, offset)
+    (properties["EventId"], offset) = read_event_id_part(message_bytes, offset)
     if properties["Parts"] == 3:
         timeout_part = {}
         (timeout_part["Size"], offset) = call_reader_function(
@@ -371,14 +325,14 @@ def read_get_pdx_id_for_type_message(properties, message_bytes, offset):
 
 
 def read_get_function_attributes_message(properties, message_bytes, offset):
-    (properties["FunctionName"], offset) = parse_region_part(message_bytes, offset)
+    (properties["FunctionName"], offset) = read_region_part(message_bytes, offset)
 
 
 def read_execute_function_message(properties, message_bytes, offset):
     (properties["ByteAndTimeout"], offset) = parse_byte_and_timeout_part(
         message_bytes, offset
     )
-    (properties["FunctionName"], offset) = parse_region_part(message_bytes, offset)
+    (properties["FunctionName"], offset) = read_region_part(message_bytes, offset)
     (properties["Arguments"], offset) = parse_object_part(message_bytes, offset)
 
 
@@ -390,7 +344,7 @@ def parse_getall_optional_callback_arguments(message_bytes, offset):
 
 
 def read_get_all_70_message(properties, message_bytes, offset):
-    (properties["Region"], offset) = parse_region_part(message_bytes, offset)
+    (properties["Region"], offset) = read_region_part(message_bytes, offset)
     (properties["KeyList"], offset) = parse_key_or_value(message_bytes, offset)
     (
         properties["CallbackArguments"],
@@ -399,7 +353,7 @@ def read_get_all_70_message(properties, message_bytes, offset):
 
 
 def read_key_set(properties, message_bytes, offset):
-    (properties["Region"], offset) = parse_region_part(message_bytes, offset)
+    (properties["Region"], offset) = read_region_part(message_bytes, offset)
 
 
 def read_object_as_raw_bytes(message_bytes, offset):
