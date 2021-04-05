@@ -130,7 +130,9 @@ void ClientMetadata::getServerLocation(
     int bucketId, bool tryPrimary,
     std::shared_ptr<BucketServerLocation>& serverLocation, int8_t& version) {
   checkBucketId(bucketId);
-  if (m_bucketServerLocationsList[bucketId].empty()) {
+  LOGDEBUG("GEMNC-501 - %s(%p): entry at %s: %d", __FUNCTION__, this, __FILE__,
+           __LINE__);
+  if (true) {  // m_bucketServerLocationsList[bucketId].empty()) {
     LOGFINER("m_bucketServerLocationsList[%d] size is zero", bucketId);
     return;
   } else if (tryPrimary) {

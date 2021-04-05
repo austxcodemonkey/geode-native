@@ -50,7 +50,8 @@ Cache createCache() {
   using apache::geode::client::CacheFactory;
 
   auto cache = CacheFactory()
-                   .set("log-level", "none")
+                   .set("log-level", "debug")
+                   .set("log-file", "RegionPutAllTest.log")
                    .set("statistic-sampling-enabled", "false")
                    .create();
 
@@ -99,6 +100,34 @@ TEST(RegionPutAllTest, putAllToPartitionedRegion) {
     // TODO some way force synchronous client metadata update first.
     region->putAll(all);
     std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
+}
+
+TEST(RegionPutAllTest, putAllAndVerifyKeysExist) {
+  Cluster cluster{LocatorCount{1}, ServerCount{2}};
+
+  cluster.start();
+
+  cluster.getGfsh()
+      .create()
+      .region()
+      .withName("region")
+      .withType("PARTITION")
+      .execute();
+
+  auto cache = createCache();
+  auto pool = createPool(cluster, cache);
+  auto region = setupRegion(cache, pool);
+
+  HashMapOfCacheable all;
+  for (int i = 0; i < 3; i++) {
+    all.emplace(CacheableKey::create(i), Cacheable::create(std::to_string(i)));
+  }
+
+  std::this_thread::sleep_for(std::chrono::seconds(30));
+  region->putAll(all);
+  for (auto& key : all) {
+    ASSERT_TRUE(region->containsKeyOnServer(key.first));
   }
 }
 

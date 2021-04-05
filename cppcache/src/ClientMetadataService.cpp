@@ -321,8 +321,12 @@ std::shared_ptr<ClientMetadataService::ServerToFilterMap>
 ClientMetadataService::getServerToFilterMap(
     const std::vector<std::shared_ptr<CacheableKey>>& keys,
     const std::shared_ptr<Region>& region, bool isPrimary) {
+  LOGDEBUG("GEMNC-501 - %s(%p): entry at %s: %d", __FUNCTION__, this, __FILE__,
+           __LINE__);
   auto clientMetadata = getClientMetadata(region);
   if (!clientMetadata) {
+    LOGDEBUG("GEMNC-501 - %s(%p): returning NULL at %s: %d", __FUNCTION__, this,
+             __FILE__, __LINE__);
     return nullptr;
   }
 
@@ -332,7 +336,8 @@ ClientMetadataService::getServerToFilterMap(
   std::map<int, std::shared_ptr<BucketServerLocation>> buckets;
 
   for (const auto& key : keys) {
-    LOGDEBUG("cmds = %s", key->toString().c_str());
+    LOGDEBUG("GEMNC-501 - %s(%p): cmds = %s at %s: %d", __FUNCTION__, this,
+             key->toString().c_str(), __FILE__, __LINE__);
     const auto resolver = region->getAttributes().getPartitionResolver();
     std::shared_ptr<CacheableKey> resolveKey;
 
@@ -405,6 +410,8 @@ ClientMetadataService::getServerToFilterMap(
     return nullptr;  // it will force all keys to send to one server
   }
 
+  LOGDEBUG("GEMNC-501 - %s(%p): returning map of size %d at %s: %d",
+           __FUNCTION__, this, serverToFilterMap->size(), __FILE__, __LINE__);
   return serverToFilterMap;
 }
 
@@ -466,12 +473,18 @@ ClientMetadataService::getServerToFilterMapFESHOP(
     const std::shared_ptr<Region>& region, bool isPrimary) {
   auto cptr = getClientMetadata(region->getFullPath());
 
+  LOGDEBUG("GEMNC-501 - %s(%p): entry at %s: %d", __FUNCTION__, this, __FILE__,
+           __LINE__);
   if (!cptr) {
     enqueueForMetadataRefresh(region->getFullPath(), 0);
+    LOGDEBUG("GEMNC-501 - %s(%p): returning NULL at %s: %d", __FUNCTION__, this,
+             __FILE__, __LINE__);
     return nullptr;
   }
 
   if (!routingKeys) {
+    LOGDEBUG("%s(%p): returning NULL at %s: %d", __FUNCTION__, this, __FILE__,
+             __LINE__);
     return nullptr;
   }
 
@@ -490,6 +503,8 @@ ClientMetadataService::getServerToFilterMapFESHOP(
       groupByServerToBuckets(cptr, bucketSet, isPrimary);
 
   if (serverToBuckets == nullptr) {
+    LOGDEBUG("GEMNC-501 - %s(%p): returning NULL at %s: %d", __FUNCTION__, this,
+             __FILE__, __LINE__);
     return nullptr;
   }
 
@@ -515,6 +530,8 @@ ClientMetadataService::getServerToFilterMapFESHOP(
       }
     }
   }
+  LOGDEBUG("GEMNC-501 - %s(%p): returning map of size %d at %s: %d",
+           __FUNCTION__, this, serverToKeysMap->size(), __FILE__, __LINE__);
   return serverToKeysMap;
 }
 std::shared_ptr<BucketServerLocation> ClientMetadataService::findNextServer(
