@@ -52,6 +52,8 @@ Cache createCache() {
   auto cache = CacheFactory()
                    .set("log-level", "debug")
                    .set("log-file", "RegionPutAllTest.log")
+                   .set("log-file-size-limit", "100")
+                   .set("log-disk-space-limit", "1000")
                    .set("statistic-sampling-enabled", "false")
                    .create();
 
@@ -104,7 +106,7 @@ TEST(RegionPutAllTest, putAllToPartitionedRegion) {
 }
 
 TEST(RegionPutAllTest, putAllAndVerifyKeysExist) {
-  Cluster cluster{LocatorCount{1}, ServerCount{2}};
+  Cluster cluster{LocatorCount{1}, ServerCount{6}};
 
   cluster.start();
 
@@ -119,8 +121,12 @@ TEST(RegionPutAllTest, putAllAndVerifyKeysExist) {
   auto pool = createPool(cluster, cache);
   auto region = setupRegion(cache, pool);
 
+  for (int i = 0; i < 250; i++) {
+    region->put(CacheableKey::create(i), Cacheable::create(std::to_string(i)));
+  }
+
   HashMapOfCacheable all;
-  for (int i = 0; i < 3; i++) {
+  for (int i = 500; i < 600; i++) {
     all.emplace(CacheableKey::create(i), Cacheable::create(std::to_string(i)));
   }
 

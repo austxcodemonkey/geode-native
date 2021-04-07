@@ -1236,8 +1236,8 @@ GfErrType ThinClientRegion::singleHopPutAllNoThrow_remote(
     std::shared_ptr<VersionedCacheableObjectPartList>& versionedObjPartList,
     std::chrono::milliseconds timeout,
     const std::shared_ptr<Serializable>& aCallbackArgument) {
-  LOGDEBUG(" ThinClientRegion::singleHopPutAllNoThrow_remote map size = %zu",
-           map.size());
+  LOGDEBUG("GEMNC-501 - %s(%p): map size = %zu, %s: %d", __FUNCTION__, this,
+           map.size(), __FILE__, __LINE__);
   auto region = shared_from_this();
 
   auto error = GF_NOERR;
@@ -1253,13 +1253,16 @@ GfErrType ThinClientRegion::singleHopPutAllNoThrow_remote(
   }
   // last param in getServerToFilterMap() is false for putAll
 
+  LOGDEBUG("GEMNC-501 - %s(%p): userKeys size = %zu", __FUNCTION__, this,
+           userKeys.size());
   // LOGDEBUG("ThinClientRegion::singleHopPutAllNoThrow_remote keys.size() = %d
   // ", userKeys->size());
   auto locationMap = tcrdm->getClientMetaDataService()->getServerToFilterMap(
       userKeys, region, true);
   if (!locationMap) {
     // putAll with multiple hop implementation
-    LOGDEBUG("locationMap is Null or Empty");
+    LOGDEBUG("GEMNC-501 - %s(%p): location map is null or empty, %s: %d",
+             __FUNCTION__, this, __FILE__, __LINE__);
 
     return multiHopPutAllNoThrow_remote(map, versionedObjPartList, timeout,
                                         aCallbackArgument);
@@ -1284,7 +1287,6 @@ GfErrType ThinClientRegion::singleHopPutAllNoThrow_remote(
    */
   std::vector<std::shared_ptr<PutAllWork>> putAllWorkers;
   auto& threadPool = m_cacheImpl->getThreadPool();
-  int locationMapIndex = 0;
   for (const auto& locationIter : *locationMap) {
     const auto& serverLocation = locationIter.first;
     if (serverLocation == nullptr) {
@@ -1303,12 +1305,14 @@ GfErrType ThinClientRegion::singleHopPutAllNoThrow_remote(
       }
     }
 
+    LOGDEBUG("GEMNC-501 - %s(%p): filtered map size is %zu, %s: %d",
+             __FUNCTION__, this, filteredMap->size(), __FILE__, __LINE__);
+
     auto worker = std::make_shared<PutAllWork>(
         tcrdm, serverLocation, region, true /*attemptFailover*/,
         false /*isBGThread*/, filteredMap, keys, timeout, aCallbackArgument);
     threadPool.perform(worker);
     putAllWorkers.push_back(worker);
-    locationMapIndex++;
   }
 
   // TODO::CHECK, do we need to set following ..??

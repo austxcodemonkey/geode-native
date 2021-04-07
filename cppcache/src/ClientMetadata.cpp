@@ -132,7 +132,8 @@ void ClientMetadata::getServerLocation(
   checkBucketId(bucketId);
   LOGDEBUG("GEMNC-501 - %s(%p): entry at %s: %d", __FUNCTION__, this, __FILE__,
            __LINE__);
-  if (true) {  // m_bucketServerLocationsList[bucketId].empty()) {
+  // Simulate a failure in some subset of buckets.
+  if (bucketId % 10 == 4) {
     LOGFINER("m_bucketServerLocationsList[%d] size is zero", bucketId);
     return;
   } else if (tryPrimary) {

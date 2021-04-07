@@ -336,8 +336,6 @@ ClientMetadataService::getServerToFilterMap(
   std::map<int, std::shared_ptr<BucketServerLocation>> buckets;
 
   for (const auto& key : keys) {
-    LOGDEBUG("GEMNC-501 - %s(%p): cmds = %s at %s: %d", __FUNCTION__, this,
-             key->toString().c_str(), __FILE__, __LINE__);
     const auto resolver = region->getAttributes().getPartitionResolver();
     std::shared_ptr<CacheableKey> resolveKey;
 
@@ -364,6 +362,11 @@ ClientMetadataService::getServerToFilterMap(
                                         version);
       if (!(serverLocation && serverLocation->isValid())) {
         keysWhichLeft.push_back(key);
+        LOGDEBUG(
+            "GEMNC-501 - %s(%p): key %s has no server location, size of "
+            "keysWhichLeft = %d at %s: %d",
+            __FUNCTION__, this, key->toString().c_str(), keysWhichLeft.size(),
+            __FILE__, __LINE__);
         continue;
       }
 
@@ -394,6 +397,10 @@ ClientMetadataService::getServerToFilterMap(
     auto totalServers = serverToFilterMap->size();
     auto perServer = keyLefts / totalServers + 1;
 
+    LOGDEBUG(
+        "GEMNC-501 - %s(%p): number of Servers = %d, keys to add per server = "
+        "%d at %s: %d",
+        __FUNCTION__, this, totalServers, perServer, __FILE__, __LINE__);
     size_t keyIdx = 0;
     for (const auto& locationIter : *serverToFilterMap) {
       const auto values = locationIter.second;
