@@ -328,7 +328,7 @@ ClientMetadataService::getServerToFilterMap(
 
   auto serverToFilterMap = std::make_shared<ServerToFilterMap>();
 
-  std::vector<std::shared_ptr<CacheableKey>> keysWhichLeft;
+  std::vector<std::shared_ptr<CacheableKey>> leftoverKeys;
   std::map<int, std::shared_ptr<BucketServerLocation>> buckets;
 
   for (const auto& key : keys) {
@@ -358,7 +358,7 @@ ClientMetadataService::getServerToFilterMap(
       clientMetadata->getServerLocation(bucketId, isPrimary, serverLocation,
                                         version);
       if (!(serverLocation && serverLocation->isValid())) {
-        keysWhichLeft.push_back(key);
+        leftoverKeys.push_back(key);
         continue;
       }
 
@@ -383,24 +383,18 @@ ClientMetadataService::getServerToFilterMap(
     keyList->push_back(key);
   }
 
-  if (!keysWhichLeft.empty() && !serverToFilterMap->empty()) {
-    // add left keys in result
-    auto keyLefts = keysWhichLeft.size();
-    auto totalServers = serverToFilterMap->size();
-    auto perServer = keyLefts / totalServers + 1;
+  if (!leftoverKeys.empty() && !serverToFilterMap->empty()) {
+    // add left keys in result.  Since the ordering in serverToFilterMap
+    // changes, just adding them to the first item in the map means we put
+    // them in (essentially) a randomly-chosen server each time, which is
+    // what we want.
+    const auto& locationIter = serverToFilterMap->begin();
+    const auto values = locationIter->second;
 
-    size_t keyIdx = 0;
-    for (const auto& locationIter : *serverToFilterMap) {
-      const auto values = locationIter.second;
-      for (size_t i = 0; i < perServer; i++) {
-        if (keyIdx < keyLefts) {
-          values->push_back(keysWhichLeft.at(keyIdx++));
-        } else {
-          break;
-        }
-      }
-      if (keyIdx >= keyLefts) break;  // done
-    }
+    LOGDEBUG("Adding leftover keys to bucket %s",
+             locationIter->first->toString().c_str());
+    values->insert(std::end(*values), std::begin(leftoverKeys),
+                   std::end(leftoverKeys));
   } else if (serverToFilterMap->empty()) {  // not be able to map any key
     return nullptr;  // it will force all keys to send to one server
   }
