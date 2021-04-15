@@ -50,7 +50,10 @@ Cache createCache() {
   using apache::geode::client::CacheFactory;
 
   auto cache = CacheFactory()
-                   .set("log-level", "none")
+                   .set("log-level", "debug")
+                   .set("log-file", "RegionPutAllTest.log")
+                   .set("log-file-size-limit", "100")
+                   .set("log-disk-space-limit", "1000")
                    .set("statistic-sampling-enabled", "false")
                    .create();
 
@@ -102,4 +105,44 @@ TEST(RegionPutAllTest, putAllToPartitionedRegion) {
   }
 }
 
+TEST(RegionPutAllTest, putAllAndVerifyKeysExist) {
+  Cluster cluster{LocatorCount{1}, ServerCount{10}};
+
+  cluster.start();
+
+  cluster.getGfsh()
+      .create()
+      .region()
+      .withName("region")
+      .withType("PARTITION")
+      .execute();
+
+  auto cache = createCache();
+  auto pool = createPool(cluster, cache);
+  auto region = setupRegion(cache, pool);
+
+  std::cerr << __FUNCTION__ << ": Doing all the puts\n";
+  for (int i = 0; i < 50; i++) {
+    region->put(std::to_string(i), Cacheable::create(i));
+  }
+  std::cerr << __FUNCTION__
+            << ": Puts done, adding all the things to the list\n";
+
+  HashMapOfCacheable all;
+  for (int i = 0; i < 113; i++) {
+    all.emplace(CacheableKey::create(std::to_string(i)), Cacheable::create(i));
+  }
+
+  std::cerr << __FUNCTION__
+            << ": All the things added to the list, doing putAll\n";
+
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+  region->putAll(all);
+  std::cerr << __FUNCTION__ << ": putAll done, checking keys\n";
+  for (auto& key : all) {
+    ASSERT_TRUE(region->containsKeyOnServer(key.first));
+  }
+  std::cerr << __FUNCTION__
+            << ": Checked all the keys, looks like we're good!\n";
+}
 }  // namespace
