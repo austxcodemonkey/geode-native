@@ -105,8 +105,12 @@ TEST(RegionPutAllTest, putAllToPartitionedRegion) {
   }
 }
 
+//
+// verifies that putall works when not all metadata is present, i.e. not all
+// buckets exist yet on the cluster.
+//
 TEST(RegionPutAllTest, putAllAndVerifyKeysExist) {
-  Cluster cluster{LocatorCount{1}, ServerCount{10}};
+  Cluster cluster{LocatorCount{1}, ServerCount{3}};
 
   cluster.start();
 
@@ -121,28 +125,19 @@ TEST(RegionPutAllTest, putAllAndVerifyKeysExist) {
   auto pool = createPool(cluster, cache);
   auto region = setupRegion(cache, pool);
 
-  std::cerr << __FUNCTION__ << ": Doing all the puts\n";
   for (int i = 0; i < 50; i++) {
     region->put(std::to_string(i), Cacheable::create(i));
   }
-  std::cerr << __FUNCTION__
-            << ": Puts done, adding all the things to the list\n";
 
   HashMapOfCacheable all;
   for (int i = 0; i < 113; i++) {
     all.emplace(CacheableKey::create(std::to_string(i)), Cacheable::create(i));
   }
 
-  std::cerr << __FUNCTION__
-            << ": All the things added to the list, doing putAll\n";
-
   std::this_thread::sleep_for(std::chrono::seconds(10));
   region->putAll(all);
-  std::cerr << __FUNCTION__ << ": putAll done, checking keys\n";
   for (auto& key : all) {
     ASSERT_TRUE(region->containsKeyOnServer(key.first));
   }
-  std::cerr << __FUNCTION__
-            << ": Checked all the keys, looks like we're good!\n";
 }
 }  // namespace

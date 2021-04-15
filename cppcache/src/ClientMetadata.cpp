@@ -130,8 +130,7 @@ void ClientMetadata::getServerLocation(
     int bucketId, bool tryPrimary,
     std::shared_ptr<BucketServerLocation>& serverLocation, int8_t& version) {
   checkBucketId(bucketId);
-  //  if (m_bucketServerLocationsList[bucketId].empty()) {
-  if (bucketId % 10 == 4) {
+  if (m_bucketServerLocationsList[bucketId].empty()) {
     LOGFINER("m_bucketServerLocationsList[%d] size is zero", bucketId);
     return;
   } else if (tryPrimary) {
