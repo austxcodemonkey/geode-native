@@ -38,6 +38,16 @@ namespace client {
 
 const char* TcrEndpoint::NC_Notification = "NC Notification";
 
+class EndpointIdCounter {
+ public:
+  static std::atomic<int64_t>& instance() {
+    static std::atomic<int64_t> cacheImplId_(0);
+    return cacheImplId_;
+  }
+
+  static int64_t next() { return ++instance(); }
+};
+
 TcrEndpoint::TcrEndpoint(const std::string& name, CacheImpl* cacheImpl,
                          binary_semaphore& failoverSema,
                          binary_semaphore& cleanupSema,
@@ -74,15 +84,18 @@ TcrEndpoint::TcrEndpoint(const std::string& name, CacheImpl* cacheImpl,
       m_queueSize(0),
       m_distributedMemId(0),
       m_isServerQueueStatusSet(false),
+      m_id(EndpointIdCounter::next()),
       m_connCreatedWhenMaxConnsIsZero(false) {
   /*
   m_name = Utils::convertHostToCanonicalForm(m_name.c_str() );
   */
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ regular ctor", __FUNCTION__, id());
 }
 
 TcrEndpoint::~TcrEndpoint() {
   connected_ = false;
   m_isActiveEndpoint = false;
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ regular dtor", __FUNCTION__, id());
   closeConnections();
   {
     // force close the notification channel -- see bug #295
@@ -1076,6 +1089,8 @@ void TcrEndpoint::setRetry(const TcrMessage& request, int& maxSendRetries) {
     maxSendRetries = 0;
   }
 }
+
+int64_t TcrEndpoint::id() { return m_id; }
 
 GfErrType TcrEndpoint::send(const TcrMessage& request, TcrMessageReply& reply) {
   GfErrType error = GF_NOTCON;

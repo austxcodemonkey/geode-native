@@ -91,6 +91,16 @@ inline void writeInt(uint8_t* buffer, uint32_t value) {
 }
 }  // namespace
 
+class MessageIdCounter {
+ public:
+  static std::atomic<int64_t>& instance() {
+    static std::atomic<int64_t> cacheImplId_(0);
+    return cacheImplId_;
+  }
+
+  static int64_t next() { return ++instance(); }
+};
+
 extern void setThreadLocalExceptionMessage(std::string);
 
 bool TcrMessage::isUserInitiativeOps(const TcrMessage& msg) {
@@ -175,7 +185,10 @@ TcrMessage::TcrMessage()
       m_serverGroupVersion(0),
       m_boolValue(0),
       m_isCallBackArguement(false),
-      m_hasResult(0) {}
+      m_id(MessageIdCounter::next()),
+      m_hasResult(0) {
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ regular ctor", __FUNCTION__, id());
+}
 
 const std::vector<std::shared_ptr<CacheableKey>>* TcrMessage::getKeys() const {
   return m_keyList;
@@ -2998,6 +3011,7 @@ TcrMessage::~TcrMessage() {
    */
   // _GEODE_SAFE_DELETE( m_deltaBytes );
   _GEODE_SAFE_DELETE_ARRAY(m_deltaBytes);
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ regular dtor", __FUNCTION__, id());
 }
 
 const std::string& TcrMessage::getRegionName() const { return m_regionName; }
@@ -3274,6 +3288,8 @@ TcrMessageHelper::ChunkObjectType TcrMessageHelper::readChunkPartHeader(
   }
   return ChunkObjectType::OBJECT;
 }
+
+int64_t TcrMessage::id() { return m_id; }
 
 #ifdef _SOLARIS
 #pragma error_messages(default, SEC_UNINITIALIZED_MEM_READ)

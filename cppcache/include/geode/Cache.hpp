@@ -167,9 +167,9 @@ class APACHE_GEODE_EXPORT Cache : public GeodeCache {
   virtual void readyForEvents();
 
   /**
-   * Creates an authenticated cache using the given user security properties.
-   * Multiple instances with different user properties can be created with a
-   * single client cache.
+   * Creates an authenticated cache using the given user security
+   * properties. Multiple instances with different user properties can be
+   * created with a single client cache.
    *
    * Application must use this instance to do operations, when
    * multiuser-authentication is set to true.
@@ -247,6 +247,8 @@ class APACHE_GEODE_EXPORT Cache : public GeodeCache {
    */
   void setLogLevel(LogLevel newLevel);
 
+  int64_t id() const;
+
   /**
    * Returns the current log level.
    * @return the current log level.
@@ -267,6 +269,7 @@ class APACHE_GEODE_EXPORT Cache : public GeodeCache {
         const std::shared_ptr<AuthInitialize>& authInitialize);
 
   std::unique_ptr<CacheImpl> m_cacheImpl;
+  int64_t m_id;
 
  protected:
   friend class CacheFactory;

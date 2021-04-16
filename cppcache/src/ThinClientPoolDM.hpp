@@ -244,6 +244,8 @@ class ThinClientPoolDM
                                             bool appThreadrequest = false);
 
  private:
+  int64_t id();
+
   bool hasExpired(TcrConnection* conn);
 
   std::shared_ptr<Properties> getCredentials(TcrEndpoint* ep);
@@ -257,6 +259,7 @@ class ThinClientPoolDM
   bool clear_pdx_registry_{false};
   bool m_isSecurityOn;
   bool m_isMultiUserMode;
+  int64_t m_id;
 
   TcrConnection* getUntil(std::chrono::microseconds& sec, GfErrType* error,
                           std::set<ServerLocation>& excludeServers,

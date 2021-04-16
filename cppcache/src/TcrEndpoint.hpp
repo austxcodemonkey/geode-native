@@ -209,6 +209,7 @@ class TcrEndpoint : public std::enable_shared_from_this<TcrEndpoint> {
   binary_semaphore& cleanup_semaphore_;
   binary_semaphore& redundancy_semaphore_;
   ThinClientBaseDM* m_baseDM;
+  int64_t m_id;
   std::string m_name;
   std::list<ThinClientBaseDM*> m_distMgrs;
   std::recursive_mutex m_endpointAuthenticationLock;
@@ -237,6 +238,7 @@ class TcrEndpoint : public std::enable_shared_from_this<TcrEndpoint> {
                              std::string& failReason, TcrConnection* conn);
   void closeConnections();
   void setRetry(const TcrMessage& request, int& maxSendRetries);
+  int64_t id();
 };
 }  // namespace client
 }  // namespace geode

@@ -104,6 +104,16 @@ namespace apache {
 namespace geode {
 namespace client {
 
+class ConnectionIdCounter {
+ public:
+  static std::atomic<int64_t>& instance() {
+    static std::atomic<int64_t> cacheImplId_(0);
+    return cacheImplId_;
+  }
+
+  static int64_t next() { return ++instance(); }
+};
+
 TcrConnection::TcrConnection(const TcrConnectionManager& connectionManager)
     : connectionId(0),
       m_connectionManager(connectionManager),
@@ -114,7 +124,10 @@ TcrConnection::TcrConnection(const TcrConnectionManager& connectionManager)
       chunks_process_semaphore_(0),
       m_isBeingUsed(false),
       m_isUsed(0),
-      m_poolDM(nullptr) {}
+      m_id(ConnectionIdCounter::next()),
+      m_poolDM(nullptr) {
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ ctor%", __FUNCTION__, id());
+}
 
 bool TcrConnection::initTcrConnection(
     std::shared_ptr<TcrEndpoint> endpointObj,
@@ -785,6 +798,8 @@ void TcrConnection::readMessageChunked(TcrMessageReply& reply,
       m_endpointObj->name().c_str());
 }
 
+int64_t TcrConnection::id() { return m_id; }
+
 std::chrono::microseconds TcrConnection::calculateHeaderTimeout(
     std::chrono::microseconds receiveTimeout, bool retry) {
   auto headerTimeout = receiveTimeout;
@@ -1211,7 +1226,9 @@ void TcrConnection::updateCreationTime() {
   touch();
 }
 
-TcrConnection::~TcrConnection() {}
+TcrConnection::~TcrConnection() {
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ dtor%", __FUNCTION__, id());
+}
 
 bool TcrConnection::setAndGetBeingUsed(volatile bool isBeingUsed,
                                        bool forTransaction) {

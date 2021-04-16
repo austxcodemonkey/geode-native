@@ -447,6 +447,9 @@ class TcrMessage {
   bool m_isCallBackArguement;
   uint8_t m_hasResult;
 
+  int64_t id();
+  int64_t m_id;
+
   friend class TcrMessageHelper;
 };
 

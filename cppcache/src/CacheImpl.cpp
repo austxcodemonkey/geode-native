@@ -51,6 +51,16 @@ namespace apache {
 namespace geode {
 namespace client {
 
+class CacheImplIdCounter {
+ public:
+  static std::atomic<int64_t>& instance() {
+    static std::atomic<int64_t> cacheImplId_(0);
+    return cacheImplId_;
+  }
+
+  static int64_t next() { return ++instance(); }
+};
+
 CacheImpl::CacheImpl(Cache* c, const std::shared_ptr<Properties>& dsProps,
                      bool ignorePdxUnreadFields, bool readPdxSerialized,
                      const std::shared_ptr<AuthInitialize>& authInitialize)
@@ -75,8 +85,11 @@ CacheImpl::CacheImpl(Cache* c, const std::shared_ptr<Properties>& dsProps,
       m_pdxTypeRegistry(nullptr),
       m_threadPool(m_distributedSystem.getSystemProperties().threadPoolSize()),
       m_authInitialize(authInitialize),
-      m_keepAlive(false) {
+      m_keepAlive(false),
+      m_id(CacheImplIdCounter::next()) {
   using apache::geode::statistics::StatisticsManager;
+
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ regular ctor", __FUNCTION__, id());
 
   m_cacheTXManager = std::shared_ptr<CacheTransactionManager>(
       new InternalCacheTransactionManager2PCImpl(this));
@@ -204,6 +217,7 @@ std::shared_ptr<QueryService> CacheImpl::getQueryService(const char* poolName) {
 }
 
 CacheImpl::~CacheImpl() {
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ dtor", __FUNCTION__, id());
   if (!m_closed) {
     close();
   }
@@ -349,6 +363,8 @@ bool CacheImpl::doIfDestroyNotPending(std::function<void()> f) {
 
   return !m_destroyPending;
 }
+
+int64_t CacheImpl::id() const { return m_id; }
 
 void CacheImpl::validateRegionAttributes(
     const std::string& name, const RegionAttributes& regionAttributes) const {

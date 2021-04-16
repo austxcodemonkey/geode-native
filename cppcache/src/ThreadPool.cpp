@@ -17,6 +17,7 @@
 #include "ThreadPool.hpp"
 
 #include "DistributedSystemImpl.hpp"
+#include "util/Log.hpp"
 
 namespace apache {
 namespace geode {
@@ -27,6 +28,8 @@ const char* ThreadPool::NC_Pool_Thread = "NC Pool Thread";
 ThreadPool::ThreadPool(size_t threadPoolSize)
     : shutdown_(false), appDomainContext_(createAppDomainContext()) {
   workers_.reserve(threadPoolSize);
+
+  LOGDEBUG("GEMNC-503 %s(%p): C++ regular ctor", __FUNCTION__, this);
 
   std::function<void()> executeWork = [this] {
     DistributedSystemImpl::setThreadName(NC_Pool_Thread);
@@ -61,7 +64,10 @@ ThreadPool::ThreadPool(size_t threadPoolSize)
   }
 }
 
-ThreadPool::~ThreadPool() { shutDown(); }
+ThreadPool::~ThreadPool() {
+  LOGDEBUG("GEMNC-503 %s(%p): C++ dtor", __FUNCTION__, this);
+  shutDown();
+}
 
 void ThreadPool::perform(std::shared_ptr<Callable> req) {
   {
@@ -86,7 +92,9 @@ void ThreadPool::shutDown(void) {
 
   queueCondition_.notify_all();
 
+  LOGDEBUG("GEMNC-503 %s(%p): joining threads", __FUNCTION__, this);
   for (auto& worker : workers_) {
+    LOGDEBUG("GEMNC-503 %s(%p):     joining worker thread", __FUNCTION__, this);
     worker.join();
   }
 }

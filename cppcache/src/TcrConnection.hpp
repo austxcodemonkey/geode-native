@@ -274,6 +274,8 @@ class TcrConnection {
   const TcrConnectionManager& m_connectionManager;
   int m_expiryTimeVariancePercentage = 0;
 
+  int64_t id();
+
   std::chrono::microseconds calculateHeaderTimeout(
       std::chrono::microseconds receiveTimeout, bool retry);
 
@@ -346,6 +348,7 @@ class TcrConnection {
   ServerQueueStatus m_hasServerQueue;
   int32_t m_queueSize;
   uint16_t m_port;
+  int64_t m_id;
 
   // semaphore to synchronize with the chunked response processing thread
   binary_semaphore chunks_process_semaphore_;

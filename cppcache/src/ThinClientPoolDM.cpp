@@ -49,6 +49,16 @@ namespace apache {
 namespace geode {
 namespace client {
 
+class PoolIdCounter {
+ public:
+  static std::atomic<int64_t>& instance() {
+    static std::atomic<int64_t> cacheImplId_(0);
+    return cacheImplId_;
+  }
+
+  static int64_t next() { return ++instance(); }
+};
+
 class GetAllWork : public PooledWork<GfErrType> {
   ThinClientPoolDM* m_poolDM;
   std::shared_ptr<BucketServerLocation> m_serverLocation;
@@ -156,12 +166,14 @@ ThinClientPoolDM::ThinClientPoolDM(const char* name,
       connected_endpoints_(0),
       m_PoolStatsSampler(nullptr),
       m_clientMetadataService(nullptr),
+      m_id(PoolIdCounter::next()),
       m_primaryServerQueueSize(PRIMARY_QUEUE_NOT_AVAILABLE) {
   static bool firstGuard = false;
   if (firstGuard) {
     ClientProxyMembershipID::increaseSynchCounter();
   }
   firstGuard = true;
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ regular ctor", __FUNCTION__, id());
 
   auto cacheImpl = m_connManager.getCacheImpl();
   auto& distributedSystem = cacheImpl->getDistributedSystem();
@@ -234,6 +246,7 @@ void ThinClientPoolDM::init() {
 ThinClientPoolDM::~ThinClientPoolDM() {
   // TODO suspect
   // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.VirtualCall)
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ dtor", __FUNCTION__, id());
   destroy();
   _GEODE_SAFE_DELETE(m_locHelper);
   _GEODE_SAFE_DELETE(m_stats);
@@ -2098,6 +2111,8 @@ void ThinClientPoolDM::releaseThreadLocalConnection() {
 void ThinClientPoolDM::setThreadLocalConnection(TcrConnection* conn) {
   m_manager->addStickyConnection(conn);
 }
+
+int64_t ThinClientPoolDM::id() { return m_id; }
 
 inline bool ThinClientPoolDM::hasExpired(TcrConnection* conn) {
   return conn->hasExpired(getLoadConditioningInterval());

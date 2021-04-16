@@ -32,6 +32,16 @@ namespace apache {
 namespace geode {
 namespace client {
 
+class CacheIdCounter {
+ public:
+  static std::atomic<int64_t>& instance() {
+    static std::atomic<int64_t> cacheImplId_(0);
+    return cacheImplId_;
+  }
+
+  static int64_t next() { return ++instance(); }
+};
+
 /**
  * Returns the name of this cache.
  * This method does not throw
@@ -68,7 +78,12 @@ void Cache::close() { close(false); }
  * @param keepalive whether to keep the durable client's queue
  * @throws CacheClosedException,  if the cache is already closed.
  */
-void Cache::close(bool keepalive) { m_cacheImpl->close(keepalive); }
+void Cache::close(bool keepalive) {
+  int64_t ID = m_cacheImpl ? m_cacheImpl->id() : -1;
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ close(), m_cacheImpl=%" PRId64,
+           __FUNCTION__, id(), ID);
+  m_cacheImpl->close(keepalive);
+}
 
 std::shared_ptr<Region> Cache::getRegion(const std::string& path) const {
   return m_cacheImpl->getRegion(path);
@@ -106,12 +121,21 @@ Cache::Cache(const std::shared_ptr<Properties>& dsProp,
              const std::shared_ptr<AuthInitialize>& authInitialize)
     : m_cacheImpl(std::unique_ptr<CacheImpl>(
           new CacheImpl(this, dsProp, ignorePdxUnreadFields, readPdxSerialized,
-                        authInitialize))) {}
+                        authInitialize))),
+      m_id(CacheIdCounter::next()) {
+  int64_t ID = m_cacheImpl ? m_cacheImpl->id() : -1;
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ regular ctor, m_cacheImpl=%" PRId64,
+           __FUNCTION__, id(), ID);
+}
 
 Cache::Cache(Cache&& other) noexcept {
   other.m_cacheImpl->doIfDestroyNotPending([&]() {
     m_cacheImpl = std::move(other.m_cacheImpl);
     m_cacheImpl->setCache(this);
+    m_id = CacheIdCounter::next();
+    int64_t ID = m_cacheImpl ? m_cacheImpl->id() : -1;
+    LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ move ctor, m_cacheImpl=%" PRId64,
+             __FUNCTION__, id(), ID);
   });
 }
 
@@ -119,12 +143,21 @@ Cache& Cache::operator=(Cache&& other) noexcept {
   other.m_cacheImpl->doIfDestroyNotPending([&]() {
     m_cacheImpl = std::move(other.m_cacheImpl);
     m_cacheImpl->setCache(this);
+    m_id = CacheIdCounter::next();
+    int64_t ID = m_cacheImpl ? m_cacheImpl->id() : -1;
+    LOGDEBUG("GEMNC-503 %s(%" PRId64
+             "): C++ assignment operator, m_cacheImpl=%" PRId64,
+             __FUNCTION__, id(), ID);
   });
 
   return *this;
 }
 
-Cache::~Cache() = default;
+Cache::~Cache() {
+  int64_t ID = m_cacheImpl ? m_cacheImpl->id() : -1;
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ dtor, m_cacheImpl=%" PRId64,
+           __FUNCTION__, id(), ID);
+}
 
 void Cache::initializeDeclarativeCache(const std::string& cacheXml) {
   m_cacheImpl->initializeDeclarativeCache(cacheXml);
@@ -144,6 +177,8 @@ void Cache::setLogLevel(LogLevel newLevel) {
   Log::setLogLevel(newLevel);
   this->getSystemProperties().setLogLevel(newLevel);
 }
+
+int64_t Cache::id() const { return m_id; }
 
 LogLevel Cache::getLogLevel() { return Log::logLevel(); }
 

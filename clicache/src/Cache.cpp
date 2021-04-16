@@ -51,12 +51,14 @@ namespace Apache
 
       Cache::Cache(std::shared_ptr<native::Cache> nativeptr)
       {
+        Log::Debug("GEMNC-503 Cache::Cache(" + this + "): CLI ctor");
         m_nativeptr = gcnew native_shared_ptr<native::Cache>(nativeptr);
         m_pdxTypeRegistry = gcnew Apache::Geode::Client::Internal::PdxTypeRegistry(this);
         m_typeRegistry = gcnew Apache::Geode::Client::TypeRegistry(this);
       }
 
       Cache::~Cache() {
+        Log::Debug("GEMNC-503 Cache::~Cache(" + this + "): CLI dtor");
         if (m_nativeptr) {
           try {
             if (!IsClosed) {
