@@ -445,7 +445,7 @@ class APACHE_GEODE_EXPORT DataInput {
   virtual Cache* getCache() const;
 
   DataInput() = delete;
-  virtual ~DataInput() noexcept = default;
+  virtual ~DataInput() noexcept;
   DataInput(const DataInput&) = delete;
   DataInput& operator=(const DataInput&) = delete;
   DataInput(DataInput&&) = default;
@@ -464,6 +464,9 @@ class APACHE_GEODE_EXPORT DataInput {
   size_t m_bufLength;
   Pool* m_pool;
   const CacheImpl* m_cache;
+  int64_t id_;
+
+  int64_t id() const { return id_; }
 
   std::shared_ptr<Serializable> readObjectInternal(int8_t typeId = -1);
 

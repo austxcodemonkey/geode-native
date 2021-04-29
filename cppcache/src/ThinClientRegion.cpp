@@ -53,6 +53,16 @@ static const std::regex PREDICATE_IS_FULL_QUERY_REGEX(
 
 void setThreadLocalExceptionMessage(std::string exMsg);
 
+class ThinClientRegionIdCounter {
+ public:
+  static std::atomic<int64_t>& instance() {
+    static std::atomic<int64_t> cacheImplId_(0);
+    return cacheImplId_;
+  }
+
+  static int64_t next() { return ++instance(); }
+};
+
 class PutAllWork : public PooledWork<GfErrType> {
   ThinClientPoolDM* m_poolDM;
   std::shared_ptr<BucketServerLocation> m_serverLocation;
@@ -320,7 +330,9 @@ ThinClientRegion::ThinClientRegion(
     : LocalRegion(name, cacheImpl, rPtr, attributes, stats, shared),
       m_tcrdm(nullptr),
       m_notifyRelease(false),
-      m_isMetaDataRefreshed(false) {
+      m_isMetaDataRefreshed(false),
+      id_(ThinClientRegionIdCounter::next()) {
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ regular ctor", __FUNCTION__, id());
   m_transactionEnabled = true;
   m_isDurableClnt = !cacheImpl->getDistributedSystem()
                          .getSystemProperties()
@@ -2882,6 +2894,7 @@ void ThinClientRegion::release(bool invokeCallbacks) {
 }
 
 ThinClientRegion::~ThinClientRegion() noexcept {
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ dtor", __FUNCTION__, id());
   TryWriteGuard guard(m_rwLock, m_destroyPending);
   if (!m_destroyPending) {
     // TODO suspect

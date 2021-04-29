@@ -34,6 +34,16 @@ static std::recursive_mutex globalBigBufferMutex;
 size_t DataOutput::m_highWaterMark = 50 * 1024 * 1024;
 size_t DataOutput::m_lowWaterMark = 8192;
 
+class DataOutputIdCounter {
+ public:
+  static std::atomic<int64_t>& instance() {
+    static std::atomic<int64_t> cacheImplId_(0);
+    return cacheImplId_;
+  }
+
+  static int64_t next() { return ++instance(); }
+};
+
 /** This represents a allocation in this thread local pool. */
 class BufferDesc {
  public:
@@ -108,9 +118,22 @@ TSSDataOutput::~TSSDataOutput() {
 thread_local TSSDataOutput TSSDataOutput::threadLocalBufferPool;
 
 DataOutput::DataOutput(const CacheImpl* cache, Pool* pool)
-    : m_size(0), m_haveBigBuffer(false), m_cache(cache), m_pool(pool) {
+    : m_size(0),
+      m_haveBigBuffer(false),
+      m_cache(cache),
+      m_pool(pool),
+      id_(DataOutputIdCounter::next()) {
   m_bytes.reset(DataOutput::checkoutBuffer(&m_size));
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ regular ctor", __FUNCTION__, id());
   m_buf = m_bytes.get();
+}
+
+DataOutput::~DataOutput() noexcept {
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ dtor", __FUNCTION__, id());
+  reset();
+  if (m_bytes) {
+    DataOutput::checkinBuffer(m_bytes.release(), m_size);
+  }
 }
 
 uint8_t* DataOutput::checkoutBuffer(size_t* size) {

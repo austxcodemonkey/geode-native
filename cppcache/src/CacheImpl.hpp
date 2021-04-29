@@ -374,11 +374,8 @@ class APACHE_GEODE_EXPORT CacheImpl {
   ThreadPool m_threadPool;
   const std::shared_ptr<AuthInitialize> m_authInitialize;
   std::unique_ptr<TypeRegistry> m_typeRegistry;
-<<<<<<< HEAD
   bool m_keepAlive;
-=======
   int64_t m_id;
->>>>>>> 932cddb2 (GEODE-9171: Fix leaked native Cache ptr in CLI)
 
   inline void throwIfClosed() const {
     if (m_closed) {

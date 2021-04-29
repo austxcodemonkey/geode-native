@@ -28,13 +28,30 @@ namespace apache {
 namespace geode {
 namespace client {
 
+class DataInputIdCounter {
+ public:
+  static std::atomic<int64_t>& instance() {
+    static std::atomic<int64_t> cacheImplId_(0);
+    return cacheImplId_;
+  }
+
+  static int64_t next() { return ++instance(); }
+};
+
 DataInput::DataInput(const uint8_t* buffer, size_t len, const CacheImpl* cache,
                      Pool* pool)
     : m_buf(buffer),
       m_bufHead(buffer),
       m_bufLength(len),
       m_pool(pool),
-      m_cache(cache) {}
+      m_cache(cache),
+      id_(DataInputIdCounter::next()) {
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ regular ctor", __FUNCTION__, id());
+}
+
+DataInput::~DataInput() noexcept {
+  LOGDEBUG("GEMNC-503 %s(%" PRId64 "): C++ dtor", __FUNCTION__, id());
+}
 
 std::shared_ptr<Serializable> DataInput::readObjectInternal(int8_t typeId) {
   return getSerializationRegistry().deserialize(*this, typeId);

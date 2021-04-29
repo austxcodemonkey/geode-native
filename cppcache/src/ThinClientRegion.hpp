@@ -346,8 +346,11 @@ class ThinClientRegion : public LocalRegion {
       std::shared_ptr<VersionedCacheableObjectPartList>& versionedObjPartList,
       const std::shared_ptr<Serializable>& aCallbackArgument = nullptr);
 
+  int64_t id() const { return id_; }
+
   ACE_RW_Thread_Mutex m_RegionMutex;
   bool m_isMetaDataRefreshed;
+  int64_t id_;
 
   typedef std::unordered_map<
       std::shared_ptr<BucketServerLocation>, std::shared_ptr<Serializable>,

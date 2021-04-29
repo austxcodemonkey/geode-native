@@ -470,12 +470,7 @@ class APACHE_GEODE_EXPORT DataOutput {
   DataOutput() = delete;
 
   /** Destruct a DataOutput, including releasing the created buffer. */
-  virtual ~DataOutput() noexcept {
-    reset();
-    if (m_bytes) {
-      DataOutput::checkinBuffer(m_bytes.release(), m_size);
-    }
-  }
+  virtual ~DataOutput() noexcept;
 
   DataOutput(const DataOutput&) = delete;
   DataOutput& operator=(const DataOutput&) = delete;
@@ -501,6 +496,8 @@ class APACHE_GEODE_EXPORT DataOutput {
     void operator()(uint8_t* p) { free(p); }
   };
 
+  int64_t id() const { return id_; }
+
   // memory m_buffer to encode to.
   std::unique_ptr<uint8_t, FreeDeleter> m_bytes;
   // cursor.
@@ -514,6 +511,7 @@ class APACHE_GEODE_EXPORT DataOutput {
   volatile bool m_haveBigBuffer;
   const CacheImpl* m_cache;
   Pool* m_pool;
+  int64_t id_;
 
   inline void writeAscii(const std::string& value) {
     uint16_t len = static_cast<uint16_t>(
