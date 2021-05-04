@@ -20,14 +20,14 @@
 #ifndef GEODE_LOG_H_
 #define GEODE_LOG_H_
 
+#include <spdlog/spdlog.h>
+
 #include <cstdarg>
 #include <cstdio>
 #include <string>
 
 #include <geode/internal/geode_globals.hpp>
 #include <geode/util/LogLevel.hpp>
-
-#include "spdlog/spdlog.h"
 
 #ifndef GEODE_HIGHEST_LOG_LEVEL
 #define GEODE_HIGHEST_LOG_LEVEL LogLevel::All

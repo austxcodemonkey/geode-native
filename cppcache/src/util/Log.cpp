@@ -14,7 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "util/Log.hpp"
+#include "Log.hpp"
+
+#include <spdlog/sinks/rotating_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
 #include <cstdarg>
 #include <cstdio>
@@ -27,11 +31,8 @@
 #include <geode/ExceptionTypes.hpp>
 #include <geode/util/LogLevel.hpp>
 
-#include "geodeBanner.hpp"
-#include "spdlog/sinks/rotating_file_sink.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/spdlog.h"
-#include "util/chrono/time_point.hpp"
+#include "../geodeBanner.hpp"
+#include "chrono/time_point.hpp"
 
 namespace apache {
 namespace geode {
