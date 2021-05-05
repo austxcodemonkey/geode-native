@@ -20,8 +20,6 @@
 #ifndef GEODE_LOG_H_
 #define GEODE_LOG_H_
 
-#include <spdlog/spdlog.h>
-
 #include <cstdarg>
 #include <cstdio>
 #include <string>
