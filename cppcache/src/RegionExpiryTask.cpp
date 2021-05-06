@@ -81,8 +81,8 @@ bool RegionExpiryTask::on_expire() {
       break;
     }
     case ExpirationAction::INVALID_ACTION: {
-      LOGERROR("Unknown expiration action %d for region [%s]", action_,
-               full_path);
+      LOGERROR("Unknown expiration action %d for region [%s]",
+               static_cast<int32_t>(action_), full_path);
       break;
     }
   }

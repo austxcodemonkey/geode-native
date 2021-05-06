@@ -42,6 +42,9 @@ const int __1K__ = 1024;
 const int __1M__ = __1K__ * __1K__;
 const int __1G__ = __1K__ * __1M__;
 const int LOG_SCRATCH_BUFFER_SIZE = 16 * __1K__;
+const int _GEODE_LOG_MESSAGE_LIMIT = 8192;
+const int64_t GEODE_MAX_LOG_FILE_LIMIT = (1024 * 1024 * 1024);
+const int64_t GEODE_MAX_LOG_DISK_LIMIT = (1024ll * 1024ll * 1024ll * 1024ll);
 
 static std::recursive_mutex g_logMutex;
 static std::shared_ptr<spdlog::logger> currentLogger;
@@ -50,7 +53,7 @@ static std::string logFilePath;
 static int32_t adjustedFileSizeLimit;
 static int32_t maxFiles;
 
-const std::shared_ptr<spdlog::logger>& getCurrentLogger() {
+const std::shared_ptr<spdlog::logger>& Log::getCurrentLogger() {
   if (logFilePath.empty()) {
     static auto consoleLogger = spdlog::stderr_color_mt("console");
     return consoleLogger;
@@ -140,7 +143,8 @@ uint32_t Log::calculateMaxFilesForSpaceLimit(uint64_t logDiskSpaceLimit,
   return maxFileCount;
 }
 
-spdlog::level::level_enum geodeLogLevelToSpdlogLevel(LogLevel logLevel) {
+const spdlog::level::level_enum Log::geodeLogLevelToSpdlogLevel(
+    LogLevel logLevel) {
   auto level = spdlog::level::level_enum::off;
   switch (logLevel) {
     case LogLevel::None:

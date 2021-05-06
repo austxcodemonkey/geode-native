@@ -509,7 +509,8 @@ void TheTypeMap::bindDataSerializablePrimitive(TypeFactoryMethod func,
   const std::lock_guard<std::mutex> guard(dataSerializablePrimitiveMapMutex_);
   const auto& result = dataSerializablePrimitiveMap_.emplace(dsCode, func);
   if (!result.second) {
-    LOGERROR("A class with DSCode %d is already registered.", dsCode);
+    LOGERROR("A class with DSCode %d is already registered.",
+             static_cast<int32_t>(dsCode));
     throw IllegalStateException(
         "A class with given DSCode is already registered.");
   }
@@ -537,7 +538,8 @@ void TheTypeMap::bindDataSerializableFixedId(TypeFactoryMethod func) {
   const std::lock_guard<std::mutex> guard(dataSerializableFixedIdMapMutex_);
   const auto& result = dataSerializableFixedIdMap_.emplace(id, func);
   if (!result.second) {
-    LOGERROR("A fixed class with ID %d is already registered.", id);
+    LOGERROR("A fixed class with ID %d is already registered.",
+             static_cast<int32_t>(id));
     throw IllegalStateException(
         "A fixed class with given ID is already registered.");
   }

@@ -168,7 +168,7 @@ class APACHE_GEODE_EXPORT Utils {
    */
   static std::string convertBytesToString(
       const uint8_t* bytes, size_t length,
-      size_t maxLength = _GEODE_LOG_MESSAGE_LIMIT);
+      size_t maxLength = Utils::bytesToStringMessageLimit_);
 
   /**
    * lib should be in the form originally required by ACE_DLL, typically just
@@ -188,7 +188,7 @@ class APACHE_GEODE_EXPORT Utils {
    */
   static std::string convertBytesToString(
       const int8_t* bytes, size_t length,
-      size_t maxLength = _GEODE_LOG_MESSAGE_LIMIT);
+      size_t maxLength = Utils::bytesToStringMessageLimit_);
 
   /**
    * Convert the byte array to a string as "%d %d ...".
@@ -196,7 +196,7 @@ class APACHE_GEODE_EXPORT Utils {
    */
   inline static std::string convertBytesToString(
       const char* bytes, size_t length,
-      size_t maxLength = _GEODE_LOG_MESSAGE_LIMIT) {
+      size_t maxLength = Utils::bytesToStringMessageLimit_) {
     return convertBytesToString(reinterpret_cast<const uint8_t*>(bytes), length,
                                 maxLength);
   }
@@ -204,6 +204,8 @@ class APACHE_GEODE_EXPORT Utils {
  private:
   static void* getFactoryFunctionVoid(const std::string& lib,
                                       const std::string& funcName);
+
+  static const int bytesToStringMessageLimit_ = 8192;
 };
 
 // Generate random numbers 0 to max-1

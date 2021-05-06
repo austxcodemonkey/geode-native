@@ -179,7 +179,7 @@ class PutAllWork : public PooledWork<GfErrType> {
         break;
       default:
         LOGERROR("Unknown message type %d during region put-all",
-                 m_reply->getMessageType());
+                 static_cast<int32_t>(m_reply->getMessageType()));
         err = GF_NOTOBJ;
         break;
     }
@@ -305,7 +305,7 @@ class RemoveAllWork : public PooledWork<GfErrType> {
         break;
       default:
         LOGERROR("Unknown message type %d during region remove-all",
-                 m_reply->getMessageType());
+                 static_cast<int32_t>(m_reply->getMessageType()));
         err = GF_NOTOBJ;
         break;
     }
@@ -721,7 +721,7 @@ std::vector<std::shared_ptr<CacheableKey>> ThinClientRegion::serverKeys() {
     }
     default: {
       LOGERROR("Unknown message type %d during region serverKeys",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
       break;
     }
@@ -765,7 +765,7 @@ bool ThinClientRegion::containsKeyOnServer(
 
     default:
       LOGERROR("Unknown message type in Region::containsKeyOnServer %d",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
       break;
   }
@@ -811,7 +811,7 @@ bool ThinClientRegion::containsValueForKey_remote(
 
     default:
       LOGERROR("Unknown message type in Region::containsValueForKey %d",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
       break;
   }
@@ -854,7 +854,7 @@ void ThinClientRegion::clear(
 
     default:
       LOGERROR("Unknown message type %d during region clear",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
       break;
   }
@@ -899,7 +899,7 @@ GfErrType ThinClientRegion::getNoThrow_remote(
     }
     default: {
       LOGERROR("Unknown message type %d while getting entry from region",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
       break;
     }
@@ -935,7 +935,7 @@ GfErrType ThinClientRegion::invalidateNoThrow_remote(
     }
     default: {
       LOGERROR("Unknown message type %d while getting entry from region",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
       break;
     }
@@ -998,7 +998,7 @@ GfErrType ThinClientRegion::putNoThrow_remote(
     }
     default: {
       LOGERROR("Unknown message type %d during region put reply",
-               reply->getMessageType());
+               static_cast<int32_t>(reply->getMessageType()));
       err = GF_MSG;
     }
   }
@@ -1049,7 +1049,7 @@ GfErrType ThinClientRegion::destroyNoThrow_remote(
     }
     default: {
       LOGERROR("Unknown message type %d while destroying region entry",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
     }
   }
@@ -1094,7 +1094,7 @@ GfErrType ThinClientRegion::removeNoThrow_remote(
     }
     default: {
       LOGERROR("Unknown message type %d while removing region entry",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
     }
   }
@@ -1137,7 +1137,7 @@ GfErrType ThinClientRegion::removeNoThrowEX_remote(
     }
     default: {
       LOGERROR("Unknown message type %d while removing region entry",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
     }
   }
@@ -1221,7 +1221,7 @@ GfErrType ThinClientRegion::getAllNoThrow_remote(
     }
     default: {
       LOGERROR("Unknown message type %d during region get-all",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
       break;
     }
@@ -1590,7 +1590,7 @@ GfErrType ThinClientRegion::multiHopPutAllNoThrow_remote(
       break;
     default:
       LOGERROR("Unknown message type %d during region put-all",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_NOTOBJ;
       break;
   }
@@ -1913,7 +1913,7 @@ GfErrType ThinClientRegion::multiHopRemoveAllNoThrow_remote(
       break;
     default:
       LOGERROR("Unknown message type %d during region remove-all",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_NOTOBJ;
       break;
   }
@@ -1970,7 +1970,7 @@ uint32_t ThinClientRegion::size_remote() {
       break;
     default:
       LOGERROR("Unknown message type %d during region size",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_NOTOBJ;
   }
 
@@ -2192,7 +2192,7 @@ GfErrType ThinClientRegion::destroyRegionNoThrow_remote(
     }
     default: {
       LOGERROR("Unknown message type %d during destroy region",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
     }
   }
@@ -2702,7 +2702,7 @@ GfErrType ThinClientRegion::clientNotificationHandler(const TcrMessage& msg) {
         LOGERROR(
             "Unknown message type %d in subscription event handler; possible "
             "serialization mismatch",
-            msg.getMessageType());
+            static_cast<int32_t>(msg.getMessageType()));
         err = GF_MSG;
       }
       break;
@@ -3234,7 +3234,7 @@ GfErrType ThinClientRegion::getFuncAttributes(
     }
     default: {
       LOGERROR("Unknown message type %d while getting function attributes.",
-               reply.getMessageType());
+               static_cast<int32_t>(reply.getMessageType()));
       err = GF_MSG;
       break;
     }
@@ -3388,7 +3388,7 @@ void ChunkedQueryResponse::readObjectPartList(DataInput& input,
                 "expecting struct set object part list; possible "
                 "serialization "
                 "mismatch",
-                arrayType);
+                static_cast<int32_t>(arrayType));
             throw MessageException(
                 "Query response got unhandled message format while expecting "
                 "struct set object part list; possible serialization "
@@ -3400,7 +3400,7 @@ void ChunkedQueryResponse::readObjectPartList(DataInput& input,
               "Query response got unhandled message format %" PRId8
               "while expecting "
               "struct set object part list; possible serialization mismatch",
-              code);
+              static_cast<int32_t>(code));
           throw MessageException(
               "Query response got unhandled message format while expecting "
               "struct set object part list; possible serialization mismatch");
@@ -3511,7 +3511,7 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
       LOGERROR(
           "Query response got unhandled message format %d while expecting "
           "object part list; possible serialization mismatch",
-          arrayType);
+          static_cast<int32_t>(arrayType));
       throw MessageException(
           "Query response got unhandled message format while expecting "
           "object "
@@ -3522,7 +3522,7 @@ void ChunkedQueryResponse::handleChunk(const uint8_t* chunk, int32_t chunkLen,
     LOGERROR(
         "Query response got unhandled message format %d; possible "
         "serialization mismatch",
-        arrayType);
+        static_cast<int32_t>(arrayType));
     throw MessageException(
         "Query response got unhandled message format; possible serialization "
         "mismatch");

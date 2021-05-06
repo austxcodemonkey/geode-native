@@ -627,7 +627,8 @@ void CacheImpl::readyForEvents() {
         "Only durable clients or clients with the "
         "auto-ready-for-events property set to false should call "
         "readyForEvents()";
-    LOGERROR("CacheImpl::%s(%p): %s", __FUNCTION__, this, msg.c_str());
+    LOGERROR("CacheImpl::%s(%p): %s", __FUNCTION__, static_cast<void*>(this),
+             msg.c_str());
     throw IllegalStateException(msg.c_str());
   }
 

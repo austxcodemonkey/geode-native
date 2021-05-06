@@ -111,7 +111,7 @@ bool EntryExpiryTask::on_expire() {
       LOGERROR(
           "Unknown expiration action "
           "%d for region %s for key %s",
-          action_, full_path.c_str(), key_str.c_str());
+          static_cast<int32_t>(action_), full_path.c_str(), key_str.c_str());
       break;
     }
   }

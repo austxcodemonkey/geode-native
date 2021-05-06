@@ -20,26 +20,14 @@
 #ifndef GEODE_LOG_H_
 #define GEODE_LOG_H_
 
+#include <spdlog/spdlog.h>
+
 #include <cstdarg>
 #include <cstdio>
 #include <string>
 
 #include <geode/internal/geode_globals.hpp>
 #include <geode/util/LogLevel.hpp>
-
-#ifndef GEODE_HIGHEST_LOG_LEVEL
-#define GEODE_HIGHEST_LOG_LEVEL LogLevel::All
-#endif
-
-#ifndef GEODE_MAX_LOG_FILE_LIMIT
-#define GEODE_MAX_LOG_FILE_LIMIT (1024 * 1024 * 1024)
-#endif
-
-#ifndef GEODE_MAX_LOG_DISK_LIMIT
-#define GEODE_MAX_LOG_DISK_LIMIT (1024ll * 1024ll * 1024ll * 1024ll)
-#endif
-
-#define _GEODE_LOG_MESSAGE_LIMIT 8192
 
 namespace apache {
 namespace geode {
@@ -175,6 +163,11 @@ class APACHE_GEODE_EXPORT Log {
 
   static bool enabled(LogLevel level);
 
+  static const std::shared_ptr<spdlog::logger>& getCurrentLogger();
+
+  static const spdlog::level::level_enum geodeLogLevelToSpdlogLevel(
+      LogLevel logLevel);
+
  private:
   static void validateSizeLimits(int64_t fileSizeLimit, int64_t diskSpaceLimit);
   static void setSizeLimits(int32_t logFileLimit, int64_t logDiskSpaceLimit,
@@ -192,13 +185,15 @@ class APACHE_GEODE_EXPORT Log {
 }  // namespace geode
 }  // namespace apache
 
-#define LOGERROR(...)                                             \
-  do {                                                            \
-    if (::apache::geode::client::Log::enabled(                    \
-            apache::geode::client::LogLevel::Error)) {            \
-      ::apache::geode::client::Log::log(                          \
-          ::apache::geode::client::LogLevel::Error, __VA_ARGS__); \
-    }                                                             \
+#define LOGERROR(...)                                               \
+  do {                                                              \
+    if (::apache::geode::client::Log::enabled(                      \
+            apache::geode::client::LogLevel::Error)) {              \
+      ::apache::geode::client::Log::getCurrentLogger()->log(        \
+          ::apache::geode::client::Log::geodeLogLevelToSpdlogLevel( \
+              ::apache::geode::client::LogLevel::Error),            \
+          __VA_ARGS__);                                             \
+    }                                                               \
   } while (false)
 
 #define LOGWARN(...)                                                \
