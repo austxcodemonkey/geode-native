@@ -189,7 +189,7 @@ void PdxType::initRemoteToLocal() {
       _GEODE_SAFE_DELETE_ARRAY(m_remoteToLocalFieldMap);
     }
     m_remoteToLocalFieldMap = new int32_t[m_pdxFieldTypes->size()];
-    LOGDEBUG(
+    LOG_DEBUG(
         "PdxType::initRemoteToLocal m_pdxFieldTypes->size() =%zu AND "
         "localPdxFields->size()=%zu",
         m_pdxFieldTypes->size(), localPdxFields->size());

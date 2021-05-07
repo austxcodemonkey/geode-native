@@ -185,7 +185,7 @@ class APACHE_GEODE_EXPORT Log {
 }  // namespace geode
 }  // namespace apache
 
-#define LOGERROR(...)                                               \
+#define LOG_ERROR(...)                                              \
   do {                                                              \
     if (::apache::geode::client::Log::enabled(                      \
             apache::geode::client::LogLevel::Error)) {              \
@@ -196,7 +196,7 @@ class APACHE_GEODE_EXPORT Log {
     }                                                               \
   } while (false)
 
-#define LOGWARN(...)                                                \
+#define LOG_WARN(...)                                               \
   do {                                                              \
     if (::apache::geode::client::Log::enabled(                      \
             apache::geode::client::LogLevel::Warning)) {            \
@@ -205,7 +205,7 @@ class APACHE_GEODE_EXPORT Log {
     }                                                               \
   } while (false)
 
-#define LOGINFO(...)                                             \
+#define LOG_INFO(...)                                            \
   do {                                                           \
     if (::apache::geode::client::Log::enabled(                   \
             apache::geode::client::LogLevel::Info)) {            \
@@ -214,7 +214,7 @@ class APACHE_GEODE_EXPORT Log {
     }                                                            \
   } while (false)
 
-#define LOGCONFIG(...)                                             \
+#define LOG_CONFIG(...)                                            \
   do {                                                             \
     if (::apache::geode::client::Log::enabled(                     \
             apache::geode::client::LogLevel::Config)) {            \
@@ -223,7 +223,7 @@ class APACHE_GEODE_EXPORT Log {
     }                                                              \
   } while (false)
 
-#define LOGFINE(...)                                             \
+#define LOG_FINE(...)                                            \
   do {                                                           \
     if (::apache::geode::client::Log::enabled(                   \
             apache::geode::client::LogLevel::Fine)) {            \
@@ -232,7 +232,7 @@ class APACHE_GEODE_EXPORT Log {
     }                                                            \
   } while (false)
 
-#define LOGFINER(...)                                             \
+#define LOG_FINER(...)                                            \
   do {                                                            \
     if (::apache::geode::client::Log::enabled(                    \
             apache::geode::client::LogLevel::Finer)) {            \
@@ -241,7 +241,7 @@ class APACHE_GEODE_EXPORT Log {
     }                                                             \
   } while (false)
 
-#define LOGFINEST(...)                                             \
+#define LOG_FINEST(...)                                            \
   do {                                                             \
     if (::apache::geode::client::Log::enabled(                     \
             apache::geode::client::LogLevel::Finest)) {            \
@@ -250,7 +250,7 @@ class APACHE_GEODE_EXPORT Log {
     }                                                              \
   } while (false)
 
-#define LOGDEBUG(...)                                             \
+#define LOG_DEBUG(...)                                            \
   do {                                                            \
     if (::apache::geode::client::Log::enabled(                    \
             apache::geode::client::LogLevel::Debug)) {            \

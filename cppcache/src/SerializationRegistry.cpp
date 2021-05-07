@@ -149,9 +149,9 @@ std::shared_ptr<Serializable> SerializationRegistry::deserialize(
     dsCode = static_cast<DSCode>(input.read());
   }
 
-  LOGDEBUG("SerializationRegistry::deserialize typeId = %" PRId8
-           " dsCode = % " PRId8,
-           typeId, dsCode);
+  LOG_DEBUG("SerializationRegistry::deserialize typeId = %" PRId8
+            " dsCode = % " PRId8,
+            typeId, dsCode);
 
   switch (dsCode) {
     case DSCode::CacheableNullString: {
@@ -489,7 +489,7 @@ void TheTypeMap::bindDataSerializable(TypeFactoryMethod func, int32_t id) {
   const std::lock_guard<std::mutex> guard(dataSerializableMapMutex_);
   const auto& result = dataSerializableMap_.emplace(id, func);
   if (!result.second) {
-    LOGERROR("A class with ID %d is already registered.", id);
+    LOG_ERROR("A class with ID %d is already registered.", id);
     throw IllegalStateException("A class with given ID is already registered.");
   }
 }
@@ -509,8 +509,8 @@ void TheTypeMap::bindDataSerializablePrimitive(TypeFactoryMethod func,
   const std::lock_guard<std::mutex> guard(dataSerializablePrimitiveMapMutex_);
   const auto& result = dataSerializablePrimitiveMap_.emplace(dsCode, func);
   if (!result.second) {
-    LOGERROR("A class with DSCode %d is already registered.",
-             static_cast<int32_t>(dsCode));
+    LOG_ERROR("A class with DSCode %d is already registered.",
+              static_cast<int32_t>(dsCode));
     throw IllegalStateException(
         "A class with given DSCode is already registered.");
   }
@@ -538,8 +538,8 @@ void TheTypeMap::bindDataSerializableFixedId(TypeFactoryMethod func) {
   const std::lock_guard<std::mutex> guard(dataSerializableFixedIdMapMutex_);
   const auto& result = dataSerializableFixedIdMap_.emplace(id, func);
   if (!result.second) {
-    LOGERROR("A fixed class with ID %d is already registered.",
-             static_cast<int32_t>(id));
+    LOG_ERROR("A fixed class with ID %d is already registered.",
+              static_cast<int32_t>(id));
     throw IllegalStateException(
         "A fixed class with given ID is already registered.");
   }
@@ -563,8 +563,8 @@ void TheTypeMap::bindPdxSerializable(TypeFactoryMethodPdx func) {
 
   const auto& result = pdxSerializableMap_.emplace(objFullName, func);
   if (!result.second) {
-    LOGERROR("A object with FullName " + objFullName +
-             " is already registered.");
+    LOG_ERROR("A object with FullName " + objFullName +
+              " is already registered.");
     throw IllegalStateException(
         "A Object with given FullName is already registered.");
   }
@@ -756,7 +756,7 @@ std::shared_ptr<DataSerializable> DataSerializableHandler::deserialize(
       input.getCache()->getTypeRegistry().getCreationFunction(classId);
 
   if (createType == nullptr) {
-    LOGERROR(
+    LOG_ERROR(
         "Unregistered class ID %d during deserialization: Did the "
         "application register serialization types?",
         classId);

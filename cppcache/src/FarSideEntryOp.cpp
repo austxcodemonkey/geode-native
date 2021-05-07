@@ -155,7 +155,7 @@ void FarSideEntryOp::skipFilterRoutingInfo(DataInput& input) {
       }
     }
   } else {
-    LOGERROR(
+    LOG_ERROR(
         "FarSideEntryOp::skipFilterRoutingInfo Unexpected type id: %d while "
         "desirializing commit response",
         static_cast<int32_t>(structType));
