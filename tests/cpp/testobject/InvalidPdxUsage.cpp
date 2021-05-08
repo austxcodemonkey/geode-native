@@ -19,6 +19,9 @@
 
 namespace PdxTests {
 
+#undef LOG_INFO
+#define LOG_INFO(...)
+
 template <typename T1, typename T2>
 bool InvalidPdxUsage::genericValCompare(T1 value1, T2 value2) const {
   if (value1 != value2) return false;
@@ -54,7 +57,7 @@ bool InvalidPdxUsage::generic2DCompare(T1** value1, T2** value2, int length,
     LOG_INFO("generic2DCompare arrlength0 = %d ", arrLengths[j]);
     for (int k = 0; k < arrLengths[j]; k++) {
       LOG_INFO("generic2DCompare arrlength = %d ", arrLengths[j]);
-      LOG_INFO("generic2DCompare value1 = %d \t value2 = %d ", value1[j][k],
+      LOG_INFO("generic2DCompare value1 = {} \t value2 = {} ", value1[j][k],
                value2[j][k]);
       if (value1[j][k] != value2[j][k]) return false;
     }

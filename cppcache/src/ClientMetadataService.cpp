@@ -87,7 +87,7 @@ void ClientMetadataService::svc() {
           getClientPRMetadata(regionFullPath.c_str());
         })) {
       LOG_INFO("ClientMetadataService::%s(%p): destroy is pending, bail out",
-               __FUNCTION__, this);
+               __FUNCTION__, static_cast<void*>(this));
       break;
     }
   }

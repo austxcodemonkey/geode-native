@@ -165,9 +165,6 @@ class APACHE_GEODE_EXPORT Log {
 
   static const std::shared_ptr<spdlog::logger>& getCurrentLogger();
 
-  static const spdlog::level::level_enum geodeLogLevelToSpdlogLevel(
-      LogLevel logLevel);
-
  private:
   static void validateSizeLimits(int64_t fileSizeLimit, int64_t diskSpaceLimit);
   static void setSizeLimits(int32_t logFileLimit, int64_t logDiskSpaceLimit,
@@ -185,78 +182,52 @@ class APACHE_GEODE_EXPORT Log {
 }  // namespace geode
 }  // namespace apache
 
-#define LOG_ERROR(...)                                              \
-  do {                                                              \
-    if (::apache::geode::client::Log::enabled(                      \
-            apache::geode::client::LogLevel::Error)) {              \
-      ::apache::geode::client::Log::getCurrentLogger()->log(        \
-          ::apache::geode::client::Log::geodeLogLevelToSpdlogLevel( \
-              ::apache::geode::client::LogLevel::Error),            \
-          __VA_ARGS__);                                             \
-    }                                                               \
+#define LOG_ERROR(...)                                             \
+  do {                                                             \
+    using ::apache::geode::client::Log;                            \
+    using ::apache::geode::client::LogLevel;                       \
+    if (Log::enabled(LogLevel::Error)) {                           \
+      Log::getCurrentLogger()->log(spdlog::level::level_enum::err, \
+                                   __VA_ARGS__);                   \
+    }                                                              \
   } while (false)
 
 #define LOG_WARN(...)                                               \
   do {                                                              \
-    if (::apache::geode::client::Log::enabled(                      \
-            apache::geode::client::LogLevel::Warning)) {            \
-      ::apache::geode::client::Log::log(                            \
-          ::apache::geode::client::LogLevel::Warning, __VA_ARGS__); \
+    using ::apache::geode::client::Log;                             \
+    using ::apache::geode::client::LogLevel;                        \
+    if (Log::enabled(LogLevel::Warning)) {                          \
+      Log::getCurrentLogger()->log(spdlog::level::level_enum::warn, \
+                                   __VA_ARGS__);                    \
     }                                                               \
   } while (false)
 
-#define LOG_INFO(...)                                            \
-  do {                                                           \
-    if (::apache::geode::client::Log::enabled(                   \
-            apache::geode::client::LogLevel::Info)) {            \
-      ::apache::geode::client::Log::log(                         \
-          ::apache::geode::client::LogLevel::Info, __VA_ARGS__); \
-    }                                                            \
+#define LOG_INFO(...)                                               \
+  do {                                                              \
+    using ::apache::geode::client::Log;                             \
+    using ::apache::geode::client::LogLevel;                        \
+    if (Log::enabled(LogLevel::Info)) {                             \
+      Log::getCurrentLogger()->log(spdlog::level::level_enum::info, \
+                                   __VA_ARGS__);                    \
+    }                                                               \
   } while (false)
 
-#define LOG_CONFIG(...)                                            \
-  do {                                                             \
-    if (::apache::geode::client::Log::enabled(                     \
-            apache::geode::client::LogLevel::Config)) {            \
-      ::apache::geode::client::Log::log(                           \
-          ::apache::geode::client::LogLevel::Config, __VA_ARGS__); \
-    }                                                              \
-  } while (false)
+#define LOG_CONFIG(...)
 
-#define LOG_FINE(...)                                            \
-  do {                                                           \
-    if (::apache::geode::client::Log::enabled(                   \
-            apache::geode::client::LogLevel::Fine)) {            \
-      ::apache::geode::client::Log::log(                         \
-          ::apache::geode::client::LogLevel::Fine, __VA_ARGS__); \
-    }                                                            \
-  } while (false)
+#define LOG_DEBUG(...)
 
-#define LOG_FINER(...)                                            \
-  do {                                                            \
-    if (::apache::geode::client::Log::enabled(                    \
-            apache::geode::client::LogLevel::Finer)) {            \
-      ::apache::geode::client::Log::log(                          \
-          ::apache::geode::client::LogLevel::Finer, __VA_ARGS__); \
-    }                                                             \
-  } while (false)
+//#define LOG_DEBUG(...)                                               \
+//  do {                                                               \
+//    using ::apache::geode::client::Log;                              \
+//    using ::apache::geode::client::LogLevel;                         \
+//    if (Log::enabled(LogLevel::Error)) {                             \
+//      Log::getCurrentLogger()->log(spdlog::level::level_enum::debug, \
+//                                   __VA_ARGS__);                     \
+//    }                                                                \
+//  } while (false)
 
-#define LOG_FINEST(...)                                            \
-  do {                                                             \
-    if (::apache::geode::client::Log::enabled(                     \
-            apache::geode::client::LogLevel::Finest)) {            \
-      ::apache::geode::client::Log::log(                           \
-          ::apache::geode::client::LogLevel::Finest, __VA_ARGS__); \
-    }                                                              \
-  } while (false)
-
-#define LOG_DEBUG(...)                                            \
-  do {                                                            \
-    if (::apache::geode::client::Log::enabled(                    \
-            apache::geode::client::LogLevel::Debug)) {            \
-      ::apache::geode::client::Log::log(                          \
-          ::apache::geode::client::LogLevel::Debug, __VA_ARGS__); \
-    }                                                             \
-  } while (false)
+#define LOG_FINE LOG_DEBUG
+#define LOG_FINER LOG_DEBUG
+#define LOG_FINEST LOG_DEBUG
 
 #endif  // GEODE_LOG_H_
