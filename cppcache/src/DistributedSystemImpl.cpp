@@ -87,8 +87,8 @@ void DistributedSystemImpl::logSystemInformation() const {
              boost::filesystem::current_path().string().c_str());
   LOG_CONFIG("Current value of PATH: %s", Utils::getEnv("PATH").c_str());
 #ifndef _WIN32
-  LOGCONFIG("Current library path: %s",
-            Utils::getEnv("LD_LIBRARY_PATH").c_str());
+  LOG_CONFIG("Current library path: %s",
+             Utils::getEnv("LD_LIBRARY_PATH").c_str());
 #endif
   // Log the Geode system properties
   m_sysProps->logSettings();

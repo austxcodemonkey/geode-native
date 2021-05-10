@@ -87,9 +87,9 @@ TcrConnection* ThinClientPoolStickyDM::getConnectionFromQueueW(
     }
 
     LOG_DEBUG(
-        "ThinClientPoolStickyDM::getConnectionFromQueueW return conn = %p "
-        "match = %d connFound=%d",
-        conn, match, connFound);
+        "ThinClientPoolStickyDM::getConnectionFromQueueW return conn = {} "
+        "match = {} connFound={}",
+        static_cast<void*>(conn), match, connFound);
     return conn;
   }
 

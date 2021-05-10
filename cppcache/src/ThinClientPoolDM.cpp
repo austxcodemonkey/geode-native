@@ -1375,10 +1375,9 @@ GfErrType ThinClientPoolDM::sendSyncRequest(
         "ThinClientPoolDM::sendSyncRequest: isUserNeedToReAuthenticate = %d ",
         isUserNeedToReAuthenticate);
     LOG_DEBUG(
-        "ThinClientPoolDM::sendSyncRequest: m_isMultiUserMode = %d  conn = "
-        "%p  "
-        "type = %d",
-        m_isMultiUserMode, conn, type);
+        "ThinClientPoolDM::sendSyncRequest: m_isMultiUserMode = {}  conn = {}  "
+        "type = {}",
+        m_isMultiUserMode, static_cast<void*>(conn), type);
 
     if (!conn) {
       // lets assume all connection are in use will happen
@@ -2345,7 +2344,7 @@ TcrConnection* ThinClientPoolDM::getConnectionFromQueueW(
         return nullptr;
       }
     }
-    LOG_DEBUG("theEP is %p", theEP);
+    LOG_DEBUG("theEP is {}", static_cast<void*>(theEP));
   }
   bool maxConnLimit = false;
   if (theEP != nullptr) {
@@ -2393,9 +2392,9 @@ TcrConnection* ThinClientPoolDM::getConnectionFromQueueW(
   }
 
   LOG_DEBUG(
-      "ThinClientPoolDM::getConnectionFromQueueW return conn = %p match = %d "
-      "connFound=%d",
-      conn, match, connFound);
+      "ThinClientPoolDM::getConnectionFromQueueW return conn = {} match = {} "
+      "connFound={}",
+      static_cast<void*>(conn), match, connFound);
   return conn;
 }
 

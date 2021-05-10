@@ -263,9 +263,10 @@ GfErrType TcrEndpoint::createNewConnection(
 
 void TcrEndpoint::authenticateEndpoint(TcrConnection*& conn) {
   LOG_DEBUG(
-      "TcrEndpoint::authenticateEndpoint m_isAuthenticated  = %d "
-      "m_baseDM = %p, connection = %p",
-      m_isAuthenticated, m_baseDM, conn);
+      "TcrEndpoint::authenticateEndpoint m_isAuthenticated  = {} m_baseDM = "
+      "{}, connection = {}",
+      m_isAuthenticated, static_cast<void*>(m_baseDM),
+      static_cast<void*>(conn));
   if (!m_isAuthenticated && m_baseDM) {
     setConnected();
     std::lock_guard<decltype(m_endpointAuthenticationLock)> guard(
@@ -290,8 +291,8 @@ void TcrEndpoint::authenticateEndpoint(TcrConnection*& conn) {
     if (err == GF_NOERR) {
       LOG_DEBUG(
           "TcrEndpoint::authenticateEndpoint - successfully authenticated on "
-          "conn %p",
-          conn);
+          "conn {}",
+          static_cast<void*>(conn));
       // put the object into local region
       switch (reply.getMessageType()) {
         case TcrMessage::RESPONSE: {
@@ -752,10 +753,10 @@ GfErrType TcrEndpoint::sendRequestConn(const TcrMessage& request,
   int32_t type = request.getMessageType();
   GfErrType error = GF_NOERR;
 
-  LOG_FINER("Sending request type %d to endpoint [%s] via connection [%p]",
-            type, m_name.c_str(), conn);
+  LOG_FINER("Sending request type {} to endpoint [{}] via connection [{}]",
+            type, m_name.c_str(), static_cast<void*>(conn));
   // TcrMessage * req = const_cast<TcrMessage *>(&request);
-  LOG_DEBUG("TcrEndpoint::sendRequestConn  = %p", m_baseDM);
+  LOG_DEBUG("TcrEndpoint::sendRequestConn  = {}", static_cast<void*>(m_baseDM));
   if (m_baseDM != nullptr) m_baseDM->beforeSendingRequest(request, conn);
   if (((type == TcrMessage::EXECUTE_FUNCTION ||
         type == TcrMessage::EXECUTE_REGION_FUNCTION) &&

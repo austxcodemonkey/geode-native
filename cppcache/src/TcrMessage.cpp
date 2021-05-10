@@ -1457,8 +1457,8 @@ void TcrMessage::handleByteArrayResponse(
         input.readInt32();          // ignore partlen
         input.read();               // ignore  isObj;
         auto bits8 = input.read();  // cacheable vector typeid
-        LOG_DEBUG("Expected typeID %d, got %d", DSCode::CacheableArrayList,
-                  bits8);
+        LOG_DEBUG("Expected typeID {}, got {}",
+                  static_cast<int32_t>(DSCode::CacheableArrayList), bits8);
 
         auto arrayLength = input.readArrayLength();  // array length
         LOG_DEBUG("Array length = %d ", arrayLength);
@@ -2790,9 +2790,8 @@ void TcrMessage::addSecurityPart(int64_t connectionId, int64_t unique_id,
   auto bytes = CacheableBytes::create(std::vector<int8_t>(
       dOutput.getBuffer(), dOutput.getBuffer() + dOutput.getBufferLength()));
 
-  LOG_DEBUG("TcrMessage::addSecurityPart [%p] length = %" PRId32
-            ", encrypted ID = %s ",
-            conn, bytes->length(),
+  LOG_DEBUG("TcrMessage::addSecurityPart [{}] length = {}, encrypted ID = {} ",
+            static_cast<void*>(conn), bytes->length(),
             Utils::convertBytesToString(bytes->value().data(), bytes->length())
                 .c_str());
 

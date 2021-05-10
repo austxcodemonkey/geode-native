@@ -611,8 +611,8 @@ bool TcrConnection::replyHasResult(const TcrMessage& request,
 void TcrConnection::send(const char* buffer, size_t len,
                          std::chrono::microseconds sendTimeoutSec, bool) {
   LOG_DEBUG(
-      "TcrConnection::send: [%p] sending request to endpoint %s; bytes: %s",
-      this, m_endpointObj->name().c_str(),
+      "TcrConnection::send: [{}] sending request to endpoint {}; bytes: {}",
+      static_cast<void*>(this), m_endpointObj->name().c_str(),
       Utils::convertBytesToString(buffer, len).c_str());
 
   switch (sendData(buffer, len, sendTimeoutSec)) {
@@ -678,9 +678,9 @@ char* TcrConnection::readMessage(size_t* recvLen,
   }
 
   LOG_DEBUG(
-      "TcrConnection::readMessage(%p): received header from endpoint %s; "
-      "bytes: %s",
-      this, m_endpointObj->name().c_str(),
+      "TcrConnection::readMessage({}): received header from endpoint {}; "
+      "bytes: {}",
+      static_cast<void*>(this), m_endpointObj->name().c_str(),
       Utils::convertBytesToString(msg_header, HEADER_LENGTH).c_str());
 
   auto input = m_connectionManager.getCacheImpl()->createDataInput(
@@ -815,9 +815,9 @@ chunkedResponseHeader TcrConnection::readResponseHeader(
   }
 
   LOG_DEBUG(
-      "TcrConnection::readResponseHeader(%p): received header from "
-      "endpoint %s; bytes: %s",
-      this, m_endpointObj->name().c_str(),
+      "TcrConnection::readResponseHeader({}): received header from "
+      "endpoint {}; bytes: {}",
+      static_cast<void*>(this), m_endpointObj->name().c_str(),
       Utils::convertBytesToString(receiveBuffer, HEADER_LENGTH).c_str());
 
   auto input = m_connectionManager.getCacheImpl()->createDataInput(
@@ -828,12 +828,11 @@ chunkedResponseHeader TcrConnection::readResponseHeader(
   header.header.chunkLength = input.readInt32();
   header.header.flags = input.read();
   LOG_DEBUG(
-      "TcrConnection::readResponseHeader(%p): "
-      "messageType=%" PRId32 ", numberOfParts=%" PRId32
-      ", transactionId=%" PRId32 ", chunkLength=%" PRId32
-      ", lastChunkAndSecurityFlags=0x%" PRIx8,
-      this, header.messageType, header.numberOfParts, header.transactionId,
-      header.header.chunkLength, header.header.flags);
+      "TcrConnection::readResponseHeader({}): "
+      "messageType={}, numberOfParts={}, transactionId={}, chunkLength={}, "
+      "lastChunkAndSecurityFlags={}",
+      static_cast<void*>(this), header.messageType, header.numberOfParts,
+      header.transactionId, header.header.chunkLength, header.header.flags);
 
   return header;
 }  // namespace client
@@ -867,9 +866,9 @@ chunkHeader TcrConnection::readChunkHeader(std::chrono::microseconds timeout) {
   header.chunkLength = input.readInt32();
   header.flags = input.read();
   LOG_DEBUG(
-      "TcrConnection::readChunkHeader(%p): "
-      ", chunkLen=%" PRId32 ", lastChunkAndSecurityFlags=0x%" PRIx8,
-      this, header.chunkLength, header.flags);
+      "TcrConnection::readChunkHeader({}): , chunkLen={}, "
+      "lastChunkAndSecurityFlags={}",
+      static_cast<void*>(this), header.chunkLength, header.flags);
 
   return header;
 }
@@ -892,9 +891,9 @@ std::vector<uint8_t> TcrConnection::readChunkBody(
   }
 
   LOG_DEBUG(
-      "TcrConnection::readChunkBody(%p): received chunk body from endpoint "
-      "%s; bytes: %s",
-      this, m_endpointObj->name().c_str(),
+      "TcrConnection::readChunkBody({}): received chunk body from endpoint "
+      "{}; bytes: {}",
+      static_cast<void*>(this), m_endpointObj->name().c_str(),
       Utils::convertBytesToString(chunkBody.data(), chunkLength).c_str());
   return chunkBody;
 }

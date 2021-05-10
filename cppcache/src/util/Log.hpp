@@ -214,17 +214,15 @@ class APACHE_GEODE_EXPORT Log {
 
 #define LOG_CONFIG(...)
 
-#define LOG_DEBUG(...)
-
-//#define LOG_DEBUG(...)                                               \
-//  do {                                                               \
-//    using ::apache::geode::client::Log;                              \
-//    using ::apache::geode::client::LogLevel;                         \
-//    if (Log::enabled(LogLevel::Error)) {                             \
-//      Log::getCurrentLogger()->log(spdlog::level::level_enum::debug, \
-//                                   __VA_ARGS__);                     \
-//    }                                                                \
-//  } while (false)
+#define LOG_DEBUG(...)                                               \
+  do {                                                               \
+    using ::apache::geode::client::Log;                              \
+    using ::apache::geode::client::LogLevel;                         \
+    if (Log::enabled(LogLevel::Error)) {                             \
+      Log::getCurrentLogger()->log(spdlog::level::level_enum::debug, \
+                                   __VA_ARGS__);                     \
+    }                                                                \
+  } while (false)
 
 #define LOG_FINE LOG_DEBUG
 #define LOG_FINER LOG_DEBUG

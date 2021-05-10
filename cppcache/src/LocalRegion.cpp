@@ -717,7 +717,7 @@ void LocalRegion::setRegionExpiryTask() {
       "expiry for region [%s], expiry task id = %zu, duration = %s, "
       "action = %d",
       m_fullPath.c_str(), expiry_task_id_, to_string(duration).c_str(),
-      getRegionExpiryAction());
+      static_cast<int32_t>(getRegionExpiryAction()));
 }
 
 void LocalRegion::registerEntryExpiryTask(
@@ -741,7 +741,8 @@ void LocalRegion::registerEntryExpiryTask(
         "entry expiry in region [%s], key [%s], task id = %zu, "
         "duration = %s, action = %d",
         m_fullPath.c_str(), Utils::nullSafeToString(key).c_str(), id,
-        to_string(duration).c_str(), getEntryExpirationAction());
+        to_string(duration).c_str(),
+        static_cast<int32_t>(getEntryExpirationAction()));
   }
 }
 

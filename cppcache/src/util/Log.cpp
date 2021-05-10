@@ -143,7 +143,7 @@ uint32_t Log::calculateMaxFilesForSpaceLimit(uint64_t logDiskSpaceLimit,
   return maxFileCount;
 }
 
-const spdlog::level::level_enum geodeLogLevelToSpdlogLevel(LogLevel logLevel) {
+spdlog::level::level_enum geodeLogLevelToSpdlogLevel(LogLevel logLevel) {
   auto level = spdlog::level::level_enum::off;
   switch (logLevel) {
     case LogLevel::None:
