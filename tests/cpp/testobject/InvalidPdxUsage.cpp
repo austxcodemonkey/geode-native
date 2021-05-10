@@ -19,9 +19,6 @@
 
 namespace PdxTests {
 
-#undef LOG_INFO
-#define LOG_INFO(...)
-
 template <typename T1, typename T2>
 bool InvalidPdxUsage::genericValCompare(T1 value1, T2 value2) const {
   if (value1 != value2) return false;

@@ -3669,14 +3669,17 @@ DUNIT_TASK_DEFINITION(CLIENT2, StepFour)
     ASSERT(remotePdx->equals(*localPdx, false) == true,
            "PdxTests::PdxTypes should be equal.");
     LOG_INFO("testThinClientPdxTests:StepFour equal check done successfully");
-    LOG_INFO("GET OP Result: Char Val=%c", remotePdx->getChar());
-    LOG_INFO("NIL GET OP Result: Char[0] val=%c", remotePdx->getCharArray()[0]);
-    LOG_INFO("NIL GET OP Result: Char[1] val=%c", remotePdx->getCharArray()[1]);
-    LOG_INFO("GET OP Result: Array of byte arrays [0]=%x",
+    LOG_INFO("GET OP Result: Char Val={}",
+             static_cast<int32_t>(remotePdx->getChar()));
+    LOG_INFO("NIL GET OP Result: Char[0] val={}",
+             static_cast<int32_t>(remotePdx->getCharArray()[0]));
+    LOG_INFO("NIL GET OP Result: Char[1] val={}",
+             static_cast<int32_t>(remotePdx->getCharArray()[1]));
+    LOG_INFO("GET OP Result: Array of byte arrays [0]={:#04x}",
              remotePdx->getArrayOfByteArrays()[0][0]);
-    LOG_INFO("GET OP Result: Array of byte arrays [1]=%x",
+    LOG_INFO("GET OP Result: Array of byte arrays [1]={:#04x}",
              remotePdx->getArrayOfByteArrays()[1][0]);
-    LOG_INFO("GET OP Result: Array of byte arrays [2]=%x",
+    LOG_INFO("GET OP Result: Array of byte arrays [2]={:#04x}",
              remotePdx->getArrayOfByteArrays()[1][1]);
 
     CacheableInt32 *element =
