@@ -212,20 +212,54 @@ class APACHE_GEODE_EXPORT Log {
     }                                                               \
   } while (false)
 
-#define LOG_CONFIG(...)
+#define LOG_CONFIG(...)                                             \
+  do {                                                              \
+    using ::apache::geode::client::Log;                             \
+    using ::apache::geode::client::LogLevel;                        \
+    if (Log::enabled(LogLevel::Config)) {                           \
+      Log::getCurrentLogger()->log(spdlog::level::level_enum::info, \
+                                   __VA_ARGS__);                    \
+    }                                                               \
+  } while (false)
 
-#define LOG_DEBUG(...)                                               \
+#define LOG_FINE(...)                                                \
   do {                                                               \
     using ::apache::geode::client::Log;                              \
     using ::apache::geode::client::LogLevel;                         \
-    if (Log::enabled(LogLevel::Error)) {                             \
+    if (Log::enabled(LogLevel::Fine)) {                              \
       Log::getCurrentLogger()->log(spdlog::level::level_enum::debug, \
                                    __VA_ARGS__);                     \
     }                                                                \
   } while (false)
 
-#define LOG_FINE LOG_DEBUG
-#define LOG_FINER LOG_DEBUG
-#define LOG_FINEST LOG_DEBUG
+#define LOG_FINER(...)                                               \
+  do {                                                               \
+    using ::apache::geode::client::Log;                              \
+    using ::apache::geode::client::LogLevel;                         \
+    if (Log::enabled(LogLevel::Finer)) {                             \
+      Log::getCurrentLogger()->log(spdlog::level::level_enum::debug, \
+                                   __VA_ARGS__);                     \
+    }                                                                \
+  } while (false)
+
+#define LOG_FINEST(...)                                              \
+  do {                                                               \
+    using ::apache::geode::client::Log;                              \
+    using ::apache::geode::client::LogLevel;                         \
+    if (Log::enabled(LogLevel::Finest)) {                            \
+      Log::getCurrentLogger()->log(spdlog::level::level_enum::debug, \
+                                   __VA_ARGS__);                     \
+    }                                                                \
+  } while (false)
+
+#define LOG_DEBUG(...)                                               \
+  do {                                                               \
+    using ::apache::geode::client::Log;                              \
+    using ::apache::geode::client::LogLevel;                         \
+    if (Log::enabled(LogLevel::Debug)) {                             \
+      Log::getCurrentLogger()->log(spdlog::level::level_enum::debug, \
+                                   __VA_ARGS__);                     \
+    }                                                                \
+  } while (false)
 
 #endif  // GEODE_LOG_H_

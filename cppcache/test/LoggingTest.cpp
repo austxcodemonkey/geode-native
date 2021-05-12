@@ -82,7 +82,11 @@ class LoggingTest : public testing::Test {
       apache::geode::client::Log::close();
 
       if (boost::filesystem::exists(name)) {
-        boost::filesystem::remove(name);
+        try {
+          boost::filesystem::remove(name);
+        } catch (const std::exception&) {
+          ASSERT_TRUE(false) << "Failed to delete log file";
+        }
       }
 
       std::map<int32_t, boost::filesystem::path> rolledFiles;
@@ -634,6 +638,9 @@ TEST_F(LoggingTest, countLinesAllLevels) {
       LOG_DEBUG("Debug Message");
 
       apache::geode::client::Log::close();
+
+      ASSERT_TRUE(boost::filesystem::exists(logFilename));
+
       int lines = LoggingTest::numOfLinesInFile(logFilename);
 
       ASSERT_TRUE(lines == LoggingTest::expectedWithBanner(level));

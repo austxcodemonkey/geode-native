@@ -59,8 +59,11 @@ const std::shared_ptr<spdlog::logger>& Log::getCurrentLogger() {
     return consoleLogger;
   } else {
     if (!currentLogger) {
-      currentLogger = spdlog::rotating_logger_mt(
-          "file", logFilePath, adjustedFileSizeLimit, maxFiles);
+      auto rotating_sink =
+          std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+              boost::filesystem::path(logFilePath).string(),
+              adjustedFileSizeLimit, maxFiles);
+      currentLogger = std::make_shared<spdlog::logger>("file", rotating_sink);
     }
     return currentLogger;
   }
