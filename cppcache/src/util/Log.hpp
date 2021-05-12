@@ -174,8 +174,10 @@ class APACHE_GEODE_EXPORT Log {
                                                  uint32_t logFileSizeLimit);
   static void writeBanner();
   static void logInternal(LogLevel level, const std::string& msg);
+  static void createLoggerObject(int32_t fileSizeLimit = 0,
+                                 int32_t maxFiles = 0,
+                                 const std::string& path = "-");
 
-  static void calculateUsedDiskSpace();
   static std::string logLineFormat();
 };
 }  // namespace client

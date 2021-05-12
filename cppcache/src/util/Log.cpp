@@ -45,28 +45,36 @@ const int GEODE_LOG_SCRATCH_BUFFER_SIZE = 16 * __1K__;
 const int GEODE_LOG_MESSAGE_LIMIT = 8192;
 const int64_t GEODE_MAX_LOG_FILE_LIMIT = (1024 * 1024 * 1024);
 const int64_t GEODE_MAX_LOG_DISK_LIMIT = (1024ll * 1024ll * 1024ll * 1024ll);
+const std::string GEODE_STDOUT_INDICATOR = "-";
+
+// Used solely to ensure we have a non-null logger by the time any client
+// code executes.  geode-native isn't guaranteed to call Log::init() prior
+// to any calls to Log::log, and thus Log::getCurrentLogger(), which must
+// therefore *always* return non-null.
+class LogInitializer {
+ public:
+  LogInitializer() { Log::init(LogLevel::Config, "-"); }
+};
 
 static std::recursive_mutex g_logMutex;
 static std::shared_ptr<spdlog::logger> currentLogger;
 static LogLevel currentLevel = LogLevel::None;
-static std::string logFilePath;
-static int32_t adjustedFileSizeLimit;
-static int32_t maxFiles;
+static LogInitializer logInitializer;
+
+void Log::createLoggerObject(int32_t fileSizeLimit, int32_t maxFiles,
+                             const std::string& logFilePath) {
+  if (logFilePath == GEODE_STDOUT_INDICATOR) {
+    static auto consoleLogger = spdlog::stderr_color_mt("console");
+    currentLogger = consoleLogger;
+  } else {
+    auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+        boost::filesystem::path(logFilePath).string(), fileSizeLimit, maxFiles);
+    currentLogger = std::make_shared<spdlog::logger>("file", rotating_sink);
+  }
+}
 
 const std::shared_ptr<spdlog::logger>& Log::getCurrentLogger() {
-  if (logFilePath.empty()) {
-    static auto consoleLogger = spdlog::stderr_color_mt("console");
-    return consoleLogger;
-  } else {
-    if (!currentLogger) {
-      auto rotating_sink =
-          std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-              boost::filesystem::path(logFilePath).string(),
-              adjustedFileSizeLimit, maxFiles);
-      currentLogger = std::make_shared<spdlog::logger>("file", rotating_sink);
-    }
-    return currentLogger;
-  }
+  return currentLogger;
 }
 
 void Log::validateSizeLimits(int64_t fileSizeLimit, int64_t diskSpaceLimit) {
@@ -197,7 +205,7 @@ void Log::init(LogLevel logLevel, const std::string& logFilename,
   try {
     std::lock_guard<decltype(g_logMutex)> guard(g_logMutex);
 
-    if (logFilename.empty()) {
+    if (logFilename.empty() || logFilename == GEODE_STDOUT_INDICATOR) {
       if (logFileSizeLimit || logDiskSpaceLimit) {
         IllegalArgumentException ex(
             "Cannot specify a file or disk space size limit without specifying "
@@ -205,6 +213,7 @@ void Log::init(LogLevel logLevel, const std::string& logFilename,
         throw ex;
       }
       currentLevel = logLevel;
+      createLoggerObject();
       getCurrentLogger()->set_level(geodeLogLevelToSpdlogLevel(currentLevel));
       getCurrentLogger()->set_pattern(logLineFormat());
       return;
@@ -216,6 +225,8 @@ void Log::init(LogLevel logLevel, const std::string& logFilename,
     }
 
     int64_t adjustedDiskSpaceLimit;
+    int32_t adjustedFileSizeLimit;
+    int32_t maxFiles;
 
     setSizeLimits(logFileSizeLimit, logDiskSpaceLimit, adjustedFileSizeLimit,
                   adjustedDiskSpaceLimit);
@@ -239,7 +250,7 @@ void Log::init(LogLevel logLevel, const std::string& logFilename,
       boost::filesystem::create_directories(target_path);
     }
 
-    logFilePath = fullpath.string();
+    createLoggerObject(adjustedFileSizeLimit, maxFiles, fullpath.string());
     getCurrentLogger()->set_level(geodeLogLevelToSpdlogLevel(currentLevel));
     writeBanner();
     getCurrentLogger()->set_pattern(logLineFormat());
@@ -249,9 +260,10 @@ void Log::init(LogLevel logLevel, const std::string& logFilename,
 }  // namespace client
 
 void Log::close() {
+  std::lock_guard<decltype(g_logMutex)> guard(g_logMutex);
   if (currentLogger) {
-    spdlog::drop("file");
     currentLogger = nullptr;
+    Log::init(currentLevel, "-");
   }
 }
 
