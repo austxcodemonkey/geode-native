@@ -41,8 +41,8 @@ namespace client {
 const int __1K__ = 1024;
 const int __1M__ = __1K__ * __1K__;
 const int __1G__ = __1K__ * __1M__;
-const int LOG_SCRATCH_BUFFER_SIZE = 16 * __1K__;
-const int _GEODE_LOG_MESSAGE_LIMIT = 8192;
+const int GEODE_LOG_SCRATCH_BUFFER_SIZE = 16 * __1K__;
+const int GEODE_LOG_MESSAGE_LIMIT = 8192;
 const int64_t GEODE_MAX_LOG_FILE_LIMIT = (1024 * 1024 * 1024);
 const int64_t GEODE_MAX_LOG_DISK_LIMIT = (1024ll * 1024ll * 1024ll * 1024ll);
 
@@ -351,7 +351,7 @@ void Log::log(LogLevel level, const std::string& msg) {
 }
 
 void Log::log(LogLevel level, const char* fmt, ...) {
-  char msg[_GEODE_LOG_MESSAGE_LIMIT] = {0};
+  char msg[GEODE_LOG_MESSAGE_LIMIT] = {0};
   va_list argp;
   va_start(argp, fmt);
   // NOLINTNEXTLINE(clang-analyzer-valist.Uninitialized): clang-tidy bug
