@@ -165,7 +165,10 @@ class LoggingTest : public testing::Test {
       apache::geode::client::Log::close();
       int lines = LoggingTest::numOfLinesInFile(logFilename);
 
-      ASSERT_TRUE(lines == LoggingTest::expectedWithBanner(level));
+      ASSERT_TRUE(lines == LoggingTest::expectedWithBanner(level))
+          << "Expected " << LoggingTest::expectedWithBanner(level)
+          << " lines in log file at " << LoggingTest::logLevelToString(level)
+          << " level, got " << lines;
 
       boost::filesystem::remove(logFilename);
     }
@@ -239,6 +242,34 @@ class LoggingTest : public testing::Test {
       ASSERT_TRUE(usedSpace < DISK_SPACE_LIMIT);
     }
   }
+
+  static const char* logLevelToString(apache::geode::client::LogLevel level) {
+    switch (level) {
+      case apache::geode::client::LogLevel::None:
+        return "None";
+      case apache::geode::client::LogLevel::Error:
+        return "Error";
+      case apache::geode::client::LogLevel::Warning:
+        return "Warning";
+      case apache::geode::client::LogLevel::Info:
+        return "Info";
+      case apache::geode::client::LogLevel::Default:
+        return "Default";
+      case apache::geode::client::LogLevel::Config:
+        return "Config";
+      case apache::geode::client::LogLevel::Fine:
+        return "Fine";
+      case apache::geode::client::LogLevel::Finer:
+        return "Finer";
+      case apache::geode::client::LogLevel::Finest:
+        return "Finest";
+      case apache::geode::client::LogLevel::Debug:
+        return "Debug";
+      case apache::geode::client::LogLevel::All:
+        return "All";
+    }
+    return "Unknown";
+  }
 };
 
 /**
@@ -281,6 +312,11 @@ TEST_F(LoggingTest, logInit) {
     ASSERT_NO_THROW(apache::geode::client::Log::init(
         apache::geode::client::LogLevel::All, logFilename, 1, 4));
     apache::geode::client::Log::close();
+  }
+}
+
+TEST_F(LoggingTest, initWithFileAndDiskSizeVariations) {
+  for (auto logFilename : testFileNames) {
     // Specify a disk space limit smaller than the file size limit
     ASSERT_THROW(
         apache::geode::client::Log::init(
@@ -299,26 +335,30 @@ TEST_F(LoggingTest, logInit) {
             apache::geode::client::LogLevel::Config, logFilename, 1, __1G__),
         apache::geode::client::IllegalArgumentException);
   }
+}
 
-  // Init with valid filename
-  ASSERT_NO_THROW(apache::geode::client::Log::init(
-      apache::geode::client::LogLevel::Config, "LoggingTest.log"));
-  apache::geode::client::Log::close();
+TEST_F(LoggingTest, initWithFilenameVariations) {
+  for (auto logFilename : testFileNames) {
+    // Init with valid filename
+    ASSERT_NO_THROW(apache::geode::client::Log::init(
+        apache::geode::client::LogLevel::Config, "LoggingTest.log"));
+    apache::geode::client::Log::close();
 
-  // Init with legal filename with (), #, and space
-  ASSERT_NO_THROW(apache::geode::client::Log::init(
-      apache::geode::client::LogLevel::Config, "LoggingTest (#).log"));
-  apache::geode::client::Log::close();
-  boost::filesystem::remove("LoggingTest (#).log");
+    // Init with legal filename with (), #, and space
+    ASSERT_NO_THROW(apache::geode::client::Log::init(
+        apache::geode::client::LogLevel::Config, "LoggingTest (#).log"));
+    apache::geode::client::Log::close();
+    boost::filesystem::remove("LoggingTest (#).log");
 
 #ifdef WIN32
-  // Init with invalid filename.  Windows-only test, on Linux et al
-  // basically any character is legal in a filename, however ill-advised
-  // that may be.
-  ASSERT_THROW(apache::geode::client::Log::init(
-                   apache::geode::client::LogLevel::Config, "#?$?%.log"),
-               apache::geode::client::IllegalArgumentException);
+    // Init with invalid filename.  Windows-only test, on Linux et al
+    // basically any character is legal in a filename, however ill-advised
+    // that may be.
+    ASSERT_THROW(apache::geode::client::Log::init(
+                     apache::geode::client::LogLevel::Config, "#?$?%.log"),
+                 apache::geode::client::IllegalArgumentException);
 #endif
+  }
 }
 
 TEST_F(LoggingTest, logToFileAtEachLevel) {
@@ -643,7 +683,10 @@ TEST_F(LoggingTest, countLinesAllLevels) {
 
       int lines = LoggingTest::numOfLinesInFile(logFilename);
 
-      ASSERT_TRUE(lines == LoggingTest::expectedWithBanner(level));
+      ASSERT_TRUE(lines == LoggingTest::expectedWithBanner(level))
+          << "Expected " << LoggingTest::expectedWithBanner(level)
+          << " lines in log file at " << LoggingTest::logLevelToString(level)
+          << " level, got " << lines;
 
       boost::filesystem::remove(logFilename);
     }

@@ -49,8 +49,11 @@ const std::string GEODE_STDOUT_INDICATOR = "-";
 
 // Used solely to ensure we have a non-null logger by the time any client
 // code executes.  geode-native isn't guaranteed to call Log::init() prior
-// to any calls to Log::log, and thus Log::getCurrentLogger(), which must
-// therefore *always* return non-null.
+// to any calls to Log::log, which calls Log::getCurrentLogger().
+// Log::getCurrentLogger(), must therefore *always* return non-null.
+// Behavior here is designed to mimic original geode-native logging code,
+// i.e. prior to ::init call specifying a file, and after a ::close call,
+// LOG* macros still check level and, if appropriate, log to stdout.
 class LogInitializer {
  public:
   LogInitializer() { Log::init(LogLevel::Config, "-"); }
@@ -263,6 +266,10 @@ void Log::close() {
   std::lock_guard<decltype(g_logMutex)> guard(g_logMutex);
   if (currentLogger) {
     currentLogger = nullptr;
+    // In practice, the logger can never be completely shut down, or LOG*
+    // macros will deref a null logger and crash.  After "close" of logger,
+    // we default back to logging to stdout at whatever level we were using.
+    // shared_ptr to logger will be cleaned up at shutdown, so no leaks.
     Log::init(currentLevel, "-");
   }
 }
