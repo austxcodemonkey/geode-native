@@ -20,7 +20,11 @@
 #ifndef GEODE_LOG_H_
 #define GEODE_LOG_H_
 
+// spdlog headers are incompatible with managed code, so all spdlog
+// references here are defined out for clicache code.
+#ifndef _MANAGED
 #include <spdlog/spdlog.h>
+#endif  // !_MANAGED
 
 #include <cstdarg>
 #include <cstdio>
@@ -163,7 +167,9 @@ class APACHE_GEODE_EXPORT Log {
 
   static bool enabled(LogLevel level);
 
+#ifndef _MANAGED
   static const std::shared_ptr<spdlog::logger>& getCurrentLogger();
+#endif  // !_MANAGED
 
  private:
   static void validateSizeLimits(int64_t fileSizeLimit, int64_t diskSpaceLimit);
@@ -184,6 +190,16 @@ class APACHE_GEODE_EXPORT Log {
 }  // namespace geode
 }  // namespace apache
 
+#ifdef _MANAGED
+#define LOG_ERROR(...)
+#define LOG_WARN(...)
+#define LOG_INFO(...)
+#define LOG_CONFIG(...)
+#define LOG_FINE(...)
+#define LOG_FINER(...)
+#define LOG_FINEST(...)
+#define LOG_DEBUG(...)
+#else
 #define LOG_ERROR(...)                                             \
   do {                                                             \
     using ::apache::geode::client::Log;                            \
@@ -263,5 +279,6 @@ class APACHE_GEODE_EXPORT Log {
                                    __VA_ARGS__);                     \
     }                                                                \
   } while (false)
+#endif  // !_MANAGED
 
 #endif  // GEODE_LOG_H_

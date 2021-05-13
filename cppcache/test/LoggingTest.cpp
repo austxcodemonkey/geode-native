@@ -338,27 +338,25 @@ TEST_F(LoggingTest, initWithFileAndDiskSizeVariations) {
 }
 
 TEST_F(LoggingTest, initWithFilenameVariations) {
-  for (auto logFilename : testFileNames) {
-    // Init with valid filename
-    ASSERT_NO_THROW(apache::geode::client::Log::init(
-        apache::geode::client::LogLevel::Config, "LoggingTest.log"));
-    apache::geode::client::Log::close();
+  // Init with valid filename
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Config, "LoggingTest.log"));
+  apache::geode::client::Log::close();
 
-    // Init with legal filename with (), #, and space
-    ASSERT_NO_THROW(apache::geode::client::Log::init(
-        apache::geode::client::LogLevel::Config, "LoggingTest (#).log"));
-    apache::geode::client::Log::close();
-    boost::filesystem::remove("LoggingTest (#).log");
+  // Init with legal filename with (), #, and space
+  ASSERT_NO_THROW(apache::geode::client::Log::init(
+      apache::geode::client::LogLevel::Config, "LoggingTest (#).log"));
+  apache::geode::client::Log::close();
+  boost::filesystem::remove("LoggingTest (#).log");
 
 #ifdef WIN32
-    // Init with invalid filename.  Windows-only test, on Linux et al
-    // basically any character is legal in a filename, however ill-advised
-    // that may be.
-    ASSERT_THROW(apache::geode::client::Log::init(
-                     apache::geode::client::LogLevel::Config, "#?$?%.log"),
-                 apache::geode::client::IllegalArgumentException);
+  // Init with invalid filename.  Windows-only test, on Linux et al
+  // basically any character is legal in a filename, however ill-advised
+  // that may be.
+  ASSERT_THROW(apache::geode::client::Log::init(
+                   apache::geode::client::LogLevel::Config, "#?$?%.log"),
+               apache::geode::client::IllegalArgumentException);
 #endif
-  }
 }
 
 TEST_F(LoggingTest, logToFileAtEachLevel) {
