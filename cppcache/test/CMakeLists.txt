@@ -95,6 +95,8 @@ target_include_directories(apache-geode_unittests
     $<TARGET_PROPERTY:apache-geode,SOURCE_DIR>/../src
 )
 
+target_compile_definitions(apache-geode_unittests PUBLIC GEODE_WITH_LOG_FMT)
+
 add_dependencies(unit-tests apache-geode_unittests)
 
 set_target_properties(apache-geode_unittests PROPERTIES
